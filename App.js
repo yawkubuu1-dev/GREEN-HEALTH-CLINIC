@@ -5893,37 +5893,37 @@ const fetchFooterData = async () => {
 
                 <View style={styles.mobileSubmenu}>
 
-                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); alert('Functional Medicine coming soon'); }}>
+                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); setCurrentPage('services'); }}>
 
                     <Text style={[styles.mobileSubmenuItemText, { color: '#28A745' }]}>• Functional Medicine</Text>
 
                   </Pressable>
 
-                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); alert('Metabolic Health coming soon'); }}>
+                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); setCurrentPage('services'); }}>
 
                     <Text style={[styles.mobileSubmenuItemText, { color: '#28A745' }]}>• Metabolic Health</Text>
 
                   </Pressable>
 
-                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); alert('Chronic Disease Management coming soon'); }}>
+                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); setCurrentPage('services'); }}>
 
                     <Text style={[styles.mobileSubmenuItemText, { color: '#28A745' }]}>• Chronic Disease Management</Text>
 
                   </Pressable>
 
-                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); alert('Nutrition & Lifestyle Coaching coming soon'); }}>
+                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); setCurrentPage('services'); }}>
 
                     <Text style={[styles.mobileSubmenuItemText, { color: '#28A745' }]}>• Nutrition & Lifestyle Coaching</Text>
 
                   </Pressable>
 
-                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); alert('Diagnostics & Lab Services coming soon'); }}>
+                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); setCurrentPage('services'); }}>
 
                     <Text style={[styles.mobileSubmenuItemText, { color: '#28A745' }]}>• Diagnostics & Lab Services</Text>
 
                   </Pressable>
 
-                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); alert('Pharmacy coming soon'); }}>
+                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); setCurrentPage('services'); }}>
 
                     <Text style={[styles.mobileSubmenuItemText, { color: '#28A745' }]}>• Pharmacy</Text>
 
@@ -5957,31 +5957,31 @@ const fetchFooterData = async () => {
 
                 <View style={styles.mobileSubmenu}>
 
-                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); alert('Our Story coming soon'); }}>
+                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); setCurrentPage('about'); }}>
 
                     <Text style={[styles.mobileSubmenuItemText, { color: '#28A745' }]}>• Our Story</Text>
 
                   </Pressable>
 
-                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); alert('Our Team coming soon'); }}>
+                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); setCurrentPage('about'); }}>
 
                     <Text style={[styles.mobileSubmenuItemText, { color: '#28A745' }]}>• Our Team</Text>
 
                   </Pressable>
 
-                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); alert('Careers coming soon'); }}>
+                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); setCurrentPage('about'); }}>
 
                     <Text style={[styles.mobileSubmenuItemText, { color: '#28A745' }]}>• Careers</Text>
 
                   </Pressable>
 
-                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); alert('Press & Media coming soon'); }}>
+                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); setCurrentPage('about'); }}>
 
                     <Text style={[styles.mobileSubmenuItemText, { color: '#28A745' }]}>• Press & Media</Text>
 
                   </Pressable>
 
-                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); alert('Bulletin coming soon'); }}>
+                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); setCurrentPage('about'); }}>
 
                     <Text style={[styles.mobileSubmenuItemText, { color: '#28A745' }]}>• Bulletin</Text>
 
