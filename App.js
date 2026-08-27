@@ -8537,10 +8537,62 @@ const fetchFooterData = async () => {
 
       ) : isServicesPage ? (
 
-        <View style={{ flex: 1, flexDirection: 'row' }}>
+        <View style={{ flex: 1, flexDirection: isPhoneScreen ? 'column' : 'row' }}>
 
+          {/* ── Sidebar (desktop) / Horizontal tab strip (mobile) ── */}
+          {isPhoneScreen ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{
+                backgroundColor: isUserDarkMode ? darkPalette.surface : '#f0f4ee',
+                borderBottomWidth: 1,
+                borderBottomColor: isUserDarkMode ? '#333' : '#d4e2cf',
+                flexShrink: 0,
+              }}
+              contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 10, gap: 8, flexDirection: 'row', alignItems: 'center' }}
+            >
+              {[
+                { key: 'functional-medicine', label: 'Functional Medicine' },
+                { key: 'metabolic-health',    label: 'Metabolic Health' },
+                { key: 'chronic-disease',     label: 'Chronic Disease' },
+                { key: 'nutrition',           label: 'Nutrition' },
+                { key: 'diagnostics',         label: 'Diagnostics' },
+                { key: 'pharmacy',            label: 'Pharmacy' },
+              ].map((item) => (
+                <Pressable
+                  key={item.key}
+                  onPress={() => {
+                    setActiveServiceSection(item.key);
+                    servicesScrollViewRef.current?.scrollTo({ y: 0, animated: true });
+                  }}
+                  style={{
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 20,
+                    backgroundColor: activeServiceSection === item.key
+                      ? (isUserDarkMode ? '#008000' : '#296416')
+                      : (isUserDarkMode ? '#1a2e1a' : '#fff'),
+                    borderWidth: 1,
+                    borderColor: activeServiceSection === item.key
+                      ? 'transparent'
+                      : (isUserDarkMode ? '#333' : '#c5d9c0'),
+                  }}
+                >
+                  <Text style={{
+                    fontSize: 13,
+                    fontWeight: activeServiceSection === item.key ? '700' : '500',
+                    color: activeServiceSection === item.key
+                      ? '#fff'
+                      : (isUserDarkMode ? darkPalette.secondary : palette.secondary),
+                    whiteSpace: 'nowrap',
+                  }}>{item.label}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          ) : (
           <View style={{ 
-            width: 280, 
+            width: 220,
             backgroundColor: isUserDarkMode ? darkPalette.surface : '#f8f9fa',
             borderRightWidth: 1,
             borderRightColor: isUserDarkMode ? '#333' : '#e0e0e0',
@@ -8707,10 +8759,11 @@ const fetchFooterData = async () => {
             </ScrollView>
 
           </View>
+          )}
 
           <ScrollView 
             ref={servicesScrollViewRef}
-            contentContainerStyle={{ padding: 40 }} 
+            contentContainerStyle={{ padding: isPhoneScreen ? 20 : 40 }} 
             showsVerticalScrollIndicator={false}
             onScroll={(event) => {
               const offsetY = event.nativeEvent.contentOffset.y;
