@@ -1907,6 +1907,7 @@ export default function App() {
   const [activeAboutSection, setActiveAboutSection] = useState('our-story');
 
   const aboutScrollViewRef = useRef(null);
+  const aboutSectionOffsets = useRef({ 'our-story': 0, 'our-team': 0, 'patient-stories': 0, 'blog-news': 0, 'vision-mission': 0 });
 
   const [contactForm, setContactForm] = useState({
     name: '',
@@ -8885,10 +8886,62 @@ const fetchFooterData = async () => {
 
       ) : isAboutPage ? (
 
-        <View style={{ flex: 1, flexDirection: 'row' }}>
+        <View style={{ flex: 1, flexDirection: isPhoneScreen ? 'column' : 'row' }}>
 
+          {/* ── Sidebar (desktop) / Horizontal chip strip (mobile) ── */}
+          {isPhoneScreen ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{
+                backgroundColor: isUserDarkMode ? darkPalette.surface : '#f0f4ee',
+                borderBottomWidth: 1,
+                borderBottomColor: isUserDarkMode ? '#333' : '#d4e2cf',
+                flexShrink: 0,
+              }}
+              contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 10, gap: 8, flexDirection: 'row', alignItems: 'center' }}
+            >
+              {[
+                { key: 'our-story',       label: 'Our Story' },
+                { key: 'our-team',        label: 'Our Team' },
+                { key: 'patient-stories', label: 'Patient Stories' },
+                { key: 'blog-news',       label: 'Blog & News' },
+                { key: 'vision-mission',  label: 'Vision & Mission' },
+              ].map((item) => (
+                <Pressable
+                  key={item.key}
+                  onPress={() => {
+                    setActiveAboutSection(item.key);
+                    const STICKY_HEIGHT = 116;
+                    const raw = aboutSectionOffsets.current[item.key] ?? 0;
+                    aboutScrollViewRef.current?.scrollTo({ y: Math.max(0, raw - STICKY_HEIGHT), animated: false });
+                  }}
+                  style={{
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 20,
+                    backgroundColor: activeAboutSection === item.key
+                      ? (isUserDarkMode ? '#008000' : '#296416')
+                      : (isUserDarkMode ? '#1a2e1a' : '#fff'),
+                    borderWidth: 1,
+                    borderColor: activeAboutSection === item.key
+                      ? 'transparent'
+                      : (isUserDarkMode ? '#333' : '#c5d9c0'),
+                  }}
+                >
+                  <Text style={{
+                    fontSize: 13,
+                    fontWeight: activeAboutSection === item.key ? '700' : '500',
+                    color: activeAboutSection === item.key
+                      ? '#fff'
+                      : (isUserDarkMode ? darkPalette.secondary : palette.secondary),
+                  }}>{item.label}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          ) : (
           <View style={{ 
-            width: 280, 
+            width: 220,
             backgroundColor: isUserDarkMode ? darkPalette.surface : '#f8f9fa',
             borderRightWidth: 1,
             borderRightColor: isUserDarkMode ? '#333' : '#e0e0e0',
@@ -9031,23 +9084,27 @@ const fetchFooterData = async () => {
             </ScrollView>
 
           </View>
+          )}
 
           <ScrollView 
             ref={aboutScrollViewRef}
-            contentContainerStyle={{ padding: 40 }} 
+            contentContainerStyle={{ padding: isPhoneScreen ? 20 : 40 }} 
             showsVerticalScrollIndicator={false}
             onScroll={(event) => {
               const offsetY = event.nativeEvent.contentOffset.y;
-              if (offsetY < 400) setActiveAboutSection('our-story');
-              else if (offsetY < 800) setActiveAboutSection('our-team');
-              else if (offsetY < 1200) setActiveAboutSection('patient-stories');
-              else if (offsetY < 1600) setActiveAboutSection('blog-news');
-              else setActiveAboutSection('vision-mission');
+              const STICKY_HEIGHT = isPhoneScreen ? 116 : 0;
+              const offs = aboutSectionOffsets.current;
+              const order = ['our-story','our-team','patient-stories','blog-news','vision-mission'];
+              let active = order[0];
+              for (const key of order) {
+                if ((offs[key] ?? 0) - STICKY_HEIGHT <= offsetY + 20) active = key;
+              }
+              setActiveAboutSection(active);
             }}
             scrollEventThrottle={100}
           >
 
-            <View style={{ marginBottom: 60 }}>
+            <View style={{ marginBottom: 60 }} onLayout={e => { aboutSectionOffsets.current['our-story'] = e.nativeEvent.layout.y; }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -9063,7 +9120,7 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View style={{ marginBottom: 60 }}>
+            <View style={{ marginBottom: 60 }} onLayout={e => { aboutSectionOffsets.current['our-team'] = e.nativeEvent.layout.y; }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -9079,7 +9136,7 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View style={{ marginBottom: 60 }}>
+            <View style={{ marginBottom: 60 }} onLayout={e => { aboutSectionOffsets.current['patient-stories'] = e.nativeEvent.layout.y; }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -9095,7 +9152,7 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View style={{ marginBottom: 60 }}>
+            <View style={{ marginBottom: 60 }} onLayout={e => { aboutSectionOffsets.current['blog-news'] = e.nativeEvent.layout.y; }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -9111,7 +9168,7 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View style={{ marginBottom: 60 }}>
+            <View style={{ marginBottom: 60 }} onLayout={e => { aboutSectionOffsets.current['vision-mission'] = e.nativeEvent.layout.y; }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
