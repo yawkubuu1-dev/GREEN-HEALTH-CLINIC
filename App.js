@@ -1903,6 +1903,14 @@ export default function App() {
 
   const servicesScrollViewRef = useRef(null);
   const sectionOffsets = useRef({ 'functional-medicine': 0, 'metabolic-health': 0, 'chronic-disease': 0, 'nutrition': 0, 'diagnostics': 0, 'pharmacy': 0 });
+  const sectionRefs = useRef({
+    'functional-medicine': null,
+    'metabolic-health': null,
+    'chronic-disease': null,
+    'nutrition': null,
+    'diagnostics': null,
+    'pharmacy': null,
+  });
 
   const [activeAboutSection, setActiveAboutSection] = useState('our-story');
 
@@ -8566,10 +8574,23 @@ const fetchFooterData = async () => {
                   key={item.key}
                   onPress={() => {
                     setActiveServiceSection(item.key);
-                    // 60px header + ~52px chip bar = 116px sticky offset
-                    const STICKY_HEIGHT = 116;
-                    const raw = sectionOffsets.current[item.key] ?? 0;
-                    servicesScrollViewRef.current?.scrollTo({ y: Math.max(0, raw - STICKY_HEIGHT), animated: false });
+                    const ref = sectionRefs.current[item.key];
+                    if (ref && servicesScrollViewRef.current) {
+                      ref.measureLayout(
+                        servicesScrollViewRef.current.getScrollableNode?.() ?? servicesScrollViewRef.current,
+                        (x, y) => {
+                          servicesScrollViewRef.current?.scrollTo({ y: Math.max(0, y - 8), animated: false });
+                        },
+                        () => {
+                          // fallback to stored onLayout offset
+                          const raw = sectionOffsets.current[item.key] ?? 0;
+                          servicesScrollViewRef.current?.scrollTo({ y: Math.max(0, raw - 116), animated: false });
+                        }
+                      );
+                    } else {
+                      const raw = sectionOffsets.current[item.key] ?? 0;
+                      servicesScrollViewRef.current?.scrollTo({ y: Math.max(0, raw - 116), animated: false });
+                    }
                   }}
                   style={{
                     paddingHorizontal: 14,
@@ -8590,7 +8611,6 @@ const fetchFooterData = async () => {
                     color: activeServiceSection === item.key
                       ? '#fff'
                       : (isUserDarkMode ? darkPalette.secondary : palette.secondary),
-                    whiteSpace: 'nowrap',
                   }}>{item.label}</Text>
                 </Pressable>
               ))}
@@ -8784,7 +8804,7 @@ const fetchFooterData = async () => {
             scrollEventThrottle={100}
           >
 
-            <View style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['functional-medicine'] = e.nativeEvent.layout.y; }}>
+            <View ref={r => sectionRefs.current['functional-medicine'] = r} style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['functional-medicine'] = e.nativeEvent.layout.y; }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -8800,7 +8820,7 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['metabolic-health'] = e.nativeEvent.layout.y; }}>
+            <View ref={r => sectionRefs.current['metabolic-health'] = r} style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['metabolic-health'] = e.nativeEvent.layout.y; }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -8816,7 +8836,7 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['chronic-disease'] = e.nativeEvent.layout.y; }}>
+            <View ref={r => sectionRefs.current['chronic-disease'] = r} style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['chronic-disease'] = e.nativeEvent.layout.y; }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -8832,7 +8852,7 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['nutrition'] = e.nativeEvent.layout.y; }}>
+            <View ref={r => sectionRefs.current['nutrition'] = r} style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['nutrition'] = e.nativeEvent.layout.y; }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -8848,7 +8868,7 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['diagnostics'] = e.nativeEvent.layout.y; }}>
+            <View ref={r => sectionRefs.current['diagnostics'] = r} style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['diagnostics'] = e.nativeEvent.layout.y; }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -8864,7 +8884,7 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['pharmacy'] = e.nativeEvent.layout.y; }}>
+            <View ref={r => sectionRefs.current['pharmacy'] = r} style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['pharmacy'] = e.nativeEvent.layout.y; }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
