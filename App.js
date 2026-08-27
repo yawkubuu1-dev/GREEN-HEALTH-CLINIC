@@ -1902,6 +1902,7 @@ export default function App() {
   const [activeServiceSection, setActiveServiceSection] = useState('functional-medicine');
 
   const servicesScrollViewRef = useRef(null);
+  const sectionOffsets = useRef({ 'functional-medicine': 0, 'metabolic-health': 0, 'chronic-disease': 0, 'nutrition': 0, 'diagnostics': 0, 'pharmacy': 0 });
 
   const [activeAboutSection, setActiveAboutSection] = useState('our-story');
 
@@ -8564,7 +8565,7 @@ const fetchFooterData = async () => {
                   key={item.key}
                   onPress={() => {
                     setActiveServiceSection(item.key);
-                    servicesScrollViewRef.current?.scrollTo({ y: 0, animated: true });
+                    servicesScrollViewRef.current?.scrollTo({ y: sectionOffsets.current[item.key] ?? 0, animated: true });
                   }}
                   style={{
                     paddingHorizontal: 14,
@@ -8767,17 +8768,20 @@ const fetchFooterData = async () => {
             showsVerticalScrollIndicator={false}
             onScroll={(event) => {
               const offsetY = event.nativeEvent.contentOffset.y;
-              if (offsetY < 400) setActiveServiceSection('functional-medicine');
-              else if (offsetY < 800) setActiveServiceSection('metabolic-health');
-              else if (offsetY < 1200) setActiveServiceSection('chronic-disease');
-              else if (offsetY < 1600) setActiveServiceSection('nutrition');
-              else if (offsetY < 2000) setActiveServiceSection('diagnostics');
-              else setActiveServiceSection('pharmacy');
+              const offs = sectionOffsets.current;
+              // Find the last section whose offset is <= current scroll position
+              const order = ['functional-medicine','metabolic-health','chronic-disease','nutrition','diagnostics','pharmacy'];
+              let active = order[0];
+              for (const key of order) {
+                if ((offs[key] ?? 0) <= offsetY + 80) active = key;
+              }
+              setActiveServiceSection(active);
             }}
             scrollEventThrottle={100}
           >
 
             <View style={{ marginBottom: 60 }} onLayout={(e) => {}}>
+            <View style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['functional-medicine'] = e.nativeEvent.layout.y; }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -8793,7 +8797,7 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View style={{ marginBottom: 60 }}>
+            <View style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['metabolic-health'] = e.nativeEvent.layout.y; }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -8809,7 +8813,7 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View style={{ marginBottom: 60 }}>
+            <View style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['chronic-disease'] = e.nativeEvent.layout.y; }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -8825,7 +8829,7 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View style={{ marginBottom: 60 }}>
+            <View style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['nutrition'] = e.nativeEvent.layout.y; }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -8841,7 +8845,7 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View style={{ marginBottom: 60 }}>
+            <View style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['diagnostics'] = e.nativeEvent.layout.y; }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -8857,7 +8861,7 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View style={{ marginBottom: 60 }}>
+            <View style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['pharmacy'] = e.nativeEvent.layout.y; }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
