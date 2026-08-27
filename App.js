@@ -8783,7 +8783,6 @@ const fetchFooterData = async () => {
             scrollEventThrottle={100}
           >
 
-            <View style={{ marginBottom: 60 }} onLayout={(e) => {}}>
             <View style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['functional-medicine'] = e.nativeEvent.layout.y; }}>
               <Text style={{ 
                 fontSize: 28, 
