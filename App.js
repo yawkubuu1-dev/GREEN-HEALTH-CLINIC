@@ -8565,7 +8565,10 @@ const fetchFooterData = async () => {
                   key={item.key}
                   onPress={() => {
                     setActiveServiceSection(item.key);
-                    servicesScrollViewRef.current?.scrollTo({ y: sectionOffsets.current[item.key] ?? 0, animated: true });
+                    // 60px header + ~52px chip bar = 116px sticky offset
+                    const STICKY_HEIGHT = 116;
+                    const raw = sectionOffsets.current[item.key] ?? 0;
+                    servicesScrollViewRef.current?.scrollTo({ y: Math.max(0, raw - STICKY_HEIGHT), animated: false });
                   }}
                   style={{
                     paddingHorizontal: 14,
@@ -8768,12 +8771,12 @@ const fetchFooterData = async () => {
             showsVerticalScrollIndicator={false}
             onScroll={(event) => {
               const offsetY = event.nativeEvent.contentOffset.y;
+              const STICKY_HEIGHT = isPhoneScreen ? 116 : 0;
               const offs = sectionOffsets.current;
-              // Find the last section whose offset is <= current scroll position
               const order = ['functional-medicine','metabolic-health','chronic-disease','nutrition','diagnostics','pharmacy'];
               let active = order[0];
               for (const key of order) {
-                if ((offs[key] ?? 0) <= offsetY + 80) active = key;
+                if ((offs[key] ?? 0) - STICKY_HEIGHT <= offsetY + 20) active = key;
               }
               setActiveServiceSection(active);
             }}
