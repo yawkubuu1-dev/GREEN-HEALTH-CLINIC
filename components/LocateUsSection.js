@@ -1,5 +1,7 @@
 import { FontAwesome5 } from '@expo/vector-icons';
+import { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Image,
   Linking,
   Platform,
@@ -9,48 +11,62 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { supabase } from '../lib/supabase';
 import MapComponent from './MapComponent';
 
-// Add another office by appending an object with the same shape.
-// The 2-column grid layout does not need to change.
-const OFFICE_LOCATIONS = [
-  {
-    id: 'ghana-madina',
-    name: 'Accra Office',
-    city: 'Madina, Ghana',
-    address:
-      'Madina Estate Road to Social Welfare, Behind the Goil Filling Station, Madina, Accra, Ghana',
-    lat: 5.6897,
-    lng: -0.1679,
-  },
-  {
-    id: 'us-new-york',
-    name: 'New York Office',
-    city: 'New York, USA',
-    address: '245 West 29th Street, Suite 302, New York, NY 10001, United States',
-    lat: 40.7479,
-    lng: -73.9937,
-  },
-];
+const GHANA_OFFICE = {
+  id: 'ghana-roman-ridge',
+  name: 'Accra Office',
+  address: 'Roman Ridge, Accra, Ghana',
+  lat: 5.6027166,
+  lng: -0.2004655,
+};
 
-function mapsQuery(office) {
-  return encodeURIComponent(office.address || `${office.lat},${office.lng}`);
+function toStore(row) {
+  const lat = Number(row.latitude ?? row.lat);
+  const lng = Number(row.longitude ?? row.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  return {
+    id: row.id,
+    name: row.name || 'Store',
+    address: row.address || '',
+    lat,
+    lng,
+  };
 }
 
-function mapsSearchUrl(office) {
-  return `https://www.google.com/maps/search/?api=1&query=${mapsQuery(office)}`;
+function mapsEmbedUrl(store) {
+  return `https://maps.google.com/maps?q=${store.lat},${store.lng}&z=16&output=embed`;
 }
 
-function mapsEmbedUrl(office) {
-  return `https://maps.google.com/maps?q=${mapsQuery(office)}&z=16&output=embed`;
+function deviceMapsUrl(store) {
+  const label = encodeURIComponent(store.name || store.address || 'Store');
+  if (Platform.OS === 'ios') {
+    return `maps:0,0?q=${label}@${store.lat},${store.lng}`;
+  }
+  if (Platform.OS === 'android') {
+    return `geo:${store.lat},${store.lng}?q=${store.lat},${store.lng}(${label})`;
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${store.lat},${store.lng}`;
 }
 
-function GoogleMapEmbed({ office }) {
+async function openInDeviceMaps(store) {
+  const preferred = deviceMapsUrl(store);
+  const webFallback = `https://www.google.com/maps/search/?api=1&query=${store.lat},${store.lng}`;
+  try {
+    const canOpen = await Linking.canOpenURL(preferred);
+    await Linking.openURL(canOpen ? preferred : webFallback);
+  } catch {
+    await Linking.openURL(webFallback);
+  }
+}
+
+function GoogleMapEmbed({ store }) {
   if (Platform.OS === 'web') {
     return (
       <iframe
-        title={office.name}
-        src={mapsEmbedUrl(office)}
+        title={store.name}
+        src={mapsEmbedUrl(store)}
         width="100%"
         height="100%"
         style={{ border: 0, width: '100%', height: '100%' }}
@@ -63,14 +79,14 @@ function GoogleMapEmbed({ office }) {
 
   return (
     <MapComponent
-      center={[office.lat, office.lng]}
+      center={[store.lat, store.lng]}
       zoom={16}
       markers={[
         {
-          lat: office.lat,
-          lng: office.lng,
-          title: office.name,
-          description: office.address,
+          lat: store.lat,
+          lng: store.lng,
+          title: store.name,
+          description: store.address,
         },
       ]}
       showStoreLocations={false}
@@ -79,7 +95,7 @@ function GoogleMapEmbed({ office }) {
   );
 }
 
-function LocationCard({ office, isNarrowCard, textColor, mutedColor, surfaceColor, borderColor }) {
+function LocationCard({ store, isNarrowCard, textColor, mutedColor, surfaceColor, borderColor }) {
   return (
     <View style={[styles.card, { backgroundColor: surfaceColor, borderColor }]}>
       <View style={[styles.cardInner, isNarrowCard && styles.cardInnerStacked]}>
@@ -87,22 +103,21 @@ function LocationCard({ office, isNarrowCard, textColor, mutedColor, surfaceColo
           <FontAwesome5 name="map-marker-alt" size={28} color="#E53935" solid />
           <Image
             source={require('../assets/isometric-city.png')}
-            style={styles.cityImage}
+            style={[styles.cityImage, isNarrowCard && styles.cityImageCompact]}
             resizeMode="contain"
-            accessibilityLabel={`${office.name} city illustration`}
+            accessibilityLabel={`${store.name} city illustration`}
           />
-          <Text style={[styles.officeName, { color: textColor }]}>{office.name}</Text>
-          <Text style={[styles.officeCity, { color: mutedColor }]}>{office.city}</Text>
-          <Text style={[styles.officeAddress, { color: mutedColor }]}>{office.address}</Text>
+          <Text style={[styles.officeName, { color: textColor }]}>{store.name}</Text>
+          <Text style={[styles.officeAddress, { color: mutedColor }]}>{store.address}</Text>
         </View>
 
         <View style={[styles.mapCol, isNarrowCard && styles.mapColStacked]}>
-          <GoogleMapEmbed office={office} />
+          <GoogleMapEmbed store={store} />
           <Pressable
             style={styles.openMapsBtn}
-            onPress={() => Linking.openURL(mapsSearchUrl(office))}
-            accessibilityRole="link"
-            accessibilityLabel={`Open ${office.name} in Google Maps`}
+            onPress={() => openInDeviceMaps(store)}
+            accessibilityRole="button"
+            accessibilityLabel={`Open ${store.name} in Maps`}
           >
             <FontAwesome5 name="external-link-alt" size={11} color="#1B1C1C" />
             <Text style={styles.openMapsText}>Open in Maps</Text>
@@ -116,34 +131,80 @@ function LocationCard({ office, isNarrowCard, textColor, mutedColor, surfaceColo
 export default function LocateUsSection({ isDarkMode = false }) {
   const { width } = useWindowDimensions();
   const isPhone = width < 768;
+  const isTablet = width >= 768 && width < 980;
   const twoColumns = width >= 980;
+  const isNarrowCard = width < 900;
+
+  const [stores, setStores] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const textColor = isDarkMode ? '#F2F2F2' : '#1B1C1C';
   const mutedColor = isDarkMode ? '#A8B39A' : '#477d2d';
   const surfaceColor = isDarkMode ? '#1F241C' : '#FFFFFF';
   const borderColor = isDarkMode ? '#333' : '#d2d5c9';
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadStores() {
+      const { data, error } = await supabase
+        .from('stores')
+        .select('id, name, address, latitude, longitude')
+        .order('sort_order', { ascending: true })
+        .order('name', { ascending: true });
+
+      if (cancelled) return;
+
+      if (error) {
+        console.warn('Stores query failed, using Ghana office fallback:', error.message);
+        setStores([GHANA_OFFICE]);
+        setLoading(false);
+        return;
+      }
+
+      const mapped = (data || []).map(toStore).filter(Boolean);
+      setStores(mapped.length ? mapped : [GHANA_OFFICE]);
+      setLoading(false);
+    }
+
+    loadStores();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <View style={styles.section}>
-      <Text style={[styles.heading, { color: textColor }]}>Locate Us</Text>
-      <Text style={[styles.subheading, { color: mutedColor }]}>
-        Visit any of our offices. Each map shows the exact location with a marker.
+      <Text style={[styles.heading, { color: textColor, fontSize: isPhone ? 24 : isTablet ? 28 : 32 }]}>Locate Us</Text>
+      <Text style={[styles.subheading, { color: mutedColor, fontSize: isPhone ? 14 : 16 }]}>
+        Visit any of our stores. Each map is centered on the exact coordinates.
       </Text>
 
-      <View style={[styles.grid, twoColumns && styles.gridTwoCol, isPhone && styles.gridPhone]}>
-        {OFFICE_LOCATIONS.map((office) => (
-          <View key={office.id} style={[styles.gridItem, twoColumns && styles.gridItemHalf]}>
-            <LocationCard
-              office={office}
-              isNarrowCard={isPhone}
-              textColor={textColor}
-              mutedColor={mutedColor}
-              surfaceColor={surfaceColor}
-              borderColor={borderColor}
-            />
-          </View>
-        ))}
-      </View>
+      {loading ? (
+        <ActivityIndicator size="large" color={mutedColor} style={styles.loader} />
+      ) : (
+        <View style={[styles.grid, twoColumns && styles.gridTwoCol, isPhone && styles.gridPhone]}>
+          {stores.map((store) => (
+            <View
+              key={String(store.id)}
+              style={[
+                styles.gridItem,
+                twoColumns && styles.gridItemHalf,
+                isTablet && styles.gridItemTablet,
+              ]}
+            >
+              <LocationCard
+                store={store}
+                isNarrowCard={isNarrowCard}
+                textColor={textColor}
+                mutedColor={mutedColor}
+                surfaceColor={surfaceColor}
+                borderColor={borderColor}
+              />
+            </View>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -155,7 +216,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginTop: 16,
     marginBottom: 48,
-    paddingHorizontal: 8,
+    paddingHorizontal: 0,
+    overflow: 'hidden',
   },
   heading: {
     fontSize: 32,
@@ -168,41 +230,62 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 28,
     lineHeight: 22,
+    paddingHorizontal: 8,
+  },
+  loader: {
+    marginVertical: 40,
   },
   grid: {
     flexDirection: 'column',
     gap: 20,
+    width: '100%',
   },
   gridTwoCol: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
+    gap: 20,
   },
   gridPhone: {
     flexDirection: 'column',
   },
   gridItem: {
     width: '100%',
+    maxWidth: '100%',
+    minWidth: 0,
+  },
+  gridItemTablet: {
+    width: '100%',
   },
   gridItemHalf: {
-    width: '49%',
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 360,
+    minWidth: 0,
+    maxWidth: '100%',
   },
   card: {
     borderWidth: 1,
     borderRadius: 16,
     padding: 16,
     overflow: 'hidden',
+    width: '100%',
+    maxWidth: '100%',
   },
   cardInner: {
     flexDirection: 'row',
     alignItems: 'stretch',
     gap: 16,
+    width: '100%',
+    minWidth: 0,
   },
   cardInnerStacked: {
     flexDirection: 'column',
   },
   illustrationCol: {
     width: 180,
+    maxWidth: '100%',
+    flexShrink: 0,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
@@ -213,34 +296,38 @@ const styles = StyleSheet.create({
   cityImage: {
     width: 132,
     height: 132,
+    maxWidth: '100%',
+  },
+  cityImageCompact: {
+    width: 110,
+    height: 110,
   },
   officeName: {
     fontSize: 16,
     fontWeight: '700',
     textAlign: 'center',
-  },
-  officeCity: {
-    fontSize: 13,
-    fontWeight: '600',
-    textAlign: 'center',
+    flexShrink: 1,
   },
   officeAddress: {
     fontSize: 12,
     textAlign: 'center',
     lineHeight: 16,
+    flexShrink: 1,
   },
   mapCol: {
     flex: 1,
     height: 240,
-    minHeight: 240,
+    minHeight: 220,
+    minWidth: 0,
     borderRadius: 12,
     overflow: 'hidden',
     position: 'relative',
     backgroundColor: '#e8ece4',
   },
   mapColStacked: {
-    minHeight: 240,
+    minHeight: 220,
     width: '100%',
+    height: 240,
   },
   openMapsBtn: {
     position: 'absolute',

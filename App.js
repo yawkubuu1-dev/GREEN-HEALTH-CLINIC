@@ -2,6 +2,8 @@ import { StatusBar } from 'expo-status-bar';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import React from 'react';
+
 import {
 
   ActivityIndicator,
@@ -810,11 +812,11 @@ function AnimatedSocialIconBadge({ onPress, backgroundColor, iconName, iconSize 
   return (
     <Pressable
       onPress={onPress}
-      onHoverIn={() => scaleTo(1.12)}
+      onHoverIn={() => scaleTo(1.2)}
       onHoverOut={() => scaleTo(1)}
-      onMouseEnter={() => scaleTo(1.12)}
+      onMouseEnter={() => scaleTo(1.2)}
       onMouseLeave={() => scaleTo(1)}
-      onPressIn={() => scaleTo(1.12)}
+      onPressIn={() => scaleTo(1.2)}
       onPressOut={() => scaleTo(1)}
     >
       <Animated.View
@@ -874,6 +876,929 @@ function SocialMediaIconRow() {
     </View>
   );
 }
+
+// Floating Social Column — fixed to right edge on desktop/tablet, hidden on mobile
+function FloatingSocialColumn() {
+  // Only render on web; on native there is no concept of a fixed sidebar
+  if (Platform.OS !== 'web') return null;
+
+  // One animated value per icon: drives both translateX and opacity
+  const anims = useRef(
+    SOCIAL_BADGES.map(() => ({
+      translateX: new Animated.Value(80),
+      opacity: new Animated.Value(0),
+    }))
+  ).current;
+
+  useEffect(() => {
+    const animations = anims.map((anim) =>
+      Animated.parallel([
+        Animated.spring(anim.translateX, {
+          toValue: 0,
+          useNativeDriver: true,
+          friction: 7,
+          tension: 60,
+        }),
+        Animated.timing(anim.opacity, {
+          toValue: 1,
+          duration: 320,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    // Fire each icon's animation 60 ms after the previous one starts
+    Animated.stagger(60, animations).start();
+  }, []);
+
+  return (
+    <View
+      style={{
+        position: 'fixed',
+        right: 0,
+        top: '50%',
+        marginTop: -104,
+        zIndex: 9998,
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 8,
+        paddingVertical: 12,
+        paddingHorizontal: 8,
+        backgroundColor: 'rgba(255,255,255,0.92)',
+        borderTopLeftRadius: 16,
+        borderBottomLeftRadius: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: -2, height: 0 },
+        shadowOpacity: 0.12,
+        shadowRadius: 12,
+      }}
+      accessibilityRole="navigation"
+      accessibilityLabel="Social media links"
+    >
+      {SOCIAL_BADGES.map((badge, i) => (
+        <Animated.View
+          key={badge.iconName + badge.url}
+          style={{
+            opacity: anims[i].opacity,
+            transform: [{ translateX: anims[i].translateX }],
+          }}
+        >
+          <AnimatedSocialIconBadge
+            onPress={() => Linking.openURL(badge.url)}
+            backgroundColor={badge.backgroundColor}
+            iconName={badge.iconName}
+            iconSize={18}
+            size={40}
+            style={{ marginRight: 0 }}
+          />
+        </Animated.View>
+      ))}
+    </View>
+  );
+}
+
+// ─── Static blog data ────────────────────────────────────────────────────────
+const BLOG_POSTS = [
+  {
+    id: 'b1',
+    title: 'Understanding Functional Medicine: A Holistic Approach to Health',
+    category: 'Functional Medicine',
+    date: 'July 12, 2026',
+    duration: '5:42',
+    excerpt: `Functional medicine looks beyond symptoms to uncover the root causes of chronic illness. Here's how it differs from conventional care and why it matters for long-term wellness.`,
+    thumbnail: 'https://img.youtube.com/vi/KJ6lhOPMCCE/maxresdefault.jpg',
+    videoId: 'KJ6lhOPMCCE',
+  },
+  {
+    id: 'b2',
+    title: 'Metabolic Health 101: What Your Blood Sugar Is Really Telling You',
+    category: 'Metabolic Health',
+    date: 'July 5, 2026',
+    duration: '7:18',
+    excerpt: 'Blood sugar fluctuations affect energy, mood, and weight — even in people without diabetes. Learn the markers to watch and simple lifestyle adjustments that make a real difference.',
+    thumbnail: 'https://img.youtube.com/vi/lPkEXfuoHL8/maxresdefault.jpg',
+    videoId: 'lPkEXfuoHL8',
+  },
+  {
+    id: 'b3',
+    title: 'The Gut–Brain Connection: How Your Digestive Health Shapes Your Mind',
+    category: 'Nutrition',
+    date: 'June 28, 2026',
+    duration: '6:05',
+    excerpt: 'Emerging research confirms that gut microbiome diversity directly influences anxiety, cognition, and mood. Discover how to nourish your gut for better mental clarity.',
+    thumbnail: 'https://img.youtube.com/vi/1sISguPDlhY/maxresdefault.jpg',
+    videoId: '1sISguPDlhY',
+  },
+  {
+    id: 'b4',
+    title: 'Chronic Inflammation: The Silent Driver Behind Most Modern Diseases',
+    category: 'Chronic Disease',
+    date: 'June 20, 2026',
+    duration: '8:33',
+    excerpt: 'From heart disease to autoimmune conditions, low-grade chronic inflammation is a common thread. Find out what triggers it and how targeted interventions can calm it down.',
+    thumbnail: 'https://img.youtube.com/vi/zz4YVJ4aRfg/maxresdefault.jpg',
+    videoId: 'zz4YVJ4aRfg',
+  },
+  {
+    id: 'b5',
+    title: 'Lab Tests That Actually Matter: Beyond the Standard Panel',
+    category: 'Diagnostics',
+    date: 'June 14, 2026',
+    duration: '5:20',
+    excerpt: 'Standard bloodwork misses a lot. We break down the advanced markers — hs-CRP, homocysteine, HOMA-IR — that give a fuller picture of your metabolic and cardiovascular risk.',
+    thumbnail: 'https://img.youtube.com/vi/7LEtFbVpMYo/maxresdefault.jpg',
+    videoId: '7LEtFbVpMYo',
+  },
+  {
+    id: 'b6',
+    title: 'Sleep, Stress and Cortisol: Why Rest Is a Medical Intervention',
+    category: 'Lifestyle',
+    date: 'June 7, 2026',
+    duration: '6:51',
+    excerpt: `Poor sleep elevates cortisol, disrupts insulin sensitivity, and accelerates cellular ageing. Here's the science behind sleep optimisation and practical protocols to get started tonight.`,
+    thumbnail: 'https://img.youtube.com/vi/nm1TxQj9IsQ/maxresdefault.jpg',
+    videoId: 'nm1TxQj9IsQ',
+  },
+  {
+    id: 'b7',
+    title: 'Nutrition Myths Debunked: What the Latest Research Actually Says',
+    category: 'Nutrition',
+    date: 'May 30, 2026',
+    duration: '7:44',
+    excerpt: `From dietary fat being bad to eating six small meals a day — many common nutrition beliefs don't hold up to scrutiny. We look at the evidence and set the record straight.`,
+    thumbnail: 'https://img.youtube.com/vi/0bNdhM4vt4I/maxresdefault.jpg',
+    videoId: '0bNdhM4vt4I',
+  },
+  {
+    id: 'b8',
+    title: 'Hormone Balance After 40: What Changes and What You Can Do',
+    category: 'Functional Medicine',
+    date: 'May 22, 2026',
+    duration: '9:12',
+    excerpt: 'Oestrogen, testosterone, thyroid and insulin all shift as we age. Understanding these changes and working with them — rather than against them — is the cornerstone of healthy ageing.',
+    thumbnail: 'https://img.youtube.com/vi/TmFKNTKfFTk/maxresdefault.jpg',
+    videoId: 'TmFKNTKfFTk',
+  },
+  {
+    id: 'b9',
+    title: 'Movement as Medicine: Why Exercise Prescriptions Are the Future',
+    category: 'Lifestyle',
+    date: 'May 15, 2026',
+    duration: '5:09',
+    excerpt: 'Exercise is the most evidence-backed intervention in preventive medicine. We explore how personalised movement prescriptions are transforming patient outcomes across chronic conditions.',
+    thumbnail: 'https://img.youtube.com/vi/aXItOY0sLRY/maxresdefault.jpg',
+    videoId: 'aXItOY0sLRY',
+  },
+];
+
+const PATIENT_STORIES = [
+  {
+    id: 'ps1',
+    name: 'Amara Mensah',
+    condition: 'Type 2 Diabetes Reversal',
+    quote: `After years of medication, I was told my diabetes was "manageable but not reversible." Six months into the programme, my HbA1c is normal and I'm off two medications.`,
+    image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&q=80',
+  },
+  {
+    id: 'ps2',
+    name: 'Kofi Asante',
+    condition: 'Chronic Fatigue & Brain Fog',
+    quote: `I'd spent three years feeling exhausted despite sleeping 9 hours a night. The team identified a gut dysbiosis and nutrient deficiencies I never knew I had. I feel like myself again.`,
+    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80',
+  },
+  {
+    id: 'ps3',
+    name: 'Efua Boateng',
+    condition: 'Autoimmune Thyroiditis',
+    quote: 'Conventional doctors kept adjusting my levothyroxine dose but never asked why my immune system was attacking my thyroid. Here they actually looked for the root cause — and found it.',
+    image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80',
+  },
+  {
+    id: 'ps4',
+    name: 'Kwame Osei',
+    condition: 'Cardiovascular Risk Reduction',
+    quote: `My cardiologist said my numbers were "borderline" and to come back in a year. The functional medicine team ran a deeper panel, found the real risk factors, and built a plan. Two years on, I'm thriving.`,
+    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80',
+  },
+];
+
+const BLOG_PAGE_SIZE = 6;
+
+// ─── Blog Page Component ──────────────────────────────────────────────────────
+function BlogPage({ isUserDarkMode, isPhoneScreen, isTabletScreen }) {
+  const bg        = isUserDarkMode ? darkPalette.background   : palette.background;
+  const surface   = isUserDarkMode ? darkPalette.surface      : palette.surface;
+  const charcoal  = isUserDarkMode ? darkPalette.charcoal     : palette.charcoal;
+  const green     = isUserDarkMode ? darkPalette.oxblood      : palette.oxblood;
+  const greenSoft = isUserDarkMode ? darkPalette.secondary    : palette.secondary;
+  const border    = isUserDarkMode ? darkPalette.border       : palette.border;
+
+  const [blogSearch, setBlogSearch]           = useState('');
+  const [visibleCount, setVisibleCount]       = useState(BLOG_PAGE_SIZE);
+  const [expandedStory, setExpandedStory]     = useState(null);
+  const [activeVideo, setActiveVideo]         = useState(null); // post object or null
+
+  const filtered = BLOG_POSTS.filter(p =>
+    p.title.toLowerCase().includes(blogSearch.toLowerCase())
+  );
+  const visible  = filtered.slice(0, visibleCount);
+  const hasMore  = visibleCount < filtered.length;
+
+  // Reset pagination when search changes
+  useEffect(() => {
+    setVisibleCount(BLOG_PAGE_SIZE);
+  }, [blogSearch]);
+
+  const cols = isPhoneScreen ? 1 : isTabletScreen ? 2 : 3;
+
+  return (
+    <ScrollView
+      style={{ flex: 1, backgroundColor: bg }}
+      contentContainerStyle={{ paddingBottom: 80 }}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* ── Page header ── */}
+      <View style={{
+        paddingHorizontal: isPhoneScreen ? 16 : 40,
+        paddingTop: isPhoneScreen ? 28 : 48,
+        paddingBottom: 24,
+        borderBottomWidth: 1,
+        borderBottomColor: border,
+      }}>
+        <Text style={{
+          fontSize: isPhoneScreen ? 26 : 36,
+          fontWeight: '700',
+          fontFamily: 'Georgia',
+          color: green,
+          marginBottom: 6,
+        }}>Blog & Insights</Text>
+        <Text style={{
+          fontSize: isPhoneScreen ? 14 : 16,
+          color: greenSoft,
+          marginBottom: 20,
+          lineHeight: 22,
+        }}>Evidence-based video content on functional medicine, nutrition, metabolic health and more.</Text>
+
+        {/* ── Search bar ── */}
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: surface,
+          borderWidth: 1,
+          borderColor: border,
+          borderRadius: 10,
+          paddingHorizontal: 14,
+          paddingVertical: isPhoneScreen ? 10 : 12,
+          maxWidth: 520,
+        }}>
+          <FontAwesome name="search" size={16} color={greenSoft} style={{ marginRight: 10 }} />
+          <TextInput
+            value={blogSearch}
+            onChangeText={setBlogSearch}
+            placeholder="Search videos by title…"
+            placeholderTextColor={isUserDarkMode ? '#666' : '#aaa'}
+            style={{
+              flex: 1,
+              fontSize: 15,
+              color: charcoal,
+              outlineStyle: 'none',   // web: remove focus ring (react-native-web)
+            }}
+            clearButtonMode="while-editing"
+            accessibilityLabel="Search blog posts"
+          />
+          {blogSearch.length > 0 && (
+            <Pressable onPress={() => setBlogSearch('')} style={{ padding: 4 }}>
+              <FontAwesome name="times-circle" size={16} color={greenSoft} />
+            </Pressable>
+          )}
+        </View>
+      </View>
+
+      {/* ── Blog posts grid ── */}
+      <View style={{
+        paddingHorizontal: isPhoneScreen ? 16 : 40,
+        paddingTop: 32,
+      }}>
+        {filtered.length === 0 ? (
+          <View style={{ alignItems: 'center', paddingVertical: 60 }}>
+            <FontAwesome name="search" size={36} color={border} style={{ marginBottom: 14 }} />
+            <Text style={{ fontSize: 18, fontWeight: '600', color: charcoal, marginBottom: 6 }}>No videos found</Text>
+            <Text style={{ fontSize: 14, color: greenSoft }}>Try a different search term.</Text>
+          </View>
+        ) : (
+          <>
+            {/* Responsive grid using rows */}
+            {Array.from({ length: Math.ceil(visible.length / cols) }).map((_, rowIdx) => (
+              <View
+                key={rowIdx}
+                style={{ flexDirection: 'row', gap: 20, marginBottom: 20 }}
+              >
+                {visible.slice(rowIdx * cols, rowIdx * cols + cols).map((post) => (
+                  <BlogCard
+                    key={post.id}
+                    post={post}
+                    flex={1}
+                    isUserDarkMode={isUserDarkMode}
+                    surface={surface}
+                    charcoal={charcoal}
+                    green={green}
+                    greenSoft={greenSoft}
+                    border={border}
+                    isPhoneScreen={isPhoneScreen}
+                    onPlay={() => setActiveVideo(post)}
+                  />
+                ))}
+                {/* Fill empty cells in last row */}
+                {visible.slice(rowIdx * cols, rowIdx * cols + cols).length < cols &&
+                  Array.from({ length: cols - visible.slice(rowIdx * cols, rowIdx * cols + cols).length }).map((_, fi) => (
+                    <View key={'fill-' + fi} style={{ flex: 1 }} />
+                  ))
+                }
+              </View>
+            ))}
+
+            {/* ── Load More / result count ── */}
+            <View style={{ alignItems: 'center', paddingVertical: 24, gap: 8 }}>
+              <Text style={{ fontSize: 13, color: greenSoft }}>
+                Showing {visible.length} of {filtered.length} video{filtered.length !== 1 ? 's' : ''}
+              </Text>
+              {hasMore && (
+                <Pressable
+                  onPress={() => setVisibleCount(v => v + BLOG_PAGE_SIZE)}
+                  style={({ pressed }) => ({
+                    backgroundColor: pressed ? '#1e5010' : green,
+                    paddingVertical: 12,
+                    paddingHorizontal: 32,
+                    borderRadius: 8,
+                    marginTop: 6,
+                  })}
+                  accessibilityRole="button"
+                  accessibilityLabel="Load more videos"
+                >
+                  <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14, letterSpacing: 0.5 }}>
+                    Load More
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          </>
+        )}
+      </View>
+
+      {/* ── Video lightbox ── */}
+      <Modal
+        visible={activeVideo !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setActiveVideo(null)}
+      >
+        <Pressable
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.88)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: isPhoneScreen ? 0 : 24,
+          }}
+          onPress={() => setActiveVideo(null)}
+        >
+          {/* Inner card — stop propagation so tapping inside doesn't close */}
+          <Pressable
+            onPress={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: 860,
+              backgroundColor: '#000',
+              borderRadius: isPhoneScreen ? 0 : 16,
+              overflow: 'hidden',
+            }}
+          >
+            {/* Header bar */}
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              backgroundColor: '#111',
+            }}>
+              <Text style={{
+                color: '#fff',
+                fontSize: isPhoneScreen ? 13 : 15,
+                fontWeight: '600',
+                flex: 1,
+                marginRight: 12,
+              }} numberOfLines={1}>{activeVideo?.title}</Text>
+              <Pressable
+                onPress={() => setActiveVideo(null)}
+                style={{ padding: 6 }}
+                accessibilityRole="button"
+                accessibilityLabel="Close video"
+              >
+                <FontAwesome name="times" size={20} color="#fff" />
+              </Pressable>
+            </View>
+
+            {/* Responsive 16:9 iframe container */}
+            <View style={{ width: '100%', aspectRatio: 16 / 9 }}>
+              {activeVideo && Platform.OS === 'web' && (
+                // react-native-web renders unknown tags to the DOM — use an
+                // iframe element directly via the web-only "as" prop trick
+                <View style={{ flex: 1 }}>
+                  {React.createElement('iframe', {
+                    src: `https://www.youtube.com/embed/${activeVideo.videoId}?autoplay=1&rel=0&modestbranding=1`,
+                    style: {
+                      width: '100%',
+                      height: '100%',
+                      border: 'none',
+                    },
+                    allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
+                    allowFullScreen: true,
+                    title: activeVideo.title,
+                  })}
+                </View>
+              )}
+            </View>
+
+            {/* Footer meta */}
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 12,
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              backgroundColor: '#111',
+            }}>
+              <View style={{
+                backgroundColor: '#1a3a0f',
+                paddingHorizontal: 10,
+                paddingVertical: 3,
+                borderRadius: 20,
+              }}>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: '#6db84a' }}>{activeVideo?.category}</Text>
+              </View>
+              <FontAwesome name="clock-o" size={12} color="#888" />
+              <Text style={{ fontSize: 12, color: '#888' }}>{activeVideo?.duration}</Text>
+              <Text style={{ fontSize: 12, color: '#666', marginLeft: 'auto' }}>{activeVideo?.date}</Text>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* ── Patient Stories section ── */}
+      <View style={{
+        marginTop: 16,
+        paddingTop: 40,
+        paddingBottom: 40,
+        paddingHorizontal: isPhoneScreen ? 16 : 40,
+        backgroundColor: isUserDarkMode ? darkPalette.surface : '#eef5e8',
+        borderTopWidth: 1,
+        borderTopColor: border,
+      }}>
+        <Text style={{
+          fontSize: isPhoneScreen ? 22 : 30,
+          fontWeight: '700',
+          fontFamily: 'Georgia',
+          color: green,
+          marginBottom: 6,
+        }}>Patient Stories</Text>
+        <Text style={{
+          fontSize: isPhoneScreen ? 13 : 15,
+          color: greenSoft,
+          marginBottom: 28,
+          lineHeight: 22,
+        }}>Real experiences from patients whose lives have been transformed through functional medicine.</Text>
+
+        <View style={{ gap: 20 }}>
+          {Array.from({ length: Math.ceil(PATIENT_STORIES.length / (isPhoneScreen ? 1 : 2)) }).map((_, rowIdx) => {
+            const rowCols = isPhoneScreen ? 1 : 2;
+            const rowItems = PATIENT_STORIES.slice(rowIdx * rowCols, rowIdx * rowCols + rowCols);
+            return (
+              <View key={rowIdx} style={{ flexDirection: 'row', gap: 20 }}>
+                {rowItems.map((story) => (
+                  <PatientStoryCard
+                    key={story.id}
+                    story={story}
+                    isUserDarkMode={isUserDarkMode}
+                    surface={surface}
+                    charcoal={charcoal}
+                    green={green}
+                    greenSoft={greenSoft}
+                    border={border}
+                    isPhoneScreen={isPhoneScreen}
+                    expanded={expandedStory === story.id}
+                    onToggle={() => setExpandedStory(id => id === story.id ? null : story.id)}
+                  />
+                ))}
+                {rowItems.length < (isPhoneScreen ? 1 : 2) && (
+                  <View style={{ flex: 1 }} />
+                )}
+              </View>
+            );
+          })}
+        </View>
+      </View>
+    </ScrollView>
+  );
+}
+
+// ─── Blog Video Card ──────────────────────────────────────────────────────────
+function BlogCard({ post, flex, isUserDarkMode, surface, charcoal, green, greenSoft, border, isPhoneScreen, onPlay }) {
+  const scaleAnim  = useRef(new Animated.Value(1)).current;
+  const overlayAnim = useRef(new Animated.Value(0)).current;
+
+  const scaleTo   = (v) => Animated.spring(scaleAnim,  { toValue: v, useNativeDriver: true, friction: 7, tension: 80 }).start();
+  const overlayTo = (v) => Animated.timing(overlayAnim, { toValue: v, duration: 180, useNativeDriver: true }).start();
+
+  const thumbnailHeight = isPhoneScreen ? 180 : 200;
+
+  return (
+    <Pressable
+      style={{ flex }}
+      onHoverIn={() => { scaleTo(1.02); overlayTo(1); }}
+      onHoverOut={() => { scaleTo(1); overlayTo(0); }}
+      onMouseEnter={() => { scaleTo(1.02); overlayTo(1); }}
+      onMouseLeave={() => { scaleTo(1); overlayTo(0); }}
+      onPressIn={() => scaleTo(0.97)}
+      onPressOut={() => scaleTo(1)}
+      onPress={onPlay}
+      accessibilityRole="button"
+      accessibilityLabel={'Watch video: ' + post.title}
+    >
+      <Animated.View style={{
+        flex: 1,
+        backgroundColor: surface,
+        borderRadius: 14,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: border,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: isUserDarkMode ? 0.3 : 0.07,
+        shadowRadius: 8,
+        transform: [{ scale: scaleAnim }],
+      }}>
+
+        {/* ── Thumbnail with play overlay ── */}
+        <View style={{ width: '100%', height: thumbnailHeight }}>
+          <Image
+            source={{ uri: post.thumbnail }}
+            style={{ width: '100%', height: thumbnailHeight }}
+            resizeMode="cover"
+          />
+
+          {/* Dark hover tint */}
+          <Animated.View style={{
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.25)',
+            opacity: overlayAnim,
+          }} />
+
+          {/* Play button circle */}
+          <Animated.View style={{
+            position: 'absolute',
+            top: '50%', left: '50%',
+            marginTop: -26, marginLeft: -26,
+            width: 52, height: 52,
+            borderRadius: 26,
+            backgroundColor: 'rgba(255,255,255,0.92)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.25,
+            shadowRadius: 6,
+            transform: [{
+              scale: overlayAnim.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] }),
+            }],
+          }}>
+            {/* Offset by 2px right to optically centre the triangle */}
+            <FontAwesome name="play" size={18} color={green} style={{ marginLeft: 3 }} />
+          </Animated.View>
+
+          {/* Duration badge — bottom-right */}
+          <View style={{
+            position: 'absolute', bottom: 8, right: 8,
+            backgroundColor: 'rgba(0,0,0,0.72)',
+            paddingHorizontal: 7, paddingVertical: 3,
+            borderRadius: 5,
+            flexDirection: 'row', alignItems: 'center', gap: 4,
+          }}>
+            <FontAwesome name="clock-o" size={10} color="#fff" />
+            <Text style={{ fontSize: 11, color: '#fff', fontWeight: '600' }}>{post.duration}</Text>
+          </View>
+        </View>
+
+        {/* ── Card body ── */}
+        <View style={{ padding: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <View style={{
+              backgroundColor: isUserDarkMode ? '#1a3a0f' : '#e8f5e9',
+              paddingHorizontal: 10,
+              paddingVertical: 3,
+              borderRadius: 20,
+            }}>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: green }}>{post.category}</Text>
+            </View>
+          </View>
+          <Text style={{
+            fontSize: isPhoneScreen ? 15 : 16,
+            fontWeight: '700',
+            color: charcoal,
+            marginBottom: 8,
+            lineHeight: 22,
+          }} numberOfLines={2}>{post.title}</Text>
+          <Text style={{
+            fontSize: 13,
+            color: greenSoft,
+            lineHeight: 19,
+            marginBottom: 14,
+          }} numberOfLines={3}>{post.excerpt}</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={{ fontSize: 12, color: isUserDarkMode ? '#555' : '#999' }}>{post.date}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <FontAwesome name="play-circle" size={13} color={green} />
+              <Text style={{ fontSize: 13, fontWeight: '600', color: green }}>Watch now</Text>
+            </View>
+          </View>
+        </View>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+// ─── Patient Story Card ───────────────────────────────────────────────────────
+function PatientStoryCard({ story, isUserDarkMode, surface, charcoal, green, greenSoft, border, isPhoneScreen, expanded, onToggle }) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const scaleTo = (v) => Animated.spring(scaleAnim, { toValue: v, useNativeDriver: true, friction: 7, tension: 80 }).start();
+
+  return (
+    <Animated.View style={{
+      flex: 1,
+      backgroundColor: surface,
+      borderRadius: 16,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: border,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: isUserDarkMode ? 0.3 : 0.08,
+      shadowRadius: 10,
+      transform: [{ scale: scaleAnim }],
+    }}>
+      <View style={{ flexDirection: isPhoneScreen ? 'column' : 'row', alignItems: isPhoneScreen ? 'center' : 'flex-start', padding: 20, gap: 16 }}>
+        <Image
+          source={{ uri: story.image }}
+          style={{
+            width: 72, height: 72,
+            borderRadius: 36,
+            borderWidth: 3,
+            borderColor: green,
+          }}
+          resizeMode="cover"
+        />
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 16, fontWeight: '700', color: charcoal, marginBottom: 2 }}>{story.name}</Text>
+          <View style={{
+            alignSelf: 'flex-start',
+            backgroundColor: isUserDarkMode ? '#1a3a0f' : '#e8f5e9',
+            paddingHorizontal: 10,
+            paddingVertical: 3,
+            borderRadius: 20,
+            marginBottom: 10,
+          }}>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: green }}>{story.condition}</Text>
+          </View>
+          <Text style={{
+            fontSize: 14,
+            color: greenSoft,
+            lineHeight: 21,
+            fontStyle: 'italic',
+          }} numberOfLines={expanded ? undefined : 3}>
+            "{story.quote}"
+          </Text>
+        </View>
+      </View>
+      <Pressable
+        onPress={onToggle}
+        onHoverIn={() => scaleTo(1.01)}
+        onHoverOut={() => scaleTo(1)}
+        onMouseEnter={() => scaleTo(1.01)}
+        onMouseLeave={() => scaleTo(1)}
+        onPressIn={() => scaleTo(0.99)}
+        onPressOut={() => scaleTo(1)}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 6,
+          paddingVertical: 12,
+          borderTopWidth: 1,
+          borderTopColor: border,
+          backgroundColor: isUserDarkMode ? '#1a3a0f' : '#f4faf0',
+        }}
+        accessibilityRole="button"
+        accessibilityLabel={expanded ? 'Collapse story' : 'Read full story of ' + story.name}
+      >
+        <Text style={{ fontSize: 13, fontWeight: '600', color: green }}>
+          {expanded ? 'Show less' : 'Read full story'}
+        </Text>
+        <FontAwesome name={expanded ? 'chevron-up' : 'chevron-down'} size={12} color={green} />
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ─── Hero Slider ─────────────────────────────────────────────────────────────
+// Props:
+//   slides      — array of { id, type:'image'|'video', uri, duration(ms) }
+//   maxCycles   — how many full loops before stopping on last slide (0 = infinite)
+//   height      — container height in px (default 510)
+//   onShopNow   — callback for SHOP NOW button
+//   onViewCart  — callback for VIEW CART button
+//   isPhone     — compact layout flag
+function HeroSlider({ slides, maxCycles = 0, height = 510, onShopNow, onViewCart, isPhone }) {
+  const [idx, setIdx]           = useState(0);
+  const [cycles, setCycles]     = useState(0);
+  const [stopped, setStopped]   = useState(false);
+  const fadeAnim                = useRef(new Animated.Value(1)).current;
+  const timerRef                = useRef(null);
+  const videoRef                = useRef(null);
+
+  const total = slides.length;
+
+  const advance = (nextIdx) => {
+    // Fade out → swap → fade in
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 400,
+      useNativeDriver: true,
+    }).start(() => {
+      setIdx(nextIdx);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
+  const goNext = () => {
+    clearTimer();
+    const next = (idx + 1) % total;
+    const newCycles = next === 0 ? cycles + 1 : cycles;
+    if (maxCycles > 0 && next === 0 && newCycles >= maxCycles) {
+      advance(total - 1);
+      setStopped(true);
+      setCycles(newCycles);
+      return;
+    }
+    setCycles(newCycles);
+    advance(next);
+  };
+
+  const goPrev = () => {
+    clearTimer();
+    advance((idx - 1 + total) % total);
+  };
+
+  const goTo = (i) => {
+    clearTimer();
+    advance(i);
+  };
+
+  const clearTimer = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  // Schedule next slide after current slide's duration
+  useEffect(() => {
+    if (stopped) return;
+    const slide = slides[idx];
+    timerRef.current = setTimeout(() => {
+      const next = (idx + 1) % total;
+      const newCycles = next === 0 ? cycles + 1 : cycles;
+      if (maxCycles > 0 && next === 0 && newCycles >= maxCycles) {
+        // Stop on last slide
+        advance(total - 1);
+        setStopped(true);
+        setCycles(newCycles);
+        return;
+      }
+      setCycles(newCycles);
+      advance(next);
+    }, slide.duration);
+
+    return () => clearTimer();
+  }, [idx, stopped]);
+
+  const slide = slides[idx];
+
+  return (
+    <View style={{ height, margin: 16, backgroundColor: '#1b1b1b', overflow: 'hidden', justifyContent: 'flex-end' }}>
+
+      {/* ── Slides layer ── */}
+      <Animated.View style={{ ...StyleSheet.absoluteFillObject, opacity: fadeAnim }}>
+        {slide.type === 'video' && Platform.OS === 'web' ? (
+          // Web video via DOM element — autoplay, muted, loops within its display duration
+          <View style={StyleSheet.absoluteFillObject}>
+            {React.createElement('video', {
+              key: slide.id,
+              ref: videoRef,
+              src: slide.uri,
+              autoPlay: true,
+              muted: true,
+              loop: true,
+              playsInline: true,
+              style: {
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: 0.72,
+              },
+            })}
+          </View>
+        ) : (
+          <Image
+            source={{ uri: slide.uri }}
+            style={{ ...StyleSheet.absoluteFillObject, width: '100%', height: '100%', opacity: 0.72 }}
+            resizeMode="cover"
+          />
+        )}
+        {/* Dark overlay */}
+        <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(20,0,0,0.38)' }} />
+      </Animated.View>
+
+      {/* ── Hero text ── */}
+      <View style={{ padding: isPhone ? 16 : 20, zIndex: 2 }}>
+        <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, letterSpacing: 2, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase' }}>Prolyn Wear</Text>
+        <Text style={{ color: '#fff', fontSize: isPhone ? 22 : 34, fontWeight: '800', fontFamily: 'Georgia', lineHeight: isPhone ? 28 : 42, marginBottom: 10 }}>
+          Step Into Style,{'\n'}Walk in Confidence.
+        </Text>
+        <Text style={{ color: 'rgba(255,255,255,0.82)', fontSize: isPhone ? 13 : 15, lineHeight: 22, marginBottom: 20 }}>
+          Premium footwear for every occasion.
+        </Text>
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <Pressable
+            onPress={onShopNow}
+            style={({ pressed }) => ({ backgroundColor: pressed ? '#1e5010' : '#296416', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 6 })}
+          >
+            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 12, letterSpacing: 1.5 }}>SHOP NOW</Text>
+          </Pressable>
+          <Pressable
+            onPress={onViewCart}
+            style={({ pressed }) => ({ borderWidth: 1.5, borderColor: '#fff', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 6, backgroundColor: pressed ? 'rgba(255,255,255,0.15)' : 'transparent' })}
+          >
+            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 12, letterSpacing: 1.5 }}>VIEW CART</Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* ── Prev / Next arrows ── */}
+      <Pressable
+        onPress={goPrev}
+        style={{ position: 'absolute', left: 12, top: '50%', marginTop: -20, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.42)', justifyContent: 'center', alignItems: 'center', zIndex: 10 }}
+        accessibilityRole="button" accessibilityLabel="Previous slide"
+      >
+        <FontAwesome name="chevron-left" size={14} color="#fff" />
+      </Pressable>
+      <Pressable
+        onPress={goNext}
+        style={{ position: 'absolute', right: 12, top: '50%', marginTop: -20, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.42)', justifyContent: 'center', alignItems: 'center', zIndex: 10 }}
+        accessibilityRole="button" accessibilityLabel="Next slide"
+      >
+        <FontAwesome name="chevron-right" size={14} color="#fff" />
+      </Pressable>
+
+      {/* ── Dot indicators ── */}
+      <View style={{ position: 'absolute', bottom: 16, width: '100%', flexDirection: 'row', justifyContent: 'center', gap: 6, zIndex: 10 }}>
+        {slides.map((s, i) => (
+          <Pressable key={s.id} onPress={() => goTo(i)} accessibilityRole="button" accessibilityLabel={`Go to slide ${i + 1}`}>
+            <View style={{
+              width: i === idx ? 24 : 8,
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: i === idx ? '#fff' : 'rgba(255,255,255,0.4)',
+            }} />
+          </Pressable>
+        ))}
+      </View>
+
+      {/* ── Slide type badge (video indicator) ── */}
+      {slide.type === 'video' && (
+        <View style={{ position: 'absolute', top: 14, right: 14, flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, zIndex: 10 }}>
+          <FontAwesome name="play-circle" size={12} color="#fff" />
+          <Text style={{ color: '#fff', fontSize: 11, fontWeight: '600' }}>VIDEO</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function App() {
   const [activeCategory, setActiveCategory] = useState('All');
@@ -2014,29 +2939,55 @@ const fetchFooterData = async () => {
 
   useEffect(() => {
 
-    const timer = setInterval(() => {
+    // Legacy auto-advance removed — HeroSlider component manages its own timer
 
-      setCurrentHeroSlide((prev) => (prev + 1) % 4);
-
-    }, 4000);
-
-    return () => clearInterval(timer);
+    return () => {};
 
   }, []);
 
 
 
-  const HERO_IMAGES = [
-
-    'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80',
-
-    'https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9ff?auto=format&fit=crop&w=1200&q=80',
-
-    'https://images.unsplash.com/photo-1543163521-1bf539e0cf6d?auto=format&fit=crop&w=1200&q=80',
-
-    'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=1200&q=80'
-
+  const HERO_SLIDES = [
+    {
+      id: 's1',
+      type: 'image',
+      uri: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80',
+      duration: 4000,
+    },
+    {
+      id: 's2',
+      type: 'video',
+      uri: 'https://videos.pexels.com/video-files/3994841/3994841-uhd_2560_1440_25fps.mp4',
+      duration: 8000,
+    },
+    {
+      id: 's3',
+      type: 'image',
+      uri: 'https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9ff?auto=format&fit=crop&w=1200&q=80',
+      duration: 4000,
+    },
+    {
+      id: 's4',
+      type: 'video',
+      uri: 'https://videos.pexels.com/video-files/5698481/5698481-uhd_2560_1440_24fps.mp4',
+      duration: 7000,
+    },
+    {
+      id: 's5',
+      type: 'image',
+      uri: 'https://images.unsplash.com/photo-1543163521-1bf539e0cf6d?auto=format&fit=crop&w=1200&q=80',
+      duration: 4000,
+    },
+    {
+      id: 's6',
+      type: 'image',
+      uri: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=1200&q=80',
+      duration: 4000,
+    },
   ];
+
+  // Keep legacy HERO_IMAGES in sync for any other references
+  const HERO_IMAGES = HERO_SLIDES.map(s => s.uri);
 
 
 
@@ -3596,13 +4547,13 @@ const fetchFooterData = async () => {
 
   const MIN_CARD = 160;
 
-  const GAP = 8;
+  const GAP = 12;
 
-  const PADDING = 8;
+  const PADDING = width < 600 ? 12 : width < 980 ? 20 : 32;
 
   const availableWidth = width - (PADDING * 2);
 
-  const columnCount = 2; // 👈 hardcode this — no Math, no logic
+  const columnCount = width < 600 ? 2 : width < 980 ? 3 : 4;
 
   const cardWidth = (availableWidth - (GAP * (columnCount - 1))) / columnCount;
 
@@ -3612,7 +4563,11 @@ const fetchFooterData = async () => {
 
   const isPhoneScreen = width < 600;
 
+  const isTabletScreen = width >= 600 && width < 980;
+
   const isMobileOrTablet = width <= 1400;
+
+  const isCompactShareMenu = width < 1100;
 
   const formatCurrency = (amount) => formatMoney(amount, currency);
 
@@ -3657,6 +4612,8 @@ const fetchFooterData = async () => {
   const isAboutPage = currentPage === 'about';
 
   const isContactPage = currentPage === 'contact';
+
+  const isBlogsPage = currentPage === 'blogs';
 
   
 
@@ -4198,6 +5155,36 @@ const fetchFooterData = async () => {
 
 
 
+  const shareButtonEl = (
+    <Pressable
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: isUserDarkMode ? darkPalette.oxblood : palette.oxblood,
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+      onPress={toggleShareMenu}
+      accessibilityRole="button"
+      accessibilityLabel={isShareMenuOpen ? 'Close social links' : 'Open social links'}
+    >
+      <FontAwesome name="share-alt" size={18} color="#fff" />
+    </Pressable>
+  );
+
+  const shareIconEls = SOCIAL_BADGES.map((badge) => (
+    <AnimatedSocialIconBadge
+      key={badge.iconName + badge.url}
+      onPress={() => Linking.openURL(badge.url)}
+      backgroundColor={badge.backgroundColor}
+      iconName={badge.iconName}
+      iconSize={isCompactShareMenu ? 16 : 16}
+      size={isCompactShareMenu ? 36 : 36}
+      style={{ marginRight: 0 }}
+    />
+  ));
+
   return (
 
     <SafeAreaView style={[styles.safeArea, { backgroundColor: isUserDarkMode ? darkPalette.background : palette.background }]}>
@@ -4256,6 +5243,8 @@ const fetchFooterData = async () => {
             </View>
 
             <View style={styles.headerRight}>
+
+              {shareButtonEl}
 
               {isShopPage && (
 
@@ -4683,89 +5672,35 @@ const fetchFooterData = async () => {
 
             <View style={styles.headerRight}>
 
-              <View style={{ flexDirection: 'row', alignItems: 'center', zIndex: 10000 }}>
-                <Pressable
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 20,
-                    backgroundColor: isUserDarkMode ? darkPalette.oxblood : palette.oxblood,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginRight: 8
-                  }}
-                  onPress={toggleShareMenu}
-                >
-                  <FontAwesome name="share-alt" size={18} color="#fff" />
-                </Pressable>
+              <View style={{ flexDirection: 'row', alignItems: 'center', zIndex: 10000, marginRight: 8 }}>
+                {shareButtonEl}
 
-                <Animated.View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingVertical: 8,
-                    opacity: shareMenuAnim,
-                    transform: [{
-                      translateX: shareMenuAnim.interpolate({
+                {!isCompactShareMenu && (
+                  <Animated.View
+                    pointerEvents={isShareMenuOpen ? 'auto' : 'none'}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingVertical: 8,
+                      paddingLeft: 8,
+                      gap: 8,
+                      opacity: shareMenuAnim,
+                      transform: [{
+                        translateX: shareMenuAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [-20, 0]
+                        })
+                      }],
+                      overflow: 'hidden',
+                      maxWidth: shareMenuAnim.interpolate({
                         inputRange: [0, 1],
-                        outputRange: [-20, 0]
+                        outputRange: [0, 420]
                       })
-                    }],
-                    overflow: 'hidden',
-                    maxWidth: shareMenuAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, 400]
-                    })
-                  }}
-                >
-                  <AnimatedSocialIconBadge
-                    onPress={() => Linking.openURL('https://facebook.com')}
-                    backgroundColor="#1877F2"
-                    iconName="facebook"
-                  />
-
-                  <AnimatedSocialIconBadge
-                    onPress={() => Linking.openURL('https://instagram.com')}
-                    backgroundColor="#E4405F"
-                    iconName="instagram"
-                  />
-
-                  <AnimatedSocialIconBadge
-                    onPress={() => Linking.openURL('https://twitter.com')}
-                    backgroundColor="#000"
-                    iconName="twitter"
-                  />
-
-                  <AnimatedSocialIconBadge
-                    onPress={() => Linking.openURL('https://linkedin.com')}
-                    backgroundColor="#0077B5"
-                    iconName="linkedin"
-                  />
-
-                  <AnimatedSocialIconBadge
-                    onPress={() => Linking.openURL('https://youtube.com')}
-                    backgroundColor="#FF0000"
-                    iconName="youtube"
-                  />
-
-                  <AnimatedSocialIconBadge
-                    onPress={() => Linking.openURL('https://tiktok.com')}
-                    backgroundColor="#000"
-                    iconName="music"
-                  />
-
-                  <AnimatedSocialIconBadge
-                    onPress={() => Linking.openURL('https://wa.me/233591008897')}
-                    backgroundColor="#25D366"
-                    iconName="whatsapp"
-                  />
-
-                  <AnimatedSocialIconBadge
-                    onPress={() => Linking.openURL('https://t.me')}
-                    backgroundColor="#0088cc"
-                    iconName="telegram"
-                  />
-                </Animated.View>
+                    }}
+                  >
+                    {shareIconEls}
+                  </Animated.View>
+                )}
               </View>
 
               {isShopPage && (
@@ -4818,7 +5753,45 @@ const fetchFooterData = async () => {
 
       </View>
 
-
+      {isCompactShareMenu && isShareMenuOpen && (
+        <Animated.View
+          pointerEvents="auto"
+          style={{
+            position: 'absolute',
+            top: 68,
+            right: isPhoneScreen ? 12 : 20,
+            zIndex: 10002,
+            maxWidth: Math.min(width - 24, isPhoneScreen ? 220 : 248),
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            gap: 10,
+            paddingVertical: 10,
+            paddingHorizontal: 10,
+            borderRadius: 28,
+            backgroundColor: isUserDarkMode ? darkPalette.surface : '#ffffff',
+            borderWidth: 1,
+            borderColor: isUserDarkMode ? '#333' : 'rgba(27, 28, 28, 0.08)',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.18,
+            shadowRadius: 16,
+            elevation: 16,
+            opacity: shareMenuAnim,
+            transform: [
+              {
+                translateY: shareMenuAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-8, 0],
+                }),
+              },
+            ],
+          }}
+        >
+          {shareIconEls}
+        </Animated.View>
+      )}
 
       {/* Mobile Menu */}
 
@@ -5020,7 +5993,7 @@ const fetchFooterData = async () => {
 
 
 
-              <Pressable style={styles.mobileMenuItem} onPress={() => { setMobileMenuVisible(false); alert('Blogs coming soon'); }}>
+              <Pressable style={styles.mobileMenuItem} onPress={() => { setMobileMenuVisible(false); setCurrentPage('blogs'); }}>
 
                 <Text style={[styles.mobileMenuItemText, { color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal }]}>Blogs</Text>
 
@@ -5034,31 +6007,19 @@ const fetchFooterData = async () => {
 
 
 
-              <View style={styles.mobileSocialIcons}>
+              <View style={[styles.mobileSocialIcons, { flexWrap: 'wrap', gap: 14 }]}>
 
-                <Pressable onPress={() => Linking.openURL('https://facebook.com')}>
-
-                  <FontAwesome5 name="facebook-f" size={20} color={isUserDarkMode ? darkPalette.secondary : palette.secondary} />
-
-                </Pressable>
-
-                <Pressable onPress={() => Linking.openURL('https://instagram.com')}>
-
-                  <FontAwesome5 name="instagram" size={20} color={isUserDarkMode ? darkPalette.secondary : palette.secondary} />
-
-                </Pressable>
-
-                <Pressable onPress={() => Linking.openURL('https://twitter.com')}>
-
-                  <FontAwesome5 name="twitter" size={20} color={isUserDarkMode ? darkPalette.secondary : palette.secondary} />
-
-                </Pressable>
-
-                <Pressable onPress={() => Linking.openURL('https://linkedin.com')}>
-
-                  <FontAwesome5 name="linkedin-in" size={20} color={isUserDarkMode ? darkPalette.secondary : palette.secondary} />
-
-                </Pressable>
+                {SOCIAL_BADGES.map((badge) => (
+                  <AnimatedSocialIconBadge
+                    key={badge.iconName + badge.url}
+                    onPress={() => Linking.openURL(badge.url)}
+                    backgroundColor={badge.backgroundColor}
+                    iconName={badge.iconName}
+                    iconSize={18}
+                    size={40}
+                    style={{ marginRight: 0 }}
+                  />
+                ))}
 
               </View>
 
@@ -8113,14 +9074,25 @@ const fetchFooterData = async () => {
 
       ) : isContactPage ? (
 
-        <View style={{ flex: 1, flexDirection: 'row' }}>
+        <View style={{ flex: 1, width: '100%', overflow: 'hidden' }}>
 
-          <ScrollView contentContainerStyle={{ padding: 40 }} showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
+          <ScrollView
+            contentContainerStyle={{
+              paddingHorizontal: isPhoneScreen ? 16 : isTabletScreen ? 24 : 40,
+              paddingTop: isPhoneScreen ? 20 : 32,
+              paddingBottom: 64,
+              width: '100%',
+              maxWidth: 1180,
+              alignSelf: 'center',
+            }}
+            showsVerticalScrollIndicator={false}
+            style={{ flex: 1, width: '100%' }}
+          >
 
-            <View style={{ maxWidth: 600, alignSelf: 'center', width: '100%' }}>
+            <View style={{ maxWidth: isPhoneScreen ? '100%' : 640, alignSelf: 'center', width: '100%' }}>
 
               <Text style={{ 
-                fontSize: 32, 
+                fontSize: isPhoneScreen ? 24 : isTabletScreen ? 28 : 32, 
                 fontWeight: '700', 
                 color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
                 marginBottom: 8,
@@ -8128,13 +9100,15 @@ const fetchFooterData = async () => {
               }}>Contact Us</Text>
 
               <Text style={{ 
-                fontSize: 16, 
+                fontSize: isPhoneScreen ? 14 : 16, 
                 color: isUserDarkMode ? darkPalette.secondary : palette.secondary,
-                marginBottom: 32,
-                textAlign: 'center'
+                marginBottom: isPhoneScreen ? 24 : 32,
+                textAlign: 'center',
+                lineHeight: isPhoneScreen ? 20 : 24,
+                paddingHorizontal: isPhoneScreen ? 4 : 0,
               }}>We'd love to hear from you. Send us a message and we'll respond as soon as possible.</Text>
 
-              <View style={{ marginBottom: 20 }}>
+              <View style={{ marginBottom: 20, width: '100%' }}>
                 <Text style={{ 
                   fontSize: 14, 
                   fontWeight: '600',
@@ -8146,10 +9120,13 @@ const fetchFooterData = async () => {
                     borderWidth: 1,
                     borderColor: isUserDarkMode ? '#333' : '#e0e0e0',
                     borderRadius: 8,
-                    padding: 12,
-                    fontSize: 16,
+                    paddingVertical: isPhoneScreen ? 10 : 12,
+                    paddingHorizontal: 12,
+                    fontSize: isPhoneScreen ? 15 : 16,
                     color: isUserDarkMode ? '#fff' : '#000',
-                    backgroundColor: isUserDarkMode ? darkPalette.surface : '#fff'
+                    backgroundColor: isUserDarkMode ? darkPalette.surface : '#fff',
+                    width: '100%',
+                    maxWidth: '100%',
                   }}
                   placeholder="Enter your name"
                   placeholderTextColor={isUserDarkMode ? '#888' : '#888'}
@@ -8158,7 +9135,7 @@ const fetchFooterData = async () => {
                 />
               </View>
 
-              <View style={{ marginBottom: 20 }}>
+              <View style={{ marginBottom: 20, width: '100%' }}>
                 <Text style={{ 
                   fontSize: 14, 
                   fontWeight: '600',
@@ -8170,10 +9147,13 @@ const fetchFooterData = async () => {
                     borderWidth: 1,
                     borderColor: isUserDarkMode ? '#333' : '#e0e0e0',
                     borderRadius: 8,
-                    padding: 12,
-                    fontSize: 16,
+                    paddingVertical: isPhoneScreen ? 10 : 12,
+                    paddingHorizontal: 12,
+                    fontSize: isPhoneScreen ? 15 : 16,
                     color: isUserDarkMode ? '#fff' : '#000',
-                    backgroundColor: isUserDarkMode ? darkPalette.surface : '#fff'
+                    backgroundColor: isUserDarkMode ? darkPalette.surface : '#fff',
+                    width: '100%',
+                    maxWidth: '100%',
                   }}
                   placeholder="Enter your email"
                   placeholderTextColor={isUserDarkMode ? '#888' : '#888'}
@@ -8184,7 +9164,7 @@ const fetchFooterData = async () => {
                 />
               </View>
 
-              <View style={{ marginBottom: 20 }}>
+              <View style={{ marginBottom: 20, width: '100%' }}>
                 <Text style={{ 
                   fontSize: 14, 
                   fontWeight: '600',
@@ -8196,10 +9176,13 @@ const fetchFooterData = async () => {
                     borderWidth: 1,
                     borderColor: isUserDarkMode ? '#333' : '#e0e0e0',
                     borderRadius: 8,
-                    padding: 12,
-                    fontSize: 16,
+                    paddingVertical: isPhoneScreen ? 10 : 12,
+                    paddingHorizontal: 12,
+                    fontSize: isPhoneScreen ? 15 : 16,
                     color: isUserDarkMode ? '#fff' : '#000',
-                    backgroundColor: isUserDarkMode ? darkPalette.surface : '#fff'
+                    backgroundColor: isUserDarkMode ? darkPalette.surface : '#fff',
+                    width: '100%',
+                    maxWidth: '100%',
                   }}
                   placeholder="Enter your phone number"
                   placeholderTextColor={isUserDarkMode ? '#888' : '#888'}
@@ -8209,7 +9192,7 @@ const fetchFooterData = async () => {
                 />
               </View>
 
-              <View style={{ marginBottom: 24 }}>
+              <View style={{ marginBottom: 24, width: '100%' }}>
                 <Text style={{ 
                   fontSize: 14, 
                   fontWeight: '600',
@@ -8221,12 +9204,15 @@ const fetchFooterData = async () => {
                     borderWidth: 1,
                     borderColor: isUserDarkMode ? '#333' : '#e0e0e0',
                     borderRadius: 8,
-                    padding: 12,
-                    fontSize: 16,
+                    paddingVertical: isPhoneScreen ? 10 : 12,
+                    paddingHorizontal: 12,
+                    fontSize: isPhoneScreen ? 15 : 16,
                     color: isUserDarkMode ? '#fff' : '#000',
                     backgroundColor: isUserDarkMode ? darkPalette.surface : '#fff',
-                    minHeight: 120,
-                    textAlignVertical: 'top'
+                    minHeight: isPhoneScreen ? 110 : 120,
+                    textAlignVertical: 'top',
+                    width: '100%',
+                    maxWidth: '100%',
                   }}
                   placeholder="Enter your message"
                   placeholderTextColor={isUserDarkMode ? '#888' : '#888'}
@@ -8240,18 +9226,22 @@ const fetchFooterData = async () => {
               <Pressable
                 style={{
                   backgroundColor: '#008000',
-                  paddingVertical: 14,
+                  paddingVertical: isPhoneScreen ? 12 : 14,
                   paddingHorizontal: 32,
                   borderRadius: 8,
                   alignItems: 'center',
-                  marginBottom: 40
+                  justifyContent: 'center',
+                  marginBottom: isPhoneScreen ? 32 : 40,
+                  width: '100%',
+                  maxWidth: isPhoneScreen ? '100%' : 280,
+                  alignSelf: isPhoneScreen ? 'stretch' : 'center',
                 }}
                 onPress={() => {
                   alert('Thank you for your message! We will get back to you soon.');
                   setContactForm({ name: '', email: '', phone: '', message: '' });
                 }}
               >
-                <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Submit</Text>
+                <Text style={{ color: '#fff', fontSize: isPhoneScreen ? 15 : 16, fontWeight: '600' }}>Submit</Text>
               </Pressable>
 
             </View>
@@ -8260,98 +9250,28 @@ const fetchFooterData = async () => {
 
           </ScrollView>
 
-          <View style={{ 
-            position: 'fixed',
-            right: 20,
-            top: '50%',
-            transform: [{ translateY: -200 }],
-            flexDirection: 'column',
-            gap: 12,
-            zIndex: 1000
-          }}>
-            {SOCIAL_BADGES.map((badge) => (
-              <AnimatedSocialIconBadge
-                key={badge.iconName + badge.url}
-                onPress={() => Linking.openURL(badge.url)}
-                backgroundColor={badge.backgroundColor}
-                iconName={badge.iconName}
-                iconSize={24}
-                size={48}
-                style={{
-                  marginRight: 0,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.25,
-                  shadowRadius: 4,
-                  elevation: 5,
-                }}
-              />
-            ))}
-          </View>
-
         </View>
+
+      ) : isBlogsPage ? (
+
+        <BlogPage
+          isUserDarkMode={isUserDarkMode}
+          isPhoneScreen={isPhoneScreen}
+          isTabletScreen={isTabletScreen}
+        />
 
       ) : isShopPage ? (
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-          <View style={styles.hero}>
-
-          <Image
-
-            source={{ uri: HERO_IMAGES[currentHeroSlide] }}
-
-            style={styles.heroImage}
-
+          <HeroSlider
+            slides={HERO_SLIDES}
+            maxCycles={0}
+            height={isPhoneScreen ? 380 : 510}
+            onShopNow={() => setCurrentPage('home')}
+            onViewCart={openCart}
+            isPhone={isPhoneScreen}
           />
-
-          <View style={styles.heroOverlay} />
-
-          <Animated.View style={[styles.heroTextWrap, { opacity: reveal, transform: [{ translateY: lift }] }]}>
-
-            <Text style={styles.kicker}>Prolyn Wear</Text>
-
-            <Text style={styles.heroTitle}>Step Into Style,{`\n`}Walk in Confidence.</Text>
-
-            <Text style={styles.heroBody}>
-
-              Premium footwear for every occasion. Discover the finest collection of
-
-              shoes, sneakers and sandals — proudly available at Prolyn Wear.
-
-            </Text>
-
-            <View style={styles.heroActionsRow}>
-
-              <Pressable style={styles.heroBtn} onPress={() => setCurrentPage('home')}>
-
-                <Text style={styles.heroBtnText}>SHOP NOW</Text>
-
-              </Pressable>
-
-              <Pressable style={styles.heroOutlineBtn} onPress={openCart}>
-
-                <Text style={styles.heroOutlineBtnText}>VIEW CART</Text>
-
-              </Pressable>
-
-            </View>
-
-          </Animated.View>
-
-
-
-          <View style={{position: 'absolute', bottom: 24, width: '100%', flexDirection: 'row', justifyContent: 'center', gap: 8}}>
-
-            {HERO_IMAGES.map((_, i) => (
-
-              <View key={i} style={{width: i === currentHeroSlide ? 24 : 8, height: 8, borderRadius: 4, backgroundColor: i === currentHeroSlide ? '#fff' : 'rgba(255,255,255,0.4)', transition: 'all 0.3s ease'}} />
-
-            ))}
-
-          </View>
-
-        </View>
 
 
 
@@ -8513,9 +9433,13 @@ const fetchFooterData = async () => {
 
                 paddingHorizontal: 12,
 
-                paddingVertical: 12,
+                height: 42,
 
-                borderRadius: 4,
+                borderRadius: 8,
+
+                justifyContent: 'center',
+
+                alignItems: 'center',
 
               }}
 
@@ -8533,7 +9457,7 @@ const fetchFooterData = async () => {
 
 
 
-        <View style={[styles.productGrid, { paddingHorizontal: 0, rowGap: 0, columnGap: 0, paddingBottom: 200 }]}>
+        <View style={[styles.productGrid, { paddingHorizontal: PADDING, rowGap: GAP, columnGap: GAP, paddingBottom: 200 }]}>
 
           {filteredCategories.map((category) => (
 
@@ -11289,6 +12213,9 @@ const fetchFooterData = async () => {
 
       />
 
+      {/* Floating social column — desktop/tablet only, fixed to right edge, hidden on Shop/Services/About/Blogs pages */}
+      {!isPhoneScreen && !['shop', 'services', 'about', 'blogs'].includes(currentPage) && <FloatingSocialColumn />}
+
     </SafeAreaView>
 
   );
@@ -11328,6 +12255,8 @@ const styles = StyleSheet.create({
     zIndex: 1000,
 
     elevation: 1000,
+
+    overflow: 'visible',
 
   },
 
@@ -11370,6 +12299,8 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
 
     gap: 12,
+
+    overflow: 'visible',
 
   },
 
@@ -11573,9 +12504,13 @@ const styles = StyleSheet.create({
 
     justifyContent: 'center',
 
-    gap: 24,
+    flexWrap: 'wrap',
 
-    paddingVertical: 32,
+    gap: 14,
+
+    paddingVertical: 24,
+
+    paddingHorizontal: 16,
 
     borderTopWidth: 1,
 
@@ -12129,21 +13064,19 @@ const styles = StyleSheet.create({
 
     flexDirection: 'column',
 
-    // Height = width * (5/4) so the card maintains its 4:5 portrait ratio.
-
-    // We drive this from explicit width passed as inline style instead of
-
-    // aspectRatio so flex children never hit sub-pixel rounding gaps.
-
+    // 4:5 portrait ratio — height = width × 1.25; capped so desktop cards
+    // don't produce enormous image areas with 4-column layout
     aspectRatio: 4 / 5,
+
+    maxHeight: 280,
 
   },
 
   productImage: {
 
-    width: '100%',
+    width: '90%',
 
-    height: '100%',
+    height: '90%',
 
   },
 
@@ -13405,7 +14338,9 @@ const styles = StyleSheet.create({
 
     paddingHorizontal: 16,
 
-    marginTop: 8,
+    marginTop: 12,
+
+    marginBottom: 8,
 
   },
 
@@ -13417,13 +14352,17 @@ const styles = StyleSheet.create({
 
     backgroundColor: '#FFFFFF',
 
+    borderRadius: 8,
+
     paddingHorizontal: 14,
 
-    paddingVertical: 12,
+    paddingVertical: 0,
+
+    height: 42,
 
     color: palette.charcoal,
 
-    fontSize: 15,
+    fontSize: 14,
 
   },
 
@@ -13471,7 +14410,9 @@ const styles = StyleSheet.create({
 
     right: 16,
 
-    bottom: 82,
+    bottom: 90,
+
+    zIndex: 500,
 
     backgroundColor: palette.vault,
 
@@ -13479,15 +14420,27 @@ const styles = StyleSheet.create({
 
     borderColor: 'rgba(255,255,255,0.1)',
 
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
 
-    paddingVertical: 13,
+    paddingVertical: 14,
 
     flexDirection: 'row',
 
     alignItems: 'center',
 
     justifyContent: 'space-between',
+
+    borderRadius: 10,
+
+    shadowColor: '#000',
+
+    shadowOffset: { width: 0, height: 4 },
+
+    shadowOpacity: 0.18,
+
+    shadowRadius: 12,
+
+    elevation: 8,
 
   },
 
@@ -13529,7 +14482,7 @@ const styles = StyleSheet.create({
 
   checkoutLabel: {
 
-    color: '#888989',
+    color: 'rgba(255,255,255,0.6)',
 
     fontSize: 10,
 
@@ -13537,15 +14490,15 @@ const styles = StyleSheet.create({
 
     fontWeight: '700',
 
+    marginBottom: 3,
+
   },
 
   checkoutText: {
 
     color: '#fff',
 
-    fontSize: 18,
-
-    marginTop: 2,
+    fontSize: 17,
 
     fontWeight: '600',
 
@@ -13555,15 +14508,17 @@ const styles = StyleSheet.create({
 
     backgroundColor: '#ad7a32',
 
-    paddingHorizontal: 14,
+    paddingHorizontal: 18,
 
-    paddingVertical: 9,
+    paddingVertical: 11,
+
+    borderRadius: 8,
 
   },
 
   checkoutBtnText: {
 
-    color: palette.oxblood,
+    color: '#ffffff',
 
     letterSpacing: 1.2,
 
@@ -13655,7 +14610,7 @@ const styles = StyleSheet.create({
 
     justifyContent: 'space-around',
 
-    paddingVertical: 12,
+    height: 72,
 
     paddingHorizontal: 16,
 

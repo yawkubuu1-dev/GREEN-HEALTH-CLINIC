@@ -1,5 +1,5 @@
 /**
- * WhatsApp Helper Functions for Osebo-Shoes Delivery
+ * WhatsApp Helper Functions for Prolyn Wear Delivery
  * 
  * Functions to send delivery information to drivers via WhatsApp
  */
@@ -40,7 +40,7 @@ export const formatDeliveryMessage = (order, deliveryInfo) => {
     : `https://maps.google.com/search?q=${encodeURIComponent(address)}`;
 
   // Build message
-  const message = `🚚 *NEW DELIVERY - Osebo-Shoes*
+  const message = `🚚 *NEW DELIVERY - Prolyn Wear*
 
 📦 *Order:* #${String(orderId).slice(0, 8).toUpperCase()}
 👤 *Customer:* ${customer_name}
@@ -62,7 +62,7 @@ ${itemsList || '• Items listed in order'}
 ⏱️ *Est. Time:* ${estimatedTime ? `${estimatedTime} min` : 'Calculating...'}
 
 🏪 *Pickup from:*
-Osebo-Shoes Store
+Prolyn Wear Store
 Osu, Accra
 
 _Please confirm receipt by replying "Received"_`;

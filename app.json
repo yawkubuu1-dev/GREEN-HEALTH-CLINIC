@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "Osebo-Shoes",
-    "slug": "osebo-shoes",
+    "name": "Prolyn Wear",
+    "slug": "prolyn-wear",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "scheme": "osebo-shoes",
+    "scheme": "prolyn-wear",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -14,15 +14,15 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.osebo.shoes",
+      "bundleIdentifier": "com.prolyn.wear",
       "buildNumber": "1",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "Allow Osebo-Shoes to access your photos.",
-        "NSCameraUsageDescription": "Allow Osebo-Shoes to use your camera."
+        "NSPhotoLibraryUsageDescription": "Allow Prolyn Wear to access your photos.",
+        "NSCameraUsageDescription": "Allow Prolyn Wear to use your camera."
       }
     },
     "android": {
-      "package": "com.osebo.shoes",
+      "package": "com.prolyn.wear",
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#4A0404",
@@ -39,9 +39,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "name": "Osebo-Shoes",
-      "shortName": "Osebo",
-      "description": "Premium footwear for every occasion. Shop the finest shoes, sneakers and sandals at Osebo-Shoes."
+      "name": "Prolyn Wear",
+      "shortName": "Prolyn",
+      "description": "Premium footwear for every occasion. Shop the finest shoes, sneakers and sandals at Prolyn Wear."
     },
     "extra": {
       "eas": {

@@ -11,7 +11,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import MapComponent from './MapComponent';
 
 /**
- * StoreLocator Component - Find Osebo-Shoes Store Locations
+ * StoreLocator Component - Find Prolyn Wear Store Locations
  * 
  * This component provides a complete store locator experience with:
  * - Interactive map showing all store locations
@@ -29,17 +29,17 @@ const StoreLocator = ({ onClose }) => {
   const stores = [
     {
       id: 1,
-      name: 'Osebo-Shoes Main Store',
+      name: 'Prolyn Wear Main Store',
       lat: 5.6037,
       lng: -0.1870,
       address: 'Oxford Street, Osu, Accra',
       phone: '+233 XX XXX XXXX',
       hours: 'Mon-Sat: 9AM-8PM, Sun: 10AM-6PM',
-      description: 'Visit our flagship store for the full Osebo-Shoes experience',
+      description: 'Visit our flagship store for the full Prolyn Wear experience',
     },
     {
       id: 2,
-      name: 'Osebo-Shoes Osu Branch',
+      name: 'Prolyn Wear Osu Branch',
       lat: 5.5560,
       lng: -0.1969,
       address: 'Ring Road Central, Accra',
@@ -49,7 +49,7 @@ const StoreLocator = ({ onClose }) => {
     },
     {
       id: 3,
-      name: 'Osebo-Shoes Mall Branch',
+      name: 'Prolyn Wear Mall Branch',
       lat: 5.6537,
       lng: -0.1658,
       address: 'Accra Mall, Spintex Road',

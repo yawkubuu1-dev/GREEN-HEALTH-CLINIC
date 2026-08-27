@@ -41,19 +41,43 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
   const { width, height } = useWindowDimensions();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [selectedWeight, setSelectedWeight] = useState('US 9');
+  const [selectedWeight, setSelectedWeight] = useState('M');
   const [showQuantityControls, setShowQuantityControls] = useState(false);
   const scrollViewRef = useRef(null);
 
+  const allSizeOptions = [
+    { label: 'S', measurement: '36-38', stockKey: 'stock_s' },
+    { label: 'M', measurement: '38-40', stockKey: 'stock_m' },
+    { label: 'L', measurement: '40-42', stockKey: 'stock_l' },
+    { label: 'XL', measurement: '42-44', stockKey: 'stock_xl' },
+    { label: 'XXL', measurement: '44-46', stockKey: 'stock_xxl' }
+  ];
+
+  // Show only sizes with stock > 0
+  const sizeOptions = allSizeOptions
+    .map(option => {
+      const stock = product?.[option.stockKey] ?? 0;
+      return {
+        ...option,
+        stock: stock
+      };
+    })
+    .filter(option => option.stock > 0);
+
+  // Set default selected size to first available size, or M if all sizes are available
+  const defaultSelectedSize = sizeOptions.length > 0 ? sizeOptions[0].label : 'M';
+
   // Reset state when product changes or modal opens/closes
   useEffect(() => {
+    console.log('useEffect triggered', { visible, productId: product?.id });
     if (visible && product) {
-      const defaultWeight = 'US 9';
       // Check if this product (with selected weight) is already in cart
       const cartItem = cartItems.find(
-        (item) => item.id === product.id && item.selectedWeight === (product.hasWeights ? defaultWeight : 'unit')
+        (item) => item.id === product.id && item.selectedWeight === (product.hasSizes ? defaultSelectedSize : 'unit')
       );
-      
+
+      console.log('Cart item check', { cartItem: !!cartItem, productName: product.name });
+
       if (cartItem) {
         // Product is in cart - show quantity controls with cart quantity
         setShowQuantityControls(true);
@@ -63,18 +87,18 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
         setShowQuantityControls(false);
         setQuantity(1);
       }
-      
+
       // Reset other states
       setSelectedImageIndex(0);
-      setSelectedWeight(defaultWeight);
+      setSelectedWeight(defaultSelectedSize);
     }
-  }, [visible, product?.id, cartItems]); // Also watch cartItems for updates
+  }, [visible, product?.id, defaultSelectedSize]); // Watch visible, product ID, and default selected size
 
   // Update quantity when weight/size changes
   useEffect(() => {
     if (visible && product) {
       const cartItem = cartItems.find(
-        (item) => item.id === product.id && item.selectedWeight === (product.hasWeights ? selectedWeight : 'unit')
+        (item) => item.id === product.id && item.selectedWeight === (product.hasSizes ? selectedWeight : 'unit')
       );
       
       if (cartItem) {
@@ -88,13 +112,16 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
     }
   }, [selectedWeight]); // Watch for weight changes
 
-  // Calculate current price based on weight selection - MUST be before early return
+  // Calculate current price based on size selection - MUST be before early return
   const currentPrice = useMemo(() => {
     if (!product) return 0;
-    if (!product.hasWeights) return product.price || 0;
-    if (selectedWeight === 'US 7') return product.price_250g || 0;
-    if (selectedWeight === 'US 8') return product.price_500g || 0;
-    return product.price_1kg || 0;
+    if (!product.hasSizes) return product.price || 0;
+    if (selectedWeight === 'S') return product.price_s || 0;
+    if (selectedWeight === 'M') return product.price_m || 0;
+    if (selectedWeight === 'L') return product.price_l || 0;
+    if (selectedWeight === 'XL') return product.price_xl || 0;
+    if (selectedWeight === 'XXL') return product.price_xxl || 0;
+    return product.price || 0;
   }, [selectedWeight, product]);
 
   const totalPrice = currentPrice * quantity;
@@ -124,11 +151,9 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
     
     console.log('🎨 Final images array:', finalImages);
     console.log('📊 Total images to display:', finalImages.length);
-    
+
     return finalImages;
   }, [product]);
-
-  const weightOptions = ['US 7', 'US 8', 'US 9', 'US 10', 'US 11'];
 
   // Early return AFTER all hooks
   if (!product) return null;
@@ -175,12 +200,18 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
   };
 
   const handleAddToCartClick = () => {
-    if (product.stock_quantity === 0) {
-      Alert.alert('Out of Stock', 'This product is currently unavailable');
+    // Check stock for the selected size
+    const stockKey = `stock_${selectedWeight.toLowerCase()}`;
+    const stockForSize = product?.[stockKey] || 0;
+
+    console.log('Add to Cart clicked', { product: product?.name, size: selectedWeight, stock: stockForSize });
+    if (stockForSize === 0) {
+      Alert.alert('Out of Stock', `Size ${selectedWeight} is currently unavailable`);
       return;
     }
     setShowQuantityControls(true);
     setQuantity(1); // Start with quantity 1
+    console.log('Quantity controls shown');
   };
 
   return (
@@ -321,41 +352,60 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
                 </View>
               )}
 
-              {/* Weight Selection (if applicable) */}
+              {/* Size Selection (if applicable) */}
               {product.hasWeights && (
                 <View style={styles.weightSelectionContainer}>
-                  <Text style={[styles.sectionTitle, { color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal }]}>Select Size</Text>
+                  <View style={styles.sizeHeaderRow}>
+                    <Text style={[styles.sectionTitle, { color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal }]}>Select Size</Text>
+                    <Pressable style={[styles.sizeGuideButton, isUserDarkMode && styles.sizeGuideButtonDark]} onPress={() => Alert.alert('Size Guide', 'S: 36-38\nM: 38-40\nL: 40-42\nXL: 42-44\nXXL: 44-46')}>
+                      <FontAwesome name="ruler" size={16} color={isUserDarkMode ? darkPalette.oxblood : palette.oxblood} />
+                      <Text style={[styles.sizeGuideText, { color: isUserDarkMode ? darkPalette.oxblood : palette.oxblood }]}>Size Guide</Text>
+                    </Pressable>
+                  </View>
                   <View style={styles.weightOptionsRow}>
-                    {weightOptions.map((option) => {
-                      const active = option === selectedWeight;
+                    {sizeOptions.map((option) => {
+                      const active = option.label === selectedWeight;
+                      const isOutOfStock = option.stock === 0;
                       return (
                         <Pressable
-                          key={option}
-                          onPress={() => setSelectedWeight(option)}
+                          key={option.label}
+                          onPress={() => !isOutOfStock && setSelectedWeight(option.label)}
                           style={[
-                            styles.weightOption, 
+                            styles.weightOption,
                             active && styles.weightOptionActive,
-                            !active && isUserDarkMode && {
+                            isOutOfStock && styles.weightOptionOutOfStock,
+                            !active && !isOutOfStock && isUserDarkMode && {
                               borderColor: '#444',
                               backgroundColor: darkPalette.surface
                             }
                           ]}
+                          disabled={isOutOfStock}
                         >
                           <Text style={[
-                            styles.weightOptionText, 
+                            styles.weightOptionLabel,
                             active && styles.weightOptionTextActive,
-                            !active && isUserDarkMode && { color: darkPalette.secondary }
+                            isOutOfStock && styles.weightOptionTextOutOfStock,
+                            !active && !isOutOfStock && isUserDarkMode && { color: darkPalette.secondary }
                           ]}>
-                            {option}
+                            {option.label}
                           </Text>
+                          <Text style={[
+                            styles.weightOptionMeasurement,
+                            active && styles.weightOptionTextActive,
+                            isOutOfStock && styles.weightOptionTextOutOfStock,
+                            !active && !isOutOfStock && isUserDarkMode && { color: darkPalette.secondary }
+                          ]}>
+                            {option.measurement}
+                          </Text>
+                          {isOutOfStock && (
+                            <Text style={styles.outOfStockText}>Out of Stock</Text>
+                          )}
                         </Pressable>
                       );
                     })}
                   </View>
                   <Text style={[styles.pricePerUnit, { color: isUserDarkMode ? darkPalette.secondary : palette.secondary }]}>
-                    {selectedWeight === 'US 7' && 'Price for 250g'}
-                    {selectedWeight === 'US 8' && 'Price for 500g'}
-                    {(selectedWeight === 'US 9' || selectedWeight === 'US 10' || selectedWeight === 'US 11') && 'Price for 1kg'}
+                    Price for size {selectedWeight}
                   </Text>
                 </View>
               )}
@@ -369,17 +419,26 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
                   <Pressable
                     style={[
                       styles.initialAddToCartButton,
-                      product.stock_quantity === 0 && styles.initialAddToCartButtonDisabled,
+                      (() => {
+                        const stockKey = `stock_${selectedWeight.toLowerCase()}`;
+                        const stockForSize = product?.[stockKey] || 0;
+                        return stockForSize === 0 && styles.initialAddToCartButtonDisabled;
+                      })(),
                       { backgroundColor: isUserDarkMode ? darkPalette.oxblood : palette.oxblood }
                     ]}
                     onPress={handleAddToCartClick}
-                    disabled={product.stock_quantity === 0}
+                    disabled={() => {
+                      const stockKey = `stock_${selectedWeight.toLowerCase()}`;
+                      return (product?.[stockKey] || 0) === 0;
+                    }}
                   >
                     <FontAwesome name="shopping-cart" size={18} color="#FFF" />
                     <Text style={styles.initialAddToCartText}>
-                      {product.stock_quantity === 0
-                        ? 'Out of Stock' 
-                        : 'Add to Cart'}
+                      {(() => {
+                        const stockKey = `stock_${selectedWeight.toLowerCase()}`;
+                        const stockForSize = product?.[stockKey] || 0;
+                        return stockForSize === 0 ? 'Out of Stock' : 'Add to Cart';
+                      })()}
                     </Text>
                   </Pressable>
                 ) : (
@@ -434,6 +493,21 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
             </View>
           </ScrollView>
 
+          {/* Cart Info Bar */}
+          {cartItems.length > 0 && (
+            <View style={[styles.cartInfoBar, {
+              backgroundColor: isUserDarkMode ? darkPalette.vault : '#1B1C1C',
+            }]}>
+              <View>
+                <Text style={styles.cartInfoLabel}>CART</Text>
+                <Text style={styles.cartInfoCount}>{cartItems.length} {cartItems.length === 1 ? 'item' : 'items'}</Text>
+              </View>
+              <Pressable style={styles.viewCartBtn} onPress={() => onClose()}>
+                <Text style={styles.viewCartText}>VIEW CART</Text>
+              </Pressable>
+            </View>
+          )}
+
           {/* Add to Cart Button */}
           <View style={[styles.footer, {
             backgroundColor: isUserDarkMode ? darkPalette.surface : palette.surface,
@@ -442,61 +516,78 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
             <Pressable
               style={[
                 styles.addToCartButton,
-                (!showQuantityControls || product.stock_quantity === 0) && styles.addToCartButtonDisabled,
+                (() => {
+                  const stockKey = `stock_${selectedWeight.toLowerCase()}`;
+                  const stockForSize = product?.[stockKey] || 0;
+                  return (!showQuantityControls || stockForSize === 0) && styles.addToCartButtonDisabled;
+                })(),
                 { backgroundColor: isUserDarkMode ? darkPalette.oxblood : palette.oxblood }
               ]}
               onPress={() => {
+                const stockKey = `stock_${selectedWeight.toLowerCase()}`;
+                const stockForSize = product?.[stockKey] || 0;
+                console.log('Footer Add to Cart pressed', { showQuantityControls, size: selectedWeight, stock: stockForSize });
                 if (!showQuantityControls) {
                   Alert.alert('Select Quantity', 'Please click "Add to Cart" button first to select quantity');
                   return;
                 }
-                if (product.stock_quantity === 0) {
-                  Alert.alert('Out of Stock', 'This product is currently unavailable');
+                if (stockForSize === 0) {
+                  Alert.alert('Out of Stock', `Size ${selectedWeight} is currently unavailable`);
                   return;
                 }
-                
+
                 // Check if item is already in cart (for display message only)
                 const existingCartItem = cartItems.find(
-                  (item) => item.id === product.id && item.selectedWeight === (product.hasWeights ? selectedWeight : 'unit')
+                  (item) => item.id === product.id && item.selectedWeight === (product.hasSizes ? selectedWeight : 'unit')
                 );
-                
+
                 // Ensure product has image field (might be in product_images array)
                 const productWithImage = {
                   ...product,
                   image: product.image || product.product_images?.[0]?.url || product.product_images?.[0]?.image_url || 'https://via.placeholder.com/600x600?text=No+Image'
                 };
-                
+
+                console.log('Calling onSetCartQuantity', {
+                  product: product.name,
+                  selectedWeight,
+                  currentPrice,
+                  quantity
+                });
+
                 // ALWAYS use setCartQuantity - SET the quantity to what's displayed
                 // Never add to existing - always replace with the displayed quantity
                 onSetCartQuantity?.(productWithImage, product.hasWeights ? selectedWeight : 'unit', currentPrice, quantity);
-                
+
                 // Show success feedback
                 Alert.alert(
-                  existingCartItem ? 'Cart Updated' : 'Added to Cart', 
-                  existingCartItem 
+                  existingCartItem ? 'Cart Updated' : 'Added to Cart',
+                  existingCartItem
                     ? `${product.name} quantity updated to ${quantity}`
                     : `${quantity} × ${product.name} added to your cart`,
                   [{ text: 'OK' }]
                 );
-                
+
                 onClose(); // useEffect will reset state when modal closes
               }}
-              disabled={!showQuantityControls || product.stock_quantity === 0}
+              disabled={() => {
+                const stockKey = `stock_${selectedWeight.toLowerCase()}`;
+                return !showQuantityControls || (product?.[stockKey] || 0) === 0;
+              }}
             >
               <FontAwesome name="shopping-cart" size={20} color="#FFF" />
               <Text style={styles.addToCartText}>
-                {product.stock_quantity === 0
-                  ? 'Out of Stock' 
-                  : !showQuantityControls
-                    ? 'Select Quantity First'
-                    : (() => {
-                        const existingCartItem = cartItems.find(
-                          (item) => item.id === product.id && item.selectedWeight === (product.hasWeights ? selectedWeight : 'unit')
-                        );
-                        return existingCartItem 
-                          ? `Update Cart (${quantity}) • GHC ${totalPrice.toFixed(2)}`
-                          : `Add ${quantity} to Cart • GHC ${totalPrice.toFixed(2)}`;
-                      })()}
+                {(() => {
+                  const stockKey = `stock_${selectedWeight.toLowerCase()}`;
+                  const stockForSize = product?.[stockKey] || 0;
+                  if (stockForSize === 0) return 'Out of Stock';
+                  if (!showQuantityControls) return 'Select Quantity First';
+                  const existingCartItem = cartItems.find(
+                    (item) => item.id === product.id && item.selectedWeight === (product.hasSizes ? selectedWeight : 'unit')
+                  );
+                  return existingCartItem
+                    ? `Update Cart (${quantity}) • GHC ${totalPrice.toFixed(2)}`
+                    : `Add ${quantity} to Cart • GHC ${totalPrice.toFixed(2)}`;
+                })()}
               </Text>
             </Pressable>
           </View>
@@ -680,25 +771,79 @@ const styles = StyleSheet.create({
   weightSelectionContainer: {
     marginBottom: 20,
   },
+  sizeHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sizeGuideButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    borderRadius: 20,
+  },
+  sizeGuideButtonDark: {
+    borderColor: '#444',
+  },
+  sizeGuideText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
   weightOptionsRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
     marginTop: 8,
   },
   weightOption: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+    borderRadius: 12,
     borderWidth: 2,
     borderColor: '#E5E5E5',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: palette.surface,
+    minHeight: 70,
   },
   weightOptionActive: {
     borderColor: palette.oxblood,
     backgroundColor: palette.oxblood,
+    shadowColor: palette.oxblood,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  weightOptionOutOfStock: {
+    opacity: 0.5,
+    backgroundColor: '#F0F0F0',
+    borderColor: '#D0D0D0',
+  },
+  weightOptionLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: palette.charcoal,
+  },
+  weightOptionTextOutOfStock: {
+    color: '#999999',
+  },
+  weightOptionMeasurement: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: palette.secondary,
+    marginTop: 4,
+  },
+  outOfStockText: {
+    fontSize: 9,
+    fontWeight: '600',
+    color: '#FF0000',
+    marginTop: 2,
   },
   weightOptionText: {
     fontSize: 14,
@@ -786,6 +931,35 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: palette.oxblood,
+  },
+  cartInfoBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  cartInfoLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFF',
+    opacity: 0.7,
+  },
+  cartInfoCount: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFF',
+  },
+  viewCartBtn: {
+    backgroundColor: palette.oxblood,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  viewCartText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFF',
   },
   footer: {
     padding: 16,
