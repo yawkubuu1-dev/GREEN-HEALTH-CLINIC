@@ -1995,6 +1995,8 @@ export default function App() {
   const [activeAboutSection, setActiveAboutSection] = useState('our-story');
 
   const aboutScrollViewRef = useRef(null);
+  const isAboutScrollingProgrammatically = useRef(false);
+  const aboutChipBarHeight = useRef(116); // Will be measured dynamically
   const aboutSectionOffsets = useRef({ 'our-story': 0, 'our-team': 0, 'patient-stories': 0, 'blog-news': 0, 'vision-mission': 0 });
 
   const [contactForm, setContactForm] = useState({
@@ -9066,6 +9068,13 @@ const fetchFooterData = async () => {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
+              onLayout={(e) => {
+                const measuredHeight = e.nativeEvent.layout.height;
+                if (aboutChipBarHeight.current !== measuredHeight) {
+                  console.log(`[ABOUT] Chip bar height measured: ${measuredHeight}px`);
+                  aboutChipBarHeight.current = measuredHeight;
+                }
+              }}
               style={{
                 backgroundColor: isUserDarkMode ? darkPalette.surface : '#f0f4ee',
                 borderBottomWidth: 1,
@@ -9084,10 +9093,26 @@ const fetchFooterData = async () => {
                 <Pressable
                   key={item.key}
                   onPress={() => {
+                    console.log(`[ABOUT] Chip tapped: ${item.key}`);
+                    isAboutScrollingProgrammatically.current = true;
                     setActiveAboutSection(item.key);
-                    const STICKY_HEIGHT = 116;
+                    
+                    // Use dynamically measured chip bar height
+                    const STICKY_HEIGHT = aboutChipBarHeight.current;
                     const raw = aboutSectionOffsets.current[item.key] ?? 0;
-                    aboutScrollViewRef.current?.scrollTo({ y: Math.max(0, raw - STICKY_HEIGHT), animated: false });
+                    const targetY = Math.max(0, raw - STICKY_HEIGHT);
+                    console.log(`[ABOUT] Scrolling to ${item.key}: raw=${raw}, stickyHeight=${STICKY_HEIGHT}, target=${targetY}`);
+                    
+                    aboutScrollViewRef.current?.scrollTo({ 
+                      y: targetY, 
+                      animated: false 
+                    });
+                    
+                    // Longer timeout to ensure scroll completes
+                    setTimeout(() => { 
+                      console.log(`[ABOUT] Unlocking programmatic scroll flag for ${item.key}`);
+                      isAboutScrollingProgrammatically.current = false; 
+                    }, 500);
                   }}
                   style={{
                     paddingHorizontal: 14,
@@ -9145,8 +9170,10 @@ const fetchFooterData = async () => {
                     : 'transparent'
                 }}
                 onPress={() => {
+                  isAboutScrollingProgrammatically.current = true;
                   setActiveAboutSection('our-story');
                   aboutScrollViewRef.current?.scrollTo({ y: 0, animated: true });
+                  setTimeout(() => { isAboutScrollingProgrammatically.current = false; }, 300);
                 }}
               >
                 <Text style={{ 
@@ -9169,8 +9196,10 @@ const fetchFooterData = async () => {
                     : 'transparent'
                 }}
                 onPress={() => {
+                  isAboutScrollingProgrammatically.current = true;
                   setActiveAboutSection('our-team');
                   aboutScrollViewRef.current?.scrollTo({ y: 400, animated: true });
+                  setTimeout(() => { isAboutScrollingProgrammatically.current = false; }, 300);
                 }}
               >
                 <Text style={{ 
@@ -9193,8 +9222,10 @@ const fetchFooterData = async () => {
                     : 'transparent'
                 }}
                 onPress={() => {
+                  isAboutScrollingProgrammatically.current = true;
                   setActiveAboutSection('patient-stories');
                   aboutScrollViewRef.current?.scrollTo({ y: 800, animated: true });
+                  setTimeout(() => { isAboutScrollingProgrammatically.current = false; }, 300);
                 }}
               >
                 <Text style={{ 
@@ -9217,8 +9248,10 @@ const fetchFooterData = async () => {
                     : 'transparent'
                 }}
                 onPress={() => {
+                  isAboutScrollingProgrammatically.current = true;
                   setActiveAboutSection('blog-news');
                   aboutScrollViewRef.current?.scrollTo({ y: 1200, animated: true });
+                  setTimeout(() => { isAboutScrollingProgrammatically.current = false; }, 300);
                 }}
               >
                 <Text style={{ 
@@ -9241,8 +9274,10 @@ const fetchFooterData = async () => {
                     : 'transparent'
                 }}
                 onPress={() => {
+                  isAboutScrollingProgrammatically.current = true;
                   setActiveAboutSection('vision-mission');
                   aboutScrollViewRef.current?.scrollTo({ y: 1600, animated: true });
+                  setTimeout(() => { isAboutScrollingProgrammatically.current = false; }, 300);
                 }}
               >
                 <Text style={{ 
@@ -9264,21 +9299,37 @@ const fetchFooterData = async () => {
             contentContainerStyle={{ padding: isPhoneScreen ? 20 : 40 }} 
             showsVerticalScrollIndicator={false}
             bounces={false}
+            overScrollMode="never"
             onScroll={(event) => {
+              if (isAboutScrollingProgrammatically.current) {
+                console.log('[ABOUT] onScroll blocked - programmatic scroll in progress');
+                return;
+              }
               const offsetY = event.nativeEvent.contentOffset.y;
-              const STICKY_HEIGHT = isPhoneScreen ? 116 : 0;
+              const STICKY_HEIGHT = isPhoneScreen ? aboutChipBarHeight.current : 0;
               const offs = aboutSectionOffsets.current;
               const order = ['our-story','our-team','patient-stories','blog-news','vision-mission'];
               let active = order[0];
               for (const key of order) {
                 if ((offs[key] ?? 0) - STICKY_HEIGHT <= offsetY + 20) active = key;
               }
+              console.log(`[ABOUT] onScroll: offsetY=${offsetY.toFixed(1)}, calculated active=${active}`);
+              if (active !== activeAboutSection) {
+                console.log(`[ABOUT] Active section changing: ${activeAboutSection} -> ${active}`);
+              }
               setActiveAboutSection(active);
             }}
             scrollEventThrottle={100}
           >
 
-            <View style={{ marginBottom: 60 }} onLayout={e => { aboutSectionOffsets.current['our-story'] = e.nativeEvent.layout.y; }}>
+            <View style={{ marginBottom: 60 }} onLayout={e => { 
+              const newY = e.nativeEvent.layout.y;
+              const oldY = aboutSectionOffsets.current['our-story'];
+              if (oldY !== newY) {
+                console.log(`[ABOUT] our-story layout changed: ${oldY} -> ${newY}`);
+              }
+              aboutSectionOffsets.current['our-story'] = newY;
+            }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -9294,7 +9345,14 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View style={{ marginBottom: 60 }} onLayout={e => { aboutSectionOffsets.current['our-team'] = e.nativeEvent.layout.y; }}>
+            <View style={{ marginBottom: 60 }} onLayout={e => { 
+              const newY = e.nativeEvent.layout.y;
+              const oldY = aboutSectionOffsets.current['our-team'];
+              if (oldY !== newY) {
+                console.log(`[ABOUT] our-team layout changed: ${oldY} -> ${newY}`);
+              }
+              aboutSectionOffsets.current['our-team'] = newY;
+            }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -9310,7 +9368,14 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View style={{ marginBottom: 60 }} onLayout={e => { aboutSectionOffsets.current['patient-stories'] = e.nativeEvent.layout.y; }}>
+            <View style={{ marginBottom: 60 }} onLayout={e => { 
+              const newY = e.nativeEvent.layout.y;
+              const oldY = aboutSectionOffsets.current['patient-stories'];
+              if (oldY !== newY) {
+                console.log(`[ABOUT] patient-stories layout changed: ${oldY} -> ${newY}`);
+              }
+              aboutSectionOffsets.current['patient-stories'] = newY;
+            }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -9326,7 +9391,14 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View style={{ marginBottom: 60 }} onLayout={e => { aboutSectionOffsets.current['blog-news'] = e.nativeEvent.layout.y; }}>
+            <View style={{ marginBottom: 60 }} onLayout={e => { 
+              const newY = e.nativeEvent.layout.y;
+              const oldY = aboutSectionOffsets.current['blog-news'];
+              if (oldY !== newY) {
+                console.log(`[ABOUT] blog-news layout changed: ${oldY} -> ${newY}`);
+              }
+              aboutSectionOffsets.current['blog-news'] = newY;
+            }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -9342,7 +9414,14 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View style={{ marginBottom: 60 }} onLayout={e => { aboutSectionOffsets.current['vision-mission'] = e.nativeEvent.layout.y; }}>
+            <View style={{ marginBottom: 60 }} onLayout={e => { 
+              const newY = e.nativeEvent.layout.y;
+              const oldY = aboutSectionOffsets.current['vision-mission'];
+              if (oldY !== newY) {
+                console.log(`[ABOUT] vision-mission layout changed: ${oldY} -> ${newY}`);
+              }
+              aboutSectionOffsets.current['vision-mission'] = newY;
+            }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
