@@ -375,6 +375,30 @@ const mapProductRowToCard = (row, catNameToImageMap = {}, catIdToNameMap = {}) =
 
     product_images: row.product_images || [], // ✅ Add product_images array
 
+    // Medicine-specific fields
+
+    form: row.form ?? null,
+
+    dosage_strength: row.dosage_strength ?? null,
+
+    pack_sizes: row.pack_sizes ?? [],
+
+    requires_prescription: row.requires_prescription ?? false,
+
+    active_ingredient: row.active_ingredient ?? null,
+
+    manufacturer: row.manufacturer ?? null,
+
+    expiry_date: row.expiry_date ?? null,
+
+    storage_info: row.storage_info ?? null,
+
+    side_effects: row.side_effects ?? null,
+
+    contraindications: row.contraindications ?? null,
+
+    is_featured: row.is_featured ?? false,
+
   };
 
 };
@@ -639,11 +663,65 @@ function CategoryCard({ category, cardWidth, currency, onAddToCart, onRemoveFrom
 
         </View>
 
-          <Text style={[styles.priceUnit, { 
+          {/* Medicine-specific info: dosage & form */}
 
-            color: isUserDarkMode ? darkPalette.secondary : palette.secondary
+          {(category.dosage_strength || category.form) && (
 
-          }]}>{category.hasWeights ? 'Price per unit' : 'Price per unit'}</Text>
+            <Text style={{ 
+
+              fontSize: isPhone ? 11 : 13,
+
+              color: isUserDarkMode ? darkPalette.secondary : palette.secondary,
+
+              marginTop: 2
+
+            }}>
+
+              {category.dosage_strength}{category.dosage_strength && category.form ? ' • ' : ''}{category.form ? category.form.charAt(0).toUpperCase() + category.form.slice(1) : ''}
+
+            </Text>
+
+          )}
+
+          {/* Prescription requirement badge */}
+
+          {category.requires_prescription && (
+
+            <View style={{
+
+              backgroundColor: '#FFC107',
+
+              paddingHorizontal: isPhone ? 6 : 8,
+
+              paddingVertical: isPhone ? 2 : 3,
+
+              borderRadius: 3,
+
+              alignSelf: 'flex-start',
+
+              marginTop: 4
+
+            }}>
+
+              <Text style={{
+
+                color: '#000',
+
+                fontSize: isPhone ? 9 : 10,
+
+                fontWeight: '700',
+
+                letterSpacing: 0.5
+
+              }}>
+
+                ℞ PRESCRIPTION REQUIRED
+
+              </Text>
+
+            </View>
+
+          )}
 
           {/* Hide description on phone to save vertical space */}
 
@@ -1902,6 +1980,8 @@ export default function App() {
   const [activeServiceSection, setActiveServiceSection] = useState('functional-medicine');
 
   const servicesScrollViewRef = useRef(null);
+  const isServicesScrollingProgrammatically = useRef(false);
+  const servicesChipBarHeight = useRef(116); // Will be measured dynamically
   const sectionOffsets = useRef({ 'functional-medicine': 0, 'metabolic-health': 0, 'chronic-disease': 0, 'nutrition': 0, 'diagnostics': 0, 'pharmacy': 0 });
   const sectionRefs = useRef({
     'functional-medicine': null,
@@ -6045,7 +6125,7 @@ const fetchFooterData = async () => {
 
       {isAccountPage ? (
 
-        <ScrollView style={styles.cartPageLayout} contentContainerStyle={{padding: 20}}>
+        <ScrollView style={styles.cartPageLayout} contentContainerStyle={{padding: 20}} bounces={false}>
 
           <View style={{marginBottom: 20}}>
 
@@ -6189,7 +6269,7 @@ const fetchFooterData = async () => {
 
       ) : isAdminLoginPage ? (
 
-        <ScrollView contentContainerStyle={{ flex: 1, backgroundColor: palette.background, justifyContent: 'center', alignItems: 'center', padding: 24, minHeight: 500 }} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={{ flex: 1, backgroundColor: palette.background, justifyContent: 'center', alignItems: 'center', padding: 24, minHeight: 500 }} showsVerticalScrollIndicator={false} bounces={false}>
 
           <View style={{ width: '100%', maxWidth: 420, backgroundColor: '#fff', borderTopWidth: 4, borderTopColor: palette.oxblood, padding: 36, shadowColor: '#000', shadowOffset: {width: 0, height: 8}, shadowOpacity: 0.08, shadowRadius: 24 }}>
 
@@ -6401,7 +6481,7 @@ const fetchFooterData = async () => {
 
           {/* MAIN CONTENT */}
 
-          <ScrollView style={[styles.adminMainContent, { backgroundColor: adm.bg }]} contentContainerStyle={styles.adminMainScroll} showsVerticalScrollIndicator={true}>
+          <ScrollView style={[styles.adminMainContent, { backgroundColor: adm.bg }]} contentContainerStyle={styles.adminMainScroll} showsVerticalScrollIndicator={true} bounces={false}>
 
             <View style={[styles.adminTopHeader, { borderBottomColor: adm.border }]}>
 
@@ -8463,7 +8543,7 @@ const fetchFooterData = async () => {
 
       ) : isHomePage ? (
 
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} bounces={false}>
 
           <View style={[styles.homeHero, isPhoneScreen && { minHeight: 400 }]}>
 
@@ -8554,6 +8634,13 @@ const fetchFooterData = async () => {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
+              onLayout={(e) => {
+                const measuredHeight = e.nativeEvent.layout.height;
+                if (servicesChipBarHeight.current !== measuredHeight) {
+                  console.log(`[SERVICES] Chip bar height measured: ${measuredHeight}px`);
+                  servicesChipBarHeight.current = measuredHeight;
+                }
+              }}
               style={{
                 backgroundColor: isUserDarkMode ? darkPalette.surface : '#f0f4ee',
                 borderBottomWidth: 1,
@@ -8573,24 +8660,26 @@ const fetchFooterData = async () => {
                 <Pressable
                   key={item.key}
                   onPress={() => {
+                    console.log(`[SERVICES] Chip tapped: ${item.key}`);
+                    isServicesScrollingProgrammatically.current = true;
                     setActiveServiceSection(item.key);
-                    const ref = sectionRefs.current[item.key];
-                    if (ref && servicesScrollViewRef.current) {
-                      ref.measureLayout(
-                        servicesScrollViewRef.current.getScrollableNode?.() ?? servicesScrollViewRef.current,
-                        (x, y) => {
-                          servicesScrollViewRef.current?.scrollTo({ y: Math.max(0, y - 8), animated: false });
-                        },
-                        () => {
-                          // fallback to stored onLayout offset
-                          const raw = sectionOffsets.current[item.key] ?? 0;
-                          servicesScrollViewRef.current?.scrollTo({ y: Math.max(0, raw - 116), animated: false });
-                        }
-                      );
-                    } else {
-                      const raw = sectionOffsets.current[item.key] ?? 0;
-                      servicesScrollViewRef.current?.scrollTo({ y: Math.max(0, raw - 116), animated: false });
-                    }
+                    
+                    // Use dynamically measured chip bar height
+                    const STICKY_HEIGHT = servicesChipBarHeight.current;
+                    const raw = sectionOffsets.current[item.key] ?? 0;
+                    const targetY = Math.max(0, raw - STICKY_HEIGHT);
+                    console.log(`[SERVICES] Scrolling to ${item.key}: raw=${raw}, stickyHeight=${STICKY_HEIGHT}, target=${targetY}`);
+                    
+                    servicesScrollViewRef.current?.scrollTo({ 
+                      y: targetY, 
+                      animated: false 
+                    });
+                    
+                    // Longer timeout to ensure scroll completes
+                    setTimeout(() => { 
+                      console.log(`[SERVICES] Unlocking programmatic scroll flag for ${item.key}`);
+                      isServicesScrollingProgrammatically.current = false; 
+                    }, 500);
                   }}
                   style={{
                     paddingHorizontal: 14,
@@ -8648,8 +8737,10 @@ const fetchFooterData = async () => {
                     : 'transparent'
                 }}
                 onPress={() => {
+                  isServicesScrollingProgrammatically.current = true;
                   setActiveServiceSection('functional-medicine');
                   servicesScrollViewRef.current?.scrollTo({ y: 0, animated: true });
+                  setTimeout(() => { isServicesScrollingProgrammatically.current = false; }, 300);
                 }}
               >
                 <Text style={{ 
@@ -8672,8 +8763,10 @@ const fetchFooterData = async () => {
                     : 'transparent'
                 }}
                 onPress={() => {
+                  isServicesScrollingProgrammatically.current = true;
                   setActiveServiceSection('metabolic-health');
                   servicesScrollViewRef.current?.scrollTo({ y: 400, animated: true });
+                  setTimeout(() => { isServicesScrollingProgrammatically.current = false; }, 300);
                 }}
               >
                 <Text style={{ 
@@ -8696,8 +8789,10 @@ const fetchFooterData = async () => {
                     : 'transparent'
                 }}
                 onPress={() => {
+                  isServicesScrollingProgrammatically.current = true;
                   setActiveServiceSection('chronic-disease');
                   servicesScrollViewRef.current?.scrollTo({ y: 800, animated: true });
+                  setTimeout(() => { isServicesScrollingProgrammatically.current = false; }, 300);
                 }}
               >
                 <Text style={{ 
@@ -8720,8 +8815,10 @@ const fetchFooterData = async () => {
                     : 'transparent'
                 }}
                 onPress={() => {
+                  isServicesScrollingProgrammatically.current = true;
                   setActiveServiceSection('nutrition');
                   servicesScrollViewRef.current?.scrollTo({ y: 1200, animated: true });
+                  setTimeout(() => { isServicesScrollingProgrammatically.current = false; }, 300);
                 }}
               >
                 <Text style={{ 
@@ -8744,8 +8841,10 @@ const fetchFooterData = async () => {
                     : 'transparent'
                 }}
                 onPress={() => {
+                  isServicesScrollingProgrammatically.current = true;
                   setActiveServiceSection('diagnostics');
                   servicesScrollViewRef.current?.scrollTo({ y: 1600, animated: true });
+                  setTimeout(() => { isServicesScrollingProgrammatically.current = false; }, 300);
                 }}
               >
                 <Text style={{ 
@@ -8768,8 +8867,10 @@ const fetchFooterData = async () => {
                     : 'transparent'
                 }}
                 onPress={() => {
+                  isServicesScrollingProgrammatically.current = true;
                   setActiveServiceSection('pharmacy');
                   servicesScrollViewRef.current?.scrollTo({ y: 2000, animated: true });
+                  setTimeout(() => { isServicesScrollingProgrammatically.current = false; }, 300);
                 }}
               >
                 <Text style={{ 
@@ -8790,21 +8891,38 @@ const fetchFooterData = async () => {
             ref={servicesScrollViewRef}
             contentContainerStyle={{ padding: isPhoneScreen ? 20 : 40 }} 
             showsVerticalScrollIndicator={false}
+            bounces={false}
+            overScrollMode="never"
             onScroll={(event) => {
+              if (isServicesScrollingProgrammatically.current) {
+                console.log('[SERVICES] onScroll blocked - programmatic scroll in progress');
+                return;
+              }
               const offsetY = event.nativeEvent.contentOffset.y;
-              const STICKY_HEIGHT = isPhoneScreen ? 116 : 0;
+              const STICKY_HEIGHT = isPhoneScreen ? servicesChipBarHeight.current : 0;
               const offs = sectionOffsets.current;
               const order = ['functional-medicine','metabolic-health','chronic-disease','nutrition','diagnostics','pharmacy'];
               let active = order[0];
               for (const key of order) {
                 if ((offs[key] ?? 0) - STICKY_HEIGHT <= offsetY + 20) active = key;
               }
+              console.log(`[SERVICES] onScroll: offsetY=${offsetY.toFixed(1)}, calculated active=${active}`);
+              if (active !== activeServiceSection) {
+                console.log(`[SERVICES] Active section changing: ${activeServiceSection} -> ${active}`);
+              }
               setActiveServiceSection(active);
             }}
             scrollEventThrottle={100}
           >
 
-            <View ref={r => sectionRefs.current['functional-medicine'] = r} style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['functional-medicine'] = e.nativeEvent.layout.y; }}>
+            <View ref={r => sectionRefs.current['functional-medicine'] = r} style={{ marginBottom: 60 }} onLayout={e => { 
+              const newY = e.nativeEvent.layout.y;
+              const oldY = sectionOffsets.current['functional-medicine'];
+              if (oldY !== newY) {
+                console.log(`[SERVICES] functional-medicine layout changed: ${oldY} -> ${newY}`);
+              }
+              sectionOffsets.current['functional-medicine'] = newY;
+            }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -8820,7 +8938,14 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View ref={r => sectionRefs.current['metabolic-health'] = r} style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['metabolic-health'] = e.nativeEvent.layout.y; }}>
+            <View ref={r => sectionRefs.current['metabolic-health'] = r} style={{ marginBottom: 60 }} onLayout={e => { 
+              const newY = e.nativeEvent.layout.y;
+              const oldY = sectionOffsets.current['metabolic-health'];
+              if (oldY !== newY) {
+                console.log(`[SERVICES] metabolic-health layout changed: ${oldY} -> ${newY}`);
+              }
+              sectionOffsets.current['metabolic-health'] = newY;
+            }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -8836,7 +8961,14 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View ref={r => sectionRefs.current['chronic-disease'] = r} style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['chronic-disease'] = e.nativeEvent.layout.y; }}>
+            <View ref={r => sectionRefs.current['chronic-disease'] = r} style={{ marginBottom: 60 }} onLayout={e => { 
+              const newY = e.nativeEvent.layout.y;
+              const oldY = sectionOffsets.current['chronic-disease'];
+              if (oldY !== newY) {
+                console.log(`[SERVICES] chronic-disease layout changed: ${oldY} -> ${newY}`);
+              }
+              sectionOffsets.current['chronic-disease'] = newY;
+            }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -8852,7 +8984,14 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View ref={r => sectionRefs.current['nutrition'] = r} style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['nutrition'] = e.nativeEvent.layout.y; }}>
+            <View ref={r => sectionRefs.current['nutrition'] = r} style={{ marginBottom: 60 }} onLayout={e => { 
+              const newY = e.nativeEvent.layout.y;
+              const oldY = sectionOffsets.current['nutrition'];
+              if (oldY !== newY) {
+                console.log(`[SERVICES] nutrition layout changed: ${oldY} -> ${newY}`);
+              }
+              sectionOffsets.current['nutrition'] = newY;
+            }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -8868,7 +9007,14 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View ref={r => sectionRefs.current['diagnostics'] = r} style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['diagnostics'] = e.nativeEvent.layout.y; }}>
+            <View ref={r => sectionRefs.current['diagnostics'] = r} style={{ marginBottom: 60 }} onLayout={e => { 
+              const newY = e.nativeEvent.layout.y;
+              const oldY = sectionOffsets.current['diagnostics'];
+              if (oldY !== newY) {
+                console.log(`[SERVICES] diagnostics layout changed: ${oldY} -> ${newY}`);
+              }
+              sectionOffsets.current['diagnostics'] = newY;
+            }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -8884,7 +9030,14 @@ const fetchFooterData = async () => {
               </Text>
             </View>
 
-            <View ref={r => sectionRefs.current['pharmacy'] = r} style={{ marginBottom: 60 }} onLayout={e => { sectionOffsets.current['pharmacy'] = e.nativeEvent.layout.y; }}>
+            <View ref={r => sectionRefs.current['pharmacy'] = r} style={{ marginBottom: 60 }} onLayout={e => { 
+              const newY = e.nativeEvent.layout.y;
+              const oldY = sectionOffsets.current['pharmacy'];
+              if (oldY !== newY) {
+                console.log(`[SERVICES] pharmacy layout changed: ${oldY} -> ${newY}`);
+              }
+              sectionOffsets.current['pharmacy'] = newY;
+            }}>
               <Text style={{ 
                 fontSize: 28, 
                 fontWeight: '700', 
@@ -9110,6 +9263,7 @@ const fetchFooterData = async () => {
             ref={aboutScrollViewRef}
             contentContainerStyle={{ padding: isPhoneScreen ? 20 : 40 }} 
             showsVerticalScrollIndicator={false}
+            bounces={false}
             onScroll={(event) => {
               const offsetY = event.nativeEvent.contentOffset.y;
               const STICKY_HEIGHT = isPhoneScreen ? 116 : 0;
@@ -9398,7 +9552,7 @@ const fetchFooterData = async () => {
 
       ) : isShopPage ? (
 
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} bounces={false}>
 
           <HeroSlider
             slides={HERO_SLIDES}
@@ -9687,9 +9841,9 @@ const fetchFooterData = async () => {
 
         <View>
 
-          <Text style={styles.checkoutLabel}>CATEGORY RESULTS</Text>
+          <Text style={styles.checkoutLabel}>YOUR MEDICINES</Text>
 
-          <Text style={styles.checkoutText}>{cartCount} in cart</Text>
+          <Text style={styles.checkoutText}>{cartCount} item{cartCount !== 1 ? 's' : ''} in cart</Text>
 
         </View>
 
