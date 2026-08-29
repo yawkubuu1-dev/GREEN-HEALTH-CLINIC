@@ -8896,6 +8896,10 @@ const fetchFooterData = async () => {
             bounces={false}
             overScrollMode="never"
             onScroll={(event) => {
+              // ✅ FIX: Only process scroll events when Services page is active
+              if (currentPage !== 'services') {
+                return;
+              }
               if (isServicesScrollingProgrammatically.current) {
                 console.log('[SERVICES] onScroll blocked - programmatic scroll in progress');
                 return;
@@ -9301,6 +9305,10 @@ const fetchFooterData = async () => {
             bounces={false}
             overScrollMode="never"
             onScroll={(event) => {
+              // ✅ FIX: Only process scroll events when About page is active
+              if (currentPage !== 'about') {
+                return;
+              }
               if (isAboutScrollingProgrammatically.current) {
                 console.log('[ABOUT] onScroll blocked - programmatic scroll in progress');
                 return;
