@@ -176,8 +176,8 @@ useEffect(() => {
       const posts = await blogService.getAll({ is_published: true });
       setBlogPosts(posts);
       
-      // Get specific post by slug
-      const post = await blogService.getBySlug('health-benefits-of-vitamin-c');
+      // Get specific post by ID
+      const post = await blogService.getById('post-uuid-here');
       setCurrentPost(post);
       
     } catch (error) {

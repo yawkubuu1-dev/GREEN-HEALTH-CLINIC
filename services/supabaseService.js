@@ -358,7 +358,7 @@ export const blogService = {
       query = query.eq('category', filters.category);
     }
     
-    query = query.order('published_at', { ascending: false });
+    query = query.order('created_at', { ascending: false });
     
     const { data, error } = await query;
     if (error) throw error;
@@ -376,16 +376,8 @@ export const blogService = {
     return data;
   },
 
-  async getBySlug(slug) {
-    const { data, error } = await supabase
-      .from('blog_posts')
-      .select('*')
-      .eq('slug', slug)
-      .single();
-    
-    if (error) throw error;
-    return data;
-  },
+  // getBySlug removed — no slug column exists.
+  // Use getById(id) instead throughout the app.
 
   async create(post) {
     const { data, error } = await supabase

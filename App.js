@@ -48,6 +48,7 @@ import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
 
 import SendToDriverButton from './components/SendToDriverButton';
 import LocateUsSection from './components/LocateUsSection';
+import { Video } from 'expo-av';
 
 import { sendToDriver, formatDeliveryMessage, createWhatsAppLink } from './utils/whatsappHelper';
 
@@ -1425,25 +1426,153 @@ function BlogPage({ isUserDarkMode, isPhoneScreen, isTabletScreen }) {
               </Pressable>
             </View>
 
-            {/* Responsive 16:9 iframe container */}
-            <View style={{ width: '100%', aspectRatio: 16 / 9 }}>
-              {activeVideo && Platform.OS === 'web' && (
-                // react-native-web renders unknown tags to the DOM — use an
-                // iframe element directly via the web-only "as" prop trick
-                <View style={{ flex: 1 }}>
-                  {React.createElement('iframe', {
-                    src: `https://www.youtube.com/embed/${activeVideo.video_id || activeVideo.videoId}?autoplay=1&rel=0&modestbranding=1`,
-                    style: {
-                      width: '100%',
-                      height: '100%',
-                      border: 'none',
-                    },
-                    allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
-                    allowFullScreen: true,
-                    title: activeVideo.title,
-                  })}
-                </View>
-              )}
+            {/* Responsive 16:9 video container - Universal Player */}
+            <View style={{ width: '100%', aspectRatio: 16 / 9, backgroundColor: '#000' }}>
+              {activeVideo && (() => {
+                // BUG FIX 1: Correct source detection
+                const rawSource = activeVideo.video_id || activeVideo.videoId || '';
+                const isDirectVideo = /\.(mp4|webm|ogg|mov)(\?|$)/i.test(rawSource);
+                const videoUrl = isDirectVideo ? rawSource : '';
+                const videoId = isDirectVideo ? '' : rawSource;
+                
+                // BUG FIX 2: Native player support
+                if (Platform.OS !== 'web') {
+                  if (isDirectVideo && videoUrl) {
+                    // Native direct video playback
+                    return (
+                      <Video
+                        source={{ uri: videoUrl }}
+                        style={{ width: '100%', height: '100%' }}
+                        useNativeControls
+                        resizeMode="contain"
+                        shouldPlay
+                      />
+                    );
+                  } else if (videoId) {
+                    // Native YouTube playback - show message since WebView would need extra setup
+                    return (
+                      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000', padding: 20 }}>
+                        <FontAwesome name="youtube-play" size={64} color="#ff0000" style={{ marginBottom: 16 }} />
+                        <Text style={{ color: '#fff', fontSize: 16, marginBottom: 8, textAlign: 'center' }}>
+                          YouTube video playback
+                        </Text>
+                        <Text style={{ color: '#aaa', fontSize: 13, textAlign: 'center', marginBottom: 16 }}>
+                          This video plays on YouTube. Please use the web version or YouTube app.
+                        </Text>
+                        <Text style={{ color: '#666', fontSize: 11, textAlign: 'center' }}>
+                          Video ID: {videoId}
+                        </Text>
+                      </View>
+                    );
+                  } else {
+                    return (
+                      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                        <FontAwesome name="exclamation-triangle" size={48} color="#666" />
+                        <Text style={{ color: '#888', marginTop: 12 }}>Video source not available</Text>
+                      </View>
+                    );
+                  }
+                }
+
+                // Web platform - existing logic with corrected variables
+                let embedSrc = '';
+                
+                // Direct video URL (MP4, WebM, etc.)
+                if (isDirectVideo && videoUrl) {
+                  return (
+                    <View style={{ flex: 1 }}>
+                      {React.createElement('video', {
+                        src: videoUrl,
+                        controls: true,
+                        autoPlay: true,
+                        style: {
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'contain',
+                        },
+                      })}
+                    </View>
+                  );
+                }
+                
+                // YouTube: Extract video ID from various URL formats
+                if (videoId) {
+                  let ytId = videoId;
+                  
+                  // Check if videoId is actually a full URL
+                  if (videoId.includes('youtube.com') || videoId.includes('youtu.be')) {
+                    const ytMatch = videoId.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+                    if (ytMatch) ytId = ytMatch[1];
+                  }
+                  
+                  if (ytId && ytId.length === 11) {
+                    embedSrc = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1`;
+                  }
+                }
+                
+                // Mux: Handle Mux video player with playback ID
+                else if (rawSource && (rawSource.includes('mux.com') || rawSource.includes('stream.mux'))) {
+                  // Extract playback ID from Mux URL
+                  const muxMatch = rawSource.match(/([a-zA-Z0-9_-]{16,})/);
+                  if (muxMatch) {
+                    const playbackId = muxMatch[1];
+                    embedSrc = `https://stream.mux.com/${playbackId}.m3u8`;
+                    
+                    // For Mux, use an HLS-compatible player
+                    return (
+                      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}>
+                        <FontAwesome name="exclamation-triangle" size={48} color="#ff9800" style={{ marginBottom: 16 }} />
+                        <Text style={{ color: '#fff', fontSize: 16, marginBottom: 8, textAlign: 'center', paddingHorizontal: 20 }}>
+                          Video temporarily unavailable
+                        </Text>
+                        <Text style={{ color: '#aaa', fontSize: 13, textAlign: 'center', paddingHorizontal: 20 }}>
+                          This video requires a specialized player. Please contact support if this persists.
+                        </Text>
+                      </View>
+                    );
+                  }
+                }
+                
+                // Vimeo: Extract video ID
+                else if (rawSource && rawSource.includes('vimeo.com')) {
+                  const vimeoMatch = rawSource.match(/vimeo\.com\/(\d+)/);
+                  if (vimeoMatch) {
+                    embedSrc = `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`;
+                  }
+                }
+                
+                // Generic iframe-compatible URL
+                else if (rawSource && !isDirectVideo) {
+                  embedSrc = rawSource;
+                }
+                
+                // Render iframe for embedded content
+                if (embedSrc) {
+                  return (
+                    <View style={{ flex: 1 }}>
+                      {React.createElement('iframe', {
+                        src: embedSrc,
+                        style: {
+                          width: '100%',
+                          height: '100%',
+                          border: 'none',
+                        },
+                        allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
+                        allowFullScreen: true,
+                        title: activeVideo.title,
+                      })}
+                    </View>
+                  );
+                }
+                
+                // Fallback: No valid video source
+                return (
+                  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <FontAwesome name="exclamation-triangle" size={48} color="#666" />
+                    <Text style={{ color: '#888', marginTop: 12 }}>Video source not available</Text>
+                  </View>
+                );
+              })()}
             </View>
 
             {/* Footer meta */}
