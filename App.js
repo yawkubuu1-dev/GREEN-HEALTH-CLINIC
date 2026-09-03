@@ -1670,16 +1670,15 @@ function getVideoSource(post) {
   return { rawSource, isDirectVideo, videoUrl, videoId };
 }
 
-// ─── Blog Video Card with Inline Preview ──────────────────────────────────────
+// ─── Blog Video Card with Auto-Play on Viewport Visibility ────────────────────
 function BlogCard({ post, flex, isUserDarkMode, surface, charcoal, green, greenSoft, border, isPhoneScreen, onPlay }) {
-  const scaleAnim  = useRef(new Animated.Value(1)).current;
-  const overlayAnim = useRef(new Animated.Value(0)).current;
-  const [isHovered, setIsHovered] = useState(false);
-  const [inlinePlayingMobile, setInlinePlayingMobile] = useState(false);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const [isVisible, setIsVisible] = useState(false);
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+  const cardRef = useRef(null);
   const videoRef = useRef(null);
 
-  const scaleTo   = (v) => Animated.spring(scaleAnim,  { toValue: v, useNativeDriver: true, friction: 7, tension: 80 }).start();
-  const overlayTo = (v) => Animated.timing(overlayAnim, { toValue: v, duration: 180, useNativeDriver: true }).start();
+  const scaleTo = (v) => Animated.spring(scaleAnim, { toValue: v, useNativeDriver: true, friction: 7, tension: 80 }).start();
 
   const thumbnailHeight = isPhoneScreen ? 180 : 200;
 
@@ -1690,48 +1689,61 @@ function BlogCard({ post, flex, isUserDarkMode, surface, charcoal, green, greenS
   
   // Get video source info
   const { isDirectVideo, videoUrl, videoId } = getVideoSource(post);
-  const canPlayInline = isDirectVideo && videoUrl;
-  
-  // On web: play on hover
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-    scaleTo(1.02);
-    overlayTo(1);
-    if (Platform.OS === 'web' && canPlayInline && videoRef.current) {
-      videoRef.current.play();
-    }
-  };
-  
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    scaleTo(1);
-    overlayTo(0);
-    if (Platform.OS === 'web' && videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
-  };
-  
-  // On mobile: toggle inline play on play button tap
-  const handlePlayButtonPress = (e) => {
-    e.stopPropagation();
-    if (canPlayInline && Platform.OS !== 'web') {
-      setInlinePlayingMobile(!inlinePlayingMobile);
+  const canAutoPlay = isDirectVideo && videoUrl;
+
+  // Set up IntersectionObserver for viewport visibility detection
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !cardRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // Load video when card is near viewport (with buffer)
+          if (entry.isIntersecting || entry.intersectionRatio > 0) {
+            setShouldLoadVideo(true);
+          }
+          
+          // Play when fully visible, pause when out of view
+          setIsVisible(entry.isIntersecting && entry.intersectionRatio > 0.5);
+        });
+      },
+      {
+        threshold: [0, 0.5, 1],
+        rootMargin: '100px', // Load videos 100px before they enter viewport
+      }
+    );
+
+    observer.observe(cardRef.current);
+
+    return () => {
+      if (cardRef.current) {
+        observer.unobserve(cardRef.current);
+      }
+    };
+  }, []);
+
+  // Control video playback based on visibility (web)
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !videoRef.current || !canAutoPlay) return;
+
+    if (isVisible) {
+      videoRef.current.play().catch(() => {
+        // Autoplay failed (e.g., browser policy), ignore silently
+      });
     } else {
-      onPlay();
+      videoRef.current.pause();
     }
-  };
-  
-  const showVideo = (Platform.OS === 'web' && isHovered && canPlayInline) || 
-                    (Platform.OS !== 'web' && inlinePlayingMobile && canPlayInline);
+  }, [isVisible, canAutoPlay]);
+
+  // Mobile: Use onLayout and scroll position tracking (simplified)
+  const [mobileVisible, setMobileVisible] = useState(true); // Start visible on mobile
+
+  const showVideo = Platform.OS === 'web' ? (isVisible && canAutoPlay && shouldLoadVideo) : (mobileVisible && canAutoPlay);
 
   return (
     <Pressable
+      ref={cardRef}
       style={{ flex }}
-      onHoverIn={handleMouseEnter}
-      onHoverOut={handleMouseLeave}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       onPressIn={() => scaleTo(0.97)}
       onPressOut={() => scaleTo(1)}
       onPress={onPlay}
@@ -1761,8 +1773,8 @@ function BlogCard({ post, flex, isUserDarkMode, surface, charcoal, green, greenS
             resizeMode="cover"
           />
 
-          {/* Inline video player (web: hover to play, mobile: tap play button) */}
-          {showVideo && Platform.OS === 'web' && (
+          {/* Auto-playing video preview (web) */}
+          {showVideo && Platform.OS === 'web' && shouldLoadVideo && (
             <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
               {React.createElement('video', {
                 ref: videoRef,
@@ -1770,6 +1782,7 @@ function BlogCard({ post, flex, isUserDarkMode, surface, charcoal, green, greenS
                 muted: true,
                 loop: true,
                 playsInline: true,
+                preload: 'metadata',
                 style: {
                   width: '100%',
                   height: '100%',
@@ -1779,90 +1792,51 @@ function BlogCard({ post, flex, isUserDarkMode, surface, charcoal, green, greenS
             </View>
           )}
           
+          {/* Auto-playing video preview (mobile) */}
           {showVideo && Platform.OS !== 'web' && (
             <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
               <Video
                 source={{ uri: videoUrl }}
                 style={{ width: '100%', height: '100%' }}
                 resizeMode="cover"
-                shouldPlay
+                shouldPlay={mobileVisible}
                 isLooping
                 isMuted
               />
             </View>
           )}
 
-          {/* Dark hover tint (only show when NOT playing inline video) */}
-          {!showVideo && (
-            <Animated.View style={{
-              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-              backgroundColor: 'rgba(0,0,0,0.25)',
-              opacity: overlayAnim,
-            }} />
-          )}
-
-          {/* Play button circle (only show when NOT playing inline) */}
-          {!showVideo && (
-            <Pressable
-              onPress={handlePlayButtonPress}
-              style={{ position: 'absolute', top: '50%', left: '50%', marginTop: -26, marginLeft: -26 }}
-            >
-              <Animated.View style={{
-                width: 52, height: 52,
-                borderRadius: 26,
-                backgroundColor: 'rgba(255,255,255,0.92)',
-                justifyContent: 'center',
-                alignItems: 'center',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.25,
-                shadowRadius: 6,
-                transform: [{
-                  scale: overlayAnim.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] }),
-                }],
-              }}>
-                <FontAwesome name="play" size={18} color={green} style={{ marginLeft: 3 }} />
-              </Animated.View>
-            </Pressable>
-          )}
-          
-          {/* Mobile: "Tap for sound / full screen" affordance when inline playing */}
-          {Platform.OS !== 'web' && inlinePlayingMobile && (
-            <Pressable
-              onPress={onPlay}
-              style={{
-                position: 'absolute',
-                bottom: 8,
-                left: 8,
-                backgroundColor: 'rgba(0,0,0,0.75)',
-                paddingHorizontal: 10,
-                paddingVertical: 6,
-                borderRadius: 6,
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <FontAwesome name="volume-up" size={12} color="#fff" />
-              <Text style={{ fontSize: 11, color: '#fff', fontWeight: '600' }}>
-                Tap for sound
-              </Text>
-            </Pressable>
-          )}
-
-          {/* Duration badge — bottom-right (only show when NOT playing inline) */}
-          {!showVideo && (
+          {/* Muted/speaker-off icon overlay (when video is playing) */}
+          {showVideo && (
             <View style={{
-              position: 'absolute', bottom: 8, right: 8,
-              backgroundColor: 'rgba(0,0,0,0.72)',
-              paddingHorizontal: 7, paddingVertical: 3,
-              borderRadius: 5,
-              flexDirection: 'row', alignItems: 'center', gap: 4,
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              backgroundColor: 'rgba(0,0,0,0.65)',
+              paddingHorizontal: 6,
+              paddingVertical: 4,
+              borderRadius: 4,
             }}>
-              <FontAwesome name="clock-o" size={10} color="#fff" />
-              <Text style={{ fontSize: 11, color: '#fff', fontWeight: '600' }}>{duration}</Text>
+              <FontAwesome name="volume-off" size={12} color="#fff" />
             </View>
           )}
+
+          {/* Duration badge — bottom-right */}
+          <View style={{
+            position: 'absolute',
+            bottom: 8,
+            right: 8,
+            backgroundColor: 'rgba(0,0,0,0.72)',
+            paddingHorizontal: 7,
+            paddingVertical: 3,
+            borderRadius: 5,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 4,
+          }}>
+            <FontAwesome name="clock-o" size={10} color="#fff" />
+            <Text style={{ fontSize: 11, color: '#fff', fontWeight: '600' }}>{duration}</Text>
+          </View>
         </View>
 
         {/* ── Card body ── */}
