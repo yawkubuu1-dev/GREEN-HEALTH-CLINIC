@@ -362,17 +362,6 @@ const mapProductRowToCard = (row, catNameToImageMap = {}, catIdToNameMap = {}) =
       row.url || row.image_url || row.image || row.photo_url || row.metadata?.image_url || row.metadata?.url || catNameToImageMap[catName] || DEFAULT_CATEGORY_IMAGE,
 
     stock_quantity: row.stock_quantity ?? 0,
-
-    stock_s: row.stock_s ?? 0,
-
-    stock_m: row.stock_m ?? 0,
-
-    stock_l: row.stock_l ?? 0,
-
-    stock_xl: row.stock_xl ?? 0,
-
-    stock_xxl: row.stock_xxl ?? 0,
-
     product_images: row.product_images || [], // ✅ Add product_images array
 
     // Medicine-specific fields
@@ -1034,6 +1023,42 @@ function FloatingSocialColumn() {
   );
 }
 
+// ─── Blog Service ─────────────────────────────────────────────────────────────
+const blogService = {
+  async getAll(filters = {}) {
+    try {
+      let query = supabase
+        .from('blog_posts')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      // Apply filters if provided
+      if (filters.is_published !== undefined) {
+        query = query.eq('is_published', filters.is_published);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      
+      // Map database fields to match the component's expected structure
+      return (data || []).map(post => ({
+        id: post.id,
+        title: post.title,
+        category: post.category,
+        date: post.date,
+        duration: post.duration || 'N/A',
+        excerpt: post.excerpt || '',
+        thumbnail: post.thumbnail || '',
+        videoId: post.video_id || '',
+      }));
+    } catch (error) {
+      console.error('blogService.getAll error:', error);
+      throw error;
+    }
+  }
+};
+
 // ─── Static blog data ────────────────────────────────────────────────────────
 const BLOG_POSTS = [
   {
@@ -1174,8 +1199,27 @@ function BlogPage({ isUserDarkMode, isPhoneScreen, isTabletScreen }) {
   const [visibleCount, setVisibleCount]       = useState(BLOG_PAGE_SIZE);
   const [expandedStory, setExpandedStory]     = useState(null);
   const [activeVideo, setActiveVideo]         = useState(null); // post object or null
+  const [blogPosts, setBlogPosts]             = useState([]);
+  const [loading, setLoading]                 = useState(true);
 
-  const filtered = BLOG_POSTS.filter(p =>
+  // Fetch blog posts from Supabase
+  useEffect(() => {
+    async function fetchBlogPosts() {
+      try {
+        setLoading(true);
+        const posts = await blogService.getAll({ is_published: true });
+        setBlogPosts(posts || []);
+      } catch (error) {
+        console.error('Error fetching blog posts:', error);
+        setBlogPosts(BLOG_POSTS); // Fallback to static data if Supabase fails
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchBlogPosts();
+  }, []);
+
+  const filtered = blogPosts.filter(p =>
     p.title.toLowerCase().includes(blogSearch.toLowerCase())
   );
   const visible  = filtered.slice(0, visibleCount);
@@ -1256,7 +1300,12 @@ function BlogPage({ isUserDarkMode, isPhoneScreen, isTabletScreen }) {
         paddingHorizontal: isPhoneScreen ? 16 : 40,
         paddingTop: 32,
       }}>
-        {filtered.length === 0 ? (
+        {loading ? (
+          <View style={{ alignItems: 'center', paddingVertical: 60 }}>
+            <ActivityIndicator size="large" color={green} />
+            <Text style={{ fontSize: 14, color: greenSoft, marginTop: 16 }}>Loading videos...</Text>
+          </View>
+        ) : filtered.length === 0 ? (
           <View style={{ alignItems: 'center', paddingVertical: 60 }}>
             <FontAwesome name="search" size={36} color={border} style={{ marginBottom: 14 }} />
             <Text style={{ fontSize: 18, fontWeight: '600', color: charcoal, marginBottom: 6 }}>No videos found</Text>
@@ -1383,7 +1432,7 @@ function BlogPage({ isUserDarkMode, isPhoneScreen, isTabletScreen }) {
                 // iframe element directly via the web-only "as" prop trick
                 <View style={{ flex: 1 }}>
                   {React.createElement('iframe', {
-                    src: `https://www.youtube.com/embed/${activeVideo.videoId}?autoplay=1&rel=0&modestbranding=1`,
+                    src: `https://www.youtube.com/embed/${activeVideo.video_id || activeVideo.videoId}?autoplay=1&rel=0&modestbranding=1`,
                     style: {
                       width: '100%',
                       height: '100%',
@@ -1412,11 +1461,17 @@ function BlogPage({ isUserDarkMode, isPhoneScreen, isTabletScreen }) {
                 paddingVertical: 3,
                 borderRadius: 20,
               }}>
-                <Text style={{ fontSize: 11, fontWeight: '600', color: '#6db84a' }}>{activeVideo?.category}</Text>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: '#6db84a' }}>
+                  {activeVideo?.category_name || activeVideo?.category}
+                </Text>
               </View>
               <FontAwesome name="clock-o" size={12} color="#888" />
-              <Text style={{ fontSize: 12, color: '#888' }}>{activeVideo?.duration}</Text>
-              <Text style={{ fontSize: 12, color: '#666', marginLeft: 'auto' }}>{activeVideo?.date}</Text>
+              <Text style={{ fontSize: 12, color: '#888' }}>
+                {activeVideo?.video_duration || activeVideo?.duration}
+              </Text>
+              <Text style={{ fontSize: 12, color: '#666', marginLeft: 'auto' }}>
+                {activeVideo?.date || (activeVideo?.published_at ? new Date(activeVideo.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '')}
+              </Text>
             </View>
           </Pressable>
         </Pressable>
@@ -1489,6 +1544,11 @@ function BlogCard({ post, flex, isUserDarkMode, surface, charcoal, green, greenS
 
   const thumbnailHeight = isPhoneScreen ? 180 : 200;
 
+  // Support both static data format and Supabase format
+  const thumbnail = post.video_thumbnail || post.thumbnail || post.featured_image_url;
+  const duration = post.video_duration || post.duration;
+  const category = post.category_name || post.category;
+
   return (
     <Pressable
       style={{ flex }}
@@ -1519,7 +1579,7 @@ function BlogCard({ post, flex, isUserDarkMode, surface, charcoal, green, greenS
         {/* ── Thumbnail with play overlay ── */}
         <View style={{ width: '100%', height: thumbnailHeight }}>
           <Image
-            source={{ uri: post.thumbnail }}
+            source={{ uri: thumbnail }}
             style={{ width: '100%', height: thumbnailHeight }}
             resizeMode="cover"
           />
@@ -1562,7 +1622,7 @@ function BlogCard({ post, flex, isUserDarkMode, surface, charcoal, green, greenS
             flexDirection: 'row', alignItems: 'center', gap: 4,
           }}>
             <FontAwesome name="clock-o" size={10} color="#fff" />
-            <Text style={{ fontSize: 11, color: '#fff', fontWeight: '600' }}>{post.duration}</Text>
+            <Text style={{ fontSize: 11, color: '#fff', fontWeight: '600' }}>{duration}</Text>
           </View>
         </View>
 
@@ -1575,7 +1635,7 @@ function BlogCard({ post, flex, isUserDarkMode, surface, charcoal, green, greenS
               paddingVertical: 3,
               borderRadius: 20,
             }}>
-              <Text style={{ fontSize: 11, fontWeight: '600', color: green }}>{post.category}</Text>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: green }}>{category}</Text>
             </View>
           </View>
           <Text style={{
@@ -2653,9 +2713,9 @@ const fetchFooterData = async () => {
 
       
 
-      // Fetch products and product_images separately to avoid column alias issues
+      // Fetch products with medicine-specific fields
 
-      let prodRes = await supabase.from('products').select('*, stock_s, stock_m, stock_l, stock_xl, stock_xxl');
+      let prodRes = await supabase.from('products').select('*');
 
       
 

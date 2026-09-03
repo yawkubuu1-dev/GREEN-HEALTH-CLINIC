@@ -45,35 +45,28 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
   const [showQuantityControls, setShowQuantityControls] = useState(false);
   const scrollViewRef = useRef(null);
 
-  const allSizeOptions = [
-    { label: 'S', measurement: '36-38', stockKey: 'stock_s' },
-    { label: 'M', measurement: '38-40', stockKey: 'stock_m' },
-    { label: 'L', measurement: '40-42', stockKey: 'stock_l' },
-    { label: 'XL', measurement: '42-44', stockKey: 'stock_xl' },
-    { label: 'XXL', measurement: '44-46', stockKey: 'stock_xxl' }
-  ];
+  // Pack size options for medicine products
+  const packSizeOptions = useMemo(() => {
+    if (!product?.pack_sizes || product.pack_sizes.length === 0) {
+      return [{ label: 'Standard Pack', value: 0, stock: product?.stock_quantity || 0 }];
+    }
+    return product.pack_sizes.map((packSize, index) => ({
+      label: packSize,
+      value: index,
+      stock: product?.stock_quantity || 0 // For now, all packs share same stock
+    }));
+  }, [product]);
 
-  // Show only sizes with stock > 0
-  const sizeOptions = allSizeOptions
-    .map(option => {
-      const stock = product?.[option.stockKey] ?? 0;
-      return {
-        ...option,
-        stock: stock
-      };
-    })
-    .filter(option => option.stock > 0);
-
-  // Set default selected size to first available size, or M if all sizes are available
-  const defaultSelectedSize = sizeOptions.length > 0 ? sizeOptions[0].label : 'M';
+  // Set default selected pack size to first available
+  const defaultSelectedSize = packSizeOptions.length > 0 ? packSizeOptions[0].label : 'Standard Pack';
 
   // Reset state when product changes or modal opens/closes
   useEffect(() => {
     console.log('useEffect triggered', { visible, productId: product?.id });
     if (visible && product) {
-      // Check if this product (with selected weight) is already in cart
+      // Check if this product (with selected pack size) is already in cart
       const cartItem = cartItems.find(
-        (item) => item.id === product.id && item.selectedWeight === (product.hasSizes ? defaultSelectedSize : 'unit')
+        (item) => item.id === product.id && item.selectedWeight === selectedWeight
       );
 
       console.log('Cart item check', { cartItem: !!cartItem, productName: product.name });
@@ -94,35 +87,29 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
     }
   }, [visible, product?.id, defaultSelectedSize]); // Watch visible, product ID, and default selected size
 
-  // Update quantity when weight/size changes
+  // Update quantity when pack size changes
   useEffect(() => {
     if (visible && product) {
       const cartItem = cartItems.find(
-        (item) => item.id === product.id && item.selectedWeight === (product.hasSizes ? selectedWeight : 'unit')
+        (item) => item.id === product.id && item.selectedWeight === selectedWeight
       );
       
       if (cartItem) {
-        // This weight is in cart - show controls with cart quantity
+        // This pack size is in cart - show controls with cart quantity
         setShowQuantityControls(true);
         setQuantity(cartItem.quantity);
       } else if (showQuantityControls) {
-        // This weight is NOT in cart but controls are showing - reset to 1
+        // This pack size is NOT in cart but controls are showing - reset to 1
         setQuantity(1);
       }
     }
-  }, [selectedWeight]); // Watch for weight changes
+  }, [selectedWeight]); // Watch for pack size changes
 
-  // Calculate current price based on size selection - MUST be before early return
+  // Calculate current price - for medicine, price is same for all pack sizes
   const currentPrice = useMemo(() => {
     if (!product) return 0;
-    if (!product.hasSizes) return product.price || 0;
-    if (selectedWeight === 'S') return product.price_s || 0;
-    if (selectedWeight === 'M') return product.price_m || 0;
-    if (selectedWeight === 'L') return product.price_l || 0;
-    if (selectedWeight === 'XL') return product.price_xl || 0;
-    if (selectedWeight === 'XXL') return product.price_xxl || 0;
-    return product.price || 0;
-  }, [selectedWeight, product]);
+    return product.price_per_pack || product.price || 0;
+  }, [product]);
 
   const totalPrice = currentPrice * quantity;
 
@@ -200,13 +187,12 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
   };
 
   const handleAddToCartClick = () => {
-    // Check stock for the selected size
-    const stockKey = `stock_${selectedWeight.toLowerCase()}`;
-    const stockForSize = product?.[stockKey] || 0;
+    // Check stock for medicine
+    const stockAvailable = product?.stock_quantity || 0;
 
-    console.log('Add to Cart clicked', { product: product?.name, size: selectedWeight, stock: stockForSize });
-    if (stockForSize === 0) {
-      Alert.alert('Out of Stock', `Size ${selectedWeight} is currently unavailable`);
+    console.log('Add to Cart clicked', { product: product?.name, packSize: selectedWeight, stock: stockAvailable });
+    if (stockAvailable === 0) {
+      Alert.alert('Out of Stock', `${product.name} is currently unavailable`);
       return;
     }
     setShowQuantityControls(true);
@@ -352,23 +338,83 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
                 </View>
               )}
 
-              {/* Size Selection (if applicable) */}
-              {product.hasWeights && (
+              {/* Medicine-specific Information */}
+              {(product.dosage_strength || product.form) && (
+                <View style={styles.categoryContainer}>
+                  <Text style={[styles.sectionTitle, { color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal }]}>Dosage & Form</Text>
+                  <Text style={[styles.categoryText, { color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal }]}>
+                    {product.dosage_strength}{product.dosage_strength && product.form ? ' • ' : ''}
+                    {product.form ? product.form.charAt(0).toUpperCase() + product.form.slice(1) : ''}
+                  </Text>
+                </View>
+              )}
+
+              {product.active_ingredient && (
+                <View style={styles.categoryContainer}>
+                  <Text style={[styles.sectionTitle, { color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal }]}>Active Ingredient</Text>
+                  <Text style={[styles.categoryText, { color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal }]}>{product.active_ingredient}</Text>
+                </View>
+              )}
+
+              {product.manufacturer && (
+                <View style={styles.categoryContainer}>
+                  <Text style={[styles.sectionTitle, { color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal }]}>Manufacturer</Text>
+                  <Text style={[styles.categoryText, { color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal }]}>{product.manufacturer}</Text>
+                </View>
+              )}
+
+              {product.storage_info && (
+                <View style={styles.categoryContainer}>
+                  <Text style={[styles.sectionTitle, { color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal }]}>Storage Instructions</Text>
+                  <Text style={[styles.description, { color: isUserDarkMode ? darkPalette.secondary : palette.secondary }]}>{product.storage_info}</Text>
+                </View>
+              )}
+
+              {product.side_effects && (
+                <View style={styles.categoryContainer}>
+                  <Text style={[styles.sectionTitle, { color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal }]}>Side Effects</Text>
+                  <Text style={[styles.description, { color: isUserDarkMode ? darkPalette.secondary : palette.secondary }]}>{product.side_effects}</Text>
+                </View>
+              )}
+
+              {product.contraindications && (
+                <View style={styles.categoryContainer}>
+                  <Text style={[styles.sectionTitle, { color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal }]}>Contraindications</Text>
+                  <Text style={[styles.description, { color: isUserDarkMode ? darkPalette.secondary : palette.secondary }]}>{product.contraindications}</Text>
+                </View>
+              )}
+
+              {product.requires_prescription && (
+                <View style={[styles.categoryContainer, { 
+                  backgroundColor: '#FFF3CD',
+                  padding: 12,
+                  borderRadius: 8,
+                  borderLeftWidth: 4,
+                  borderLeftColor: '#FFC107'
+                }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text style={{ fontSize: 20 }}>℞</Text>
+                    <Text style={[styles.sectionTitle, { color: '#000', marginBottom: 0 }]}>Prescription Required</Text>
+                  </View>
+                  <Text style={[styles.description, { color: '#856404', marginTop: 4 }]}>
+                    This medicine requires a valid prescription from a licensed healthcare provider.
+                  </Text>
+                </View>
+              )}
+
+              {/* Pack Size Selection (if multiple packs available) */}
+              {product.pack_sizes && product.pack_sizes.length > 1 && (
                 <View style={styles.weightSelectionContainer}>
                   <View style={styles.sizeHeaderRow}>
-                    <Text style={[styles.sectionTitle, { color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal }]}>Select Size</Text>
-                    <Pressable style={[styles.sizeGuideButton, isUserDarkMode && styles.sizeGuideButtonDark]} onPress={() => Alert.alert('Size Guide', 'S: 36-38\nM: 38-40\nL: 40-42\nXL: 42-44\nXXL: 44-46')}>
-                      <FontAwesome name="ruler" size={16} color={isUserDarkMode ? darkPalette.oxblood : palette.oxblood} />
-                      <Text style={[styles.sizeGuideText, { color: isUserDarkMode ? darkPalette.oxblood : palette.oxblood }]}>Size Guide</Text>
-                    </Pressable>
+                    <Text style={[styles.sectionTitle, { color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal }]}>Select Pack Size</Text>
                   </View>
                   <View style={styles.weightOptionsRow}>
-                    {sizeOptions.map((option) => {
+                    {packSizeOptions.map((option) => {
                       const active = option.label === selectedWeight;
                       const isOutOfStock = option.stock === 0;
                       return (
                         <Pressable
-                          key={option.label}
+                          key={option.value}
                           onPress={() => !isOutOfStock && setSelectedWeight(option.label)}
                           style={[
                             styles.weightOption,
@@ -389,14 +435,6 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
                           ]}>
                             {option.label}
                           </Text>
-                          <Text style={[
-                            styles.weightOptionMeasurement,
-                            active && styles.weightOptionTextActive,
-                            isOutOfStock && styles.weightOptionTextOutOfStock,
-                            !active && !isOutOfStock && isUserDarkMode && { color: darkPalette.secondary }
-                          ]}>
-                            {option.measurement}
-                          </Text>
                           {isOutOfStock && (
                             <Text style={styles.outOfStockText}>Out of Stock</Text>
                           )}
@@ -405,7 +443,7 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
                     })}
                   </View>
                   <Text style={[styles.pricePerUnit, { color: isUserDarkMode ? darkPalette.secondary : palette.secondary }]}>
-                    Price for size {selectedWeight}
+                    Price per pack: GHC {currentPrice.toFixed(2)}
                   </Text>
                 </View>
               )}

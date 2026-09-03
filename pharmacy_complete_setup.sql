@@ -106,7 +106,9 @@ SELECT
   'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&q=80', 1,
   'tablet', '500mg', ARRAY['24 tablets', '48 tablets'], 5.00, false,
   'Paracetamol', 'Kinapharma', 'Store below 30°C in a dry place', true,
-  (SELECT id FROM public.categories WHERE name = 'Pain Relief' LIMIT 1);
+  c.id
+FROM public.categories c
+WHERE c.name = 'Pain Relief' LIMIT 1;
 
 -- ORS
 INSERT INTO public.products
@@ -120,7 +122,9 @@ SELECT
   'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=600&q=80', 2,
   'sachet', '20.5g per sachet', ARRAY['10 sachets', '20 sachets'], 2.50, false,
   'Sodium Chloride, Potassium Chloride, Glucose', 'WHO Standard', 'Store at room temperature', true,
-  (SELECT id FROM public.categories WHERE name = 'Digestive Health' LIMIT 1);
+  c.id
+FROM public.categories c
+WHERE c.name = 'Digestive Health' LIMIT 1;
 
 -- Amoxicillin
 INSERT INTO public.products
@@ -136,7 +140,9 @@ SELECT
   'Amoxicillin', 'Pharmanova', 'Store in a cool, dry place away from light',
   'Nausea, diarrhea, skin rash. Seek medical attention if severe allergic reaction occurs.',
   'Do not take if allergic to penicillin or cephalosporin antibiotics.', false,
-  (SELECT id FROM public.categories WHERE name = 'Antibiotics' LIMIT 1);
+  c.id
+FROM public.categories c
+WHERE c.name = 'Antibiotics' LIMIT 1;
 
 -- Multivitamin
 INSERT INTO public.products
@@ -150,7 +156,9 @@ SELECT
   'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=600&q=80', 4,
   'tablet', 'Multiple vitamins', ARRAY['30 tablets', '60 tablets', '90 tablets'], 18.00, false,
   'Vitamin A, B, C, D, E, Minerals', 'NutriHealth', 'Store below 25°C in original container', true,
-  (SELECT id FROM public.categories WHERE name = 'Vitamins & Supplements' LIMIT 1);
+  c.id
+FROM public.categories c
+WHERE c.name = 'Vitamins & Supplements' LIMIT 1;
 
 -- Ibuprofen
 INSERT INTO public.products
@@ -165,7 +173,9 @@ SELECT
   'tablet', '400mg', ARRAY['20 tablets', '40 tablets'], 6.50, false,
   'Ibuprofen', 'Kinapharma', 'Store below 30°C in a dry place',
   'May cause stomach upset. Take with food or milk.', true,
-  (SELECT id FROM public.categories WHERE name = 'Pain Relief' LIMIT 1);
+  c.id
+FROM public.categories c
+WHERE c.name = 'Pain Relief' LIMIT 1;
 
 -- Vitamin C
 INSERT INTO public.products
@@ -179,7 +189,9 @@ SELECT
   'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=600&q=80', 6,
   'tablet', '1000mg', ARRAY['30 tablets', '60 tablets'], 12.00, false,
   'Ascorbic Acid', 'NutriHealth', 'Store in a cool, dry place', false,
-  (SELECT id FROM public.categories WHERE name = 'Vitamins & Supplements' LIMIT 1);
+  c.id
+FROM public.categories c
+WHERE c.name = 'Vitamins & Supplements' LIMIT 1;
 
 -- Cough Syrup
 INSERT INTO public.products
@@ -193,7 +205,9 @@ SELECT
   'https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=600&q=80', 7,
   'syrup', '100ml bottle', ARRAY['100ml', '200ml'], 8.00, false,
   'Dextromethorphan, Guaifenesin', 'Pharmanova', 'Store at room temperature, shake well before use', true,
-  (SELECT id FROM public.categories WHERE name = 'Respiratory' LIMIT 1);
+  c.id
+FROM public.categories c
+WHERE c.name = 'Respiratory' LIMIT 1;
 
 -- Antacid
 INSERT INTO public.products
@@ -207,7 +221,9 @@ SELECT
   'https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?w=600&q=80', 8,
   'tablet', '500mg', ARRAY['24 tablets', '50 tablets'], 4.00, false,
   'Calcium Carbonate', 'DigestiCare', 'Store in a dry place', true,
-  (SELECT id FROM public.categories WHERE name = 'Digestive Health' LIMIT 1);
+  c.id
+FROM public.categories c
+WHERE c.name = 'Digestive Health' LIMIT 1;
 
 -- Step 7: Verify the setup
 SELECT 
