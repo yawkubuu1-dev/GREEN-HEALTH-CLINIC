@@ -2016,13 +2016,13 @@ function HeroSlider({ slides, maxCycles = 0, height = 510, onShopNow, onViewCart
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 400,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',  // Native driver breaks on web
     }).start(() => {
       setIdx(nextIdx);
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 400,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',  // Native driver breaks on web
       }).start();
     });
   };
@@ -2101,30 +2101,36 @@ function HeroSlider({ slides, maxCycles = 0, height = 510, onShopNow, onViewCart
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
-                opacity: 0.95,
               },
             })}
           </View>
         ) : (
           <Image
             source={{ uri: slide.uri }}
-            style={{ ...StyleSheet.absoluteFillObject, width: '100%', height: '100%', opacity: 0.95 }}
+            style={{ ...StyleSheet.absoluteFillObject, width: '100%', height: '100%' }}
             resizeMode="cover"
           />
         )}
-        {/* Dark overlay */}
-        <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.15)' }} />
+        {/* Dark overlay removed for bright images */}
       </Animated.View>
 
       {/* ── Hero text ── */}
       <View style={{ padding: isPhone ? 16 : 20, zIndex: 2 }}>
-        <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, letterSpacing: 2, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase' }}>Prolyn Wear</Text>
-        <Text style={{ color: '#fff', fontSize: isPhone ? 22 : 34, fontWeight: '800', fontFamily: 'Georgia', lineHeight: isPhone ? 28 : 42, marginBottom: 10 }}>
-          Step Into Style,{'\n'}Walk in Confidence.
-        </Text>
-        <Text style={{ color: 'rgba(255,255,255,0.82)', fontSize: isPhone ? 13 : 15, lineHeight: 22, marginBottom: 20 }}>
-          Premium footwear for every occasion.
-        </Text>
+        {slide.brandText && (
+          <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, letterSpacing: 2, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase' }}>
+            {slide.brandText}
+          </Text>
+        )}
+        {slide.title && (
+          <Text style={{ color: '#fff', fontSize: isPhone ? 22 : 34, fontWeight: '800', fontFamily: 'Georgia', lineHeight: isPhone ? 28 : 42, marginBottom: 10 }}>
+            {slide.title}
+          </Text>
+        )}
+        {slide.subtitle && (
+          <Text style={{ color: 'rgba(255,255,255,0.82)', fontSize: isPhone ? 13 : 15, lineHeight: 22, marginBottom: 20 }}>
+            {slide.subtitle}
+          </Text>
+        )}
         <View style={{ flexDirection: 'row', gap: 12 }}>
           <Pressable
             onPress={onShopNow}
@@ -3050,8 +3056,9 @@ const fetchFooterData = async () => {
           type: slide.type || 'image',
           uri: slide.url,
           duration: slide.duration || 4000,
-          title: slide.name,
-          subtitle: slide.caption,
+          brandText: slide.brand_text || '',
+          title: slide.caption || '',
+          subtitle: '',
         }));
         setHeroSlides(formattedSlides);
         console.log('🎬 Hero slides loaded:', formattedSlides.length);
