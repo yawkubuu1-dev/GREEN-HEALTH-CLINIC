@@ -909,19 +909,22 @@ function AnimatedSocialIconBadge({ onPress, backgroundColor, iconName, iconSize 
 }
 
 const SOCIAL_BADGES = [
-  { iconName: 'facebook', backgroundColor: '#1877F2', url: 'https://www.facebook.com/sharer/sharer.php?u=' },
-  { iconName: 'instagram', backgroundColor: '#E4405F', url: null, note: 'Instagram does not support URL sharing via web' },
-  { iconName: 'twitter', backgroundColor: '#000', url: 'https://twitter.com/intent/tweet?url=' },
-  { iconName: 'linkedin', backgroundColor: '#0077B5', url: 'https://www.linkedin.com/sharing/share-offsite/?url=' },
-  { iconName: 'youtube', backgroundColor: '#FF0000', url: null, note: 'YouTube does not support sharing external links' },
-  { iconName: 'music', backgroundColor: '#000', url: null, note: 'TikTok does not support URL sharing via web' },
-  { iconName: 'whatsapp', backgroundColor: '#25D366', url: 'https://wa.me/?text=' },
-  { iconName: 'telegram', backgroundColor: '#0088cc', url: 'https://t.me/share/url?url=' },
+  { iconName: 'facebook', backgroundColor: '#1877F2', url: 'https://www.facebook.com/sharer/sharer.php?u=', sharesUrl: true },
+  { iconName: 'instagram', backgroundColor: '#E4405F', url: 'https://instagram.com', sharesUrl: false, note: 'Links to Instagram profile' },
+  { iconName: 'twitter', backgroundColor: '#000', url: 'https://twitter.com/intent/tweet?url=', sharesUrl: true },
+  { iconName: 'linkedin', backgroundColor: '#0077B5', url: 'https://www.linkedin.com/sharing/share-offsite/?url=', sharesUrl: true },
+  { iconName: 'youtube', backgroundColor: '#FF0000', url: 'https://youtube.com', sharesUrl: false, note: 'Links to YouTube channel' },
+  { iconName: 'music', backgroundColor: '#000', url: 'https://tiktok.com', sharesUrl: false, note: 'Links to TikTok profile' },
+  { iconName: 'whatsapp', backgroundColor: '#25D366', url: 'https://wa.me/?text=', sharesUrl: true },
+  { iconName: 'telegram', backgroundColor: '#0088cc', url: 'https://t.me/share/url?url=', sharesUrl: true },
 ];
 
 // Helper function to get the current page URL and create share message
 function getShareUrl(badge) {
-  if (!badge.url) return null; // Platform doesn't support web sharing
+  // If badge doesn't share URL (Instagram, YouTube, TikTok), just return the direct link
+  if (!badge.sharesUrl) {
+    return badge.url;
+  }
   
   const currentUrl = Platform.OS === 'web' 
     ? window.location.href 
@@ -954,7 +957,6 @@ function SocialMediaIconRow() {
     }}>
       {SOCIAL_BADGES.map((badge) => {
         const shareUrl = getShareUrl(badge);
-        if (!shareUrl) return null; // Skip platforms that don't support sharing
         
         return (
           <AnimatedSocialIconBadge
@@ -1030,7 +1032,6 @@ function FloatingSocialColumn() {
     >
       {SOCIAL_BADGES.map((badge, i) => {
         const shareUrl = getShareUrl(badge);
-        if (!shareUrl) return null; // Skip platforms that don't support sharing
         
         return (
           <Animated.View
@@ -5571,7 +5572,6 @@ const fetchFooterData = async () => {
 
   const shareIconEls = SOCIAL_BADGES.map((badge) => {
     const shareUrl = getShareUrl(badge);
-    if (!shareUrl) return null; // Skip platforms that don't support sharing
     
     return (
       <AnimatedSocialIconBadge
@@ -6414,7 +6414,6 @@ const fetchFooterData = async () => {
 
                 {SOCIAL_BADGES.map((badge) => {
                   const shareUrl = getShareUrl(badge);
-                  if (!shareUrl) return null; // Skip platforms that don't support sharing
                   
                   return (
                     <AnimatedSocialIconBadge
