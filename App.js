@@ -2101,19 +2101,19 @@ function HeroSlider({ slides, maxCycles = 0, height = 510, onShopNow, onViewCart
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
-                opacity: 0.72,
+                opacity: 0.95,
               },
             })}
           </View>
         ) : (
           <Image
             source={{ uri: slide.uri }}
-            style={{ ...StyleSheet.absoluteFillObject, width: '100%', height: '100%', opacity: 0.72 }}
+            style={{ ...StyleSheet.absoluteFillObject, width: '100%', height: '100%', opacity: 0.95 }}
             resizeMode="cover"
           />
         )}
         {/* Dark overlay */}
-        <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(20,0,0,0.38)' }} />
+        <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.15)' }} />
       </Animated.View>
 
       {/* ── Hero text ── */}
@@ -2420,6 +2420,7 @@ export default function App() {
   const [customerOrdersLoading, setCustomerOrdersLoading] = useState(false);
 
   const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
+  const [heroSlides, setHeroSlides] = useState([]);
 
 
 
@@ -3020,6 +3021,14 @@ const fetchFooterData = async () => {
 
       const catRes = await supabase.from('categories').select('*');
 
+      // Fetch hero slides
+      const heroRes = await supabase
+        .from('hero_slides')
+        .select('*')
+        .eq('is_active', true)
+        .order('position', { ascending: true });
+
+
       
 
       if (prodRes.error) {
@@ -3033,6 +3042,23 @@ const fetchFooterData = async () => {
       
 
       console.log('✅ Products fetched from Supabase:', prodRes.data?.length || 0, 'products');
+
+      // Process hero slides
+      if (heroRes.data && heroRes.data.length > 0) {
+        const formattedSlides = heroRes.data.map(slide => ({
+          id: slide.id,
+          type: slide.type || 'image',
+          uri: slide.url,
+          duration: slide.duration || 4000,
+          title: slide.name,
+          subtitle: slide.caption,
+        }));
+        setHeroSlides(formattedSlides);
+        console.log('🎬 Hero slides loaded:', formattedSlides.length);
+      } else {
+        console.log('⚠️ No hero slides found in database, using fallback');
+      }
+      
 
       
 
@@ -9957,7 +9983,7 @@ const fetchFooterData = async () => {
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} bounces={false}>
 
           <HeroSlider
-            slides={HERO_SLIDES}
+            slides={heroSlides.length > 0 ? heroSlides : HERO_SLIDES}
             maxCycles={0}
             height={isPhoneScreen ? 380 : 510}
             onShopNow={() => setCurrentPage('home')}
