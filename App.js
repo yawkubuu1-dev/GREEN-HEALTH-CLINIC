@@ -909,15 +909,36 @@ function AnimatedSocialIconBadge({ onPress, backgroundColor, iconName, iconSize 
 }
 
 const SOCIAL_BADGES = [
-  { iconName: 'facebook', backgroundColor: '#1877F2', url: 'https://facebook.com' },
-  { iconName: 'instagram', backgroundColor: '#E4405F', url: 'https://instagram.com' },
-  { iconName: 'twitter', backgroundColor: '#000', url: 'https://twitter.com' },
-  { iconName: 'linkedin', backgroundColor: '#0077B5', url: 'https://linkedin.com' },
-  { iconName: 'youtube', backgroundColor: '#FF0000', url: 'https://youtube.com' },
-  { iconName: 'music', backgroundColor: '#000', url: 'https://tiktok.com' },
-  { iconName: 'whatsapp', backgroundColor: '#25D366', url: 'https://wa.me/233591008897' },
-  { iconName: 'telegram', backgroundColor: '#0088cc', url: 'https://t.me' },
+  { iconName: 'facebook', backgroundColor: '#1877F2', url: 'https://www.facebook.com/sharer/sharer.php?u=' },
+  { iconName: 'instagram', backgroundColor: '#E4405F', url: null, note: 'Instagram does not support URL sharing via web' },
+  { iconName: 'twitter', backgroundColor: '#000', url: 'https://twitter.com/intent/tweet?url=' },
+  { iconName: 'linkedin', backgroundColor: '#0077B5', url: 'https://www.linkedin.com/sharing/share-offsite/?url=' },
+  { iconName: 'youtube', backgroundColor: '#FF0000', url: null, note: 'YouTube does not support sharing external links' },
+  { iconName: 'music', backgroundColor: '#000', url: null, note: 'TikTok does not support URL sharing via web' },
+  { iconName: 'whatsapp', backgroundColor: '#25D366', url: 'https://wa.me/?text=' },
+  { iconName: 'telegram', backgroundColor: '#0088cc', url: 'https://t.me/share/url?url=' },
 ];
+
+// Helper function to get the current page URL and create share message
+function getShareUrl(badge) {
+  if (!badge.url) return null; // Platform doesn't support web sharing
+  
+  const currentUrl = Platform.OS === 'web' 
+    ? window.location.href 
+    : 'https://prolynwear.com'; // Fallback URL for mobile
+  
+  const shareMessage = `Check out Green Health Clinic - Online Functional & Holistic Medicine: ${currentUrl}`;
+  
+  // Different platforms have different URL encoding requirements
+  if (badge.iconName === 'whatsapp') {
+    return badge.url + encodeURIComponent(shareMessage);
+  } else if (badge.iconName === 'telegram') {
+    return badge.url + encodeURIComponent(currentUrl) + '&text=' + encodeURIComponent('Check out Green Health Clinic - Online Functional & Holistic Medicine');
+  } else {
+    // Facebook, Twitter, LinkedIn
+    return badge.url + encodeURIComponent(currentUrl);
+  }
+}
 
 // Social Media Icon Row Component
 function SocialMediaIconRow() {
@@ -931,16 +952,21 @@ function SocialMediaIconRow() {
       paddingVertical: 8,
       gap: 12
     }}>
-      {SOCIAL_BADGES.map((badge) => (
-        <AnimatedSocialIconBadge
-          key={badge.iconName + badge.url}
-          onPress={() => Linking.openURL(badge.url)}
-          backgroundColor={badge.backgroundColor}
-          iconName={badge.iconName}
-          iconSize={18}
-          style={{ marginRight: 0 }}
-        />
-      ))}
+      {SOCIAL_BADGES.map((badge) => {
+        const shareUrl = getShareUrl(badge);
+        if (!shareUrl) return null; // Skip platforms that don't support sharing
+        
+        return (
+          <AnimatedSocialIconBadge
+            key={badge.iconName + badge.url}
+            onPress={() => Linking.openURL(shareUrl)}
+            backgroundColor={badge.backgroundColor}
+            iconName={badge.iconName}
+            iconSize={18}
+            style={{ marginRight: 0 }}
+          />
+        );
+      })}
     </View>
   );
 }
@@ -1002,24 +1028,29 @@ function FloatingSocialColumn() {
       accessibilityRole="navigation"
       accessibilityLabel="Social media links"
     >
-      {SOCIAL_BADGES.map((badge, i) => (
-        <Animated.View
-          key={badge.iconName + badge.url}
-          style={{
-            opacity: anims[i].opacity,
-            transform: [{ translateX: anims[i].translateX }],
-          }}
-        >
-          <AnimatedSocialIconBadge
-            onPress={() => Linking.openURL(badge.url)}
-            backgroundColor={badge.backgroundColor}
-            iconName={badge.iconName}
-            iconSize={18}
-            size={40}
-            style={{ marginRight: 0 }}
-          />
-        </Animated.View>
-      ))}
+      {SOCIAL_BADGES.map((badge, i) => {
+        const shareUrl = getShareUrl(badge);
+        if (!shareUrl) return null; // Skip platforms that don't support sharing
+        
+        return (
+          <Animated.View
+            key={badge.iconName + badge.url}
+            style={{
+              opacity: anims[i].opacity,
+              transform: [{ translateX: anims[i].translateX }],
+            }}
+          >
+            <AnimatedSocialIconBadge
+              onPress={() => Linking.openURL(shareUrl)}
+              backgroundColor={badge.backgroundColor}
+              iconName={badge.iconName}
+              iconSize={18}
+              size={40}
+              style={{ marginRight: 0 }}
+            />
+          </Animated.View>
+        );
+      })}
     </View>
   );
 }
@@ -5538,17 +5569,22 @@ const fetchFooterData = async () => {
     </Pressable>
   );
 
-  const shareIconEls = SOCIAL_BADGES.map((badge) => (
-    <AnimatedSocialIconBadge
-      key={badge.iconName + badge.url}
-      onPress={() => Linking.openURL(badge.url)}
-      backgroundColor={badge.backgroundColor}
-      iconName={badge.iconName}
-      iconSize={isCompactShareMenu ? 16 : 16}
-      size={isCompactShareMenu ? 36 : 36}
-      style={{ marginRight: 0 }}
-    />
-  ));
+  const shareIconEls = SOCIAL_BADGES.map((badge) => {
+    const shareUrl = getShareUrl(badge);
+    if (!shareUrl) return null; // Skip platforms that don't support sharing
+    
+    return (
+      <AnimatedSocialIconBadge
+        key={badge.iconName + badge.url}
+        onPress={() => Linking.openURL(shareUrl)}
+        backgroundColor={badge.backgroundColor}
+        iconName={badge.iconName}
+        iconSize={isCompactShareMenu ? 16 : 16}
+        size={isCompactShareMenu ? 36 : 36}
+        style={{ marginRight: 0 }}
+      />
+    );
+  });
 
   return (
 
@@ -6376,17 +6412,22 @@ const fetchFooterData = async () => {
 
               <View style={[styles.mobileSocialIcons, { flexWrap: 'wrap', gap: 14 }]}>
 
-                {SOCIAL_BADGES.map((badge) => (
-                  <AnimatedSocialIconBadge
-                    key={badge.iconName + badge.url}
-                    onPress={() => Linking.openURL(badge.url)}
-                    backgroundColor={badge.backgroundColor}
-                    iconName={badge.iconName}
-                    iconSize={18}
-                    size={40}
-                    style={{ marginRight: 0 }}
-                  />
-                ))}
+                {SOCIAL_BADGES.map((badge) => {
+                  const shareUrl = getShareUrl(badge);
+                  if (!shareUrl) return null; // Skip platforms that don't support sharing
+                  
+                  return (
+                    <AnimatedSocialIconBadge
+                      key={badge.iconName + badge.url}
+                      onPress={() => Linking.openURL(shareUrl)}
+                      backgroundColor={badge.backgroundColor}
+                      iconName={badge.iconName}
+                      iconSize={18}
+                      size={40}
+                      style={{ marginRight: 0 }}
+                    />
+                  );
+                })}
 
               </View>
 
