@@ -5609,7 +5609,7 @@ const fetchFooterData = async () => {
 
             <View style={styles.headerRight}>
 
-              {shareButtonEl}
+              {!isShopPage && shareButtonEl}
 
               {isShopPage && (
 
@@ -6037,36 +6037,38 @@ const fetchFooterData = async () => {
 
             <View style={styles.headerRight}>
 
-              <View style={{ flexDirection: 'row', alignItems: 'center', zIndex: 10000, marginRight: 8 }}>
-                {shareButtonEl}
+              {!isShopPage && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', zIndex: 10000, marginRight: 8 }}>
+                  {shareButtonEl}
 
-                {!isCompactShareMenu && (
-                  <Animated.View
-                    pointerEvents={isShareMenuOpen ? 'auto' : 'none'}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      paddingVertical: 8,
-                      paddingLeft: 8,
-                      gap: 8,
-                      opacity: shareMenuAnim,
-                      transform: [{
-                        translateX: shareMenuAnim.interpolate({
+                  {!isCompactShareMenu && (
+                    <Animated.View
+                      pointerEvents={isShareMenuOpen ? 'auto' : 'none'}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingVertical: 8,
+                        paddingLeft: 8,
+                        gap: 8,
+                        opacity: shareMenuAnim,
+                        transform: [{
+                          translateX: shareMenuAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [-20, 0]
+                          })
+                        }],
+                        overflow: 'hidden',
+                        maxWidth: shareMenuAnim.interpolate({
                           inputRange: [0, 1],
-                          outputRange: [-20, 0]
+                          outputRange: [0, 420]
                         })
-                      }],
-                      overflow: 'hidden',
-                      maxWidth: shareMenuAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, 420]
-                      })
-                    }}
-                  >
-                    {shareIconEls}
-                  </Animated.View>
-                )}
-              </View>
+                      }}
+                    >
+                      {shareIconEls}
+                    </Animated.View>
+                  )}
+                </View>
+              )}
 
               {isShopPage && (
 
