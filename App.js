@@ -55,6 +55,7 @@ import LocateUsSection from './components/LocateUsSection';
 import { Video } from 'expo-av';
 
 import { sendToDriver, formatDeliveryMessage, createWhatsAppLink } from './utils/whatsappHelper';
+import { serviceService } from './services/supabaseService';
 
 
 
@@ -2102,6 +2103,11 @@ export default function App() {
   const [mobileAboutExpanded, setMobileAboutExpanded] = useState(false);
 
   const [activeServiceSection, setActiveServiceSection] = useState('functional-medicine');
+  
+  // Services data from Supabase
+  const [servicesData, setServicesData] = useState([]);
+  const [servicesLoading, setServicesLoading] = useState(true);
+  const [servicesError, setServicesError] = useState('');
 
   const servicesScrollViewRef = useRef(null);
   const isServicesScrollingProgrammatically = useRef(false);
@@ -2737,6 +2743,7 @@ const fetchFooterData = async () => {
   const loadSupabaseData = async (showLoading = true) => {
 
     fetchFooterData();
+    fetchServicesData(); // Load services from Supabase
 
     if (showLoading) {
 
@@ -3168,6 +3175,24 @@ const fetchFooterData = async () => {
   // HERO_SLIDES removed - now fetched directly in HeroSlider component from Supabase
 
 
+
+  // Fetch services data from Supabase
+  const fetchServicesData = async () => {
+    try {
+      setServicesLoading(true);
+      console.log('🔄 Fetching services from Supabase...');
+      const services = await serviceService.getAll();
+      setServicesData(services || []);
+      console.log(`✅ Loaded ${services?.length || 0} services from Supabase`);
+      setServicesError('');
+    } catch (error) {
+      console.error('❌ Failed to fetch services:', error);
+      setServicesError(`Failed to load services: ${error.message}`);
+      setServicesData([]);
+    } finally {
+      setServicesLoading(false);
+    }
+  };
 
   const fetchCustomerOrders = async () => {
 
