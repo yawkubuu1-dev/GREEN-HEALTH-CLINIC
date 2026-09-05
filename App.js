@@ -9316,120 +9316,166 @@ const fetchFooterData = async () => {
             scrollEventThrottle={100}
           >
 
-            <View style={{ marginBottom: 60 }} onLayout={e => { 
-              const newY = e.nativeEvent.layout.y;
-              const oldY = aboutSectionOffsets.current['our-story'];
-              if (oldY !== newY) {
-                console.log(`[ABOUT] our-story layout changed: ${oldY} -> ${newY}`);
-              }
-              aboutSectionOffsets.current['our-story'] = newY;
-            }}>
-              <Text style={{ 
-                fontSize: 28, 
-                fontWeight: '700', 
-                color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                marginBottom: 16 
-              }}>Our Story</Text>
-              <Text style={{ 
-                fontSize: 16, 
-                lineHeight: 24,
-                color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
-              }}>
-                K.E Green Health Clinic was founded with a vision to transform healthcare through a patient-centered, functional medicine approach. Our journey began with a simple belief: that true healing comes from addressing the root causes of illness, not just managing symptoms. Over the years, we have grown from a small practice to a comprehensive healthcare center, serving thousands of patients with personalized care that honors each individual's unique health journey.
-              </Text>
-            </View>
+            {/* Dynamic About Sections from Supabase */}
+            {aboutSectionsLoading ? (
+              <View style={{ marginBottom: 60, alignItems: 'center' }}>
+                <Text style={{ 
+                  fontSize: 16, 
+                  color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
+                }}>Loading about sections...</Text>
+              </View>
+            ) : aboutSectionsError ? (
+              <View style={{ marginBottom: 60, alignItems: 'center' }}>
+                <Text style={{ 
+                  fontSize: 16, 
+                  color: 'red' 
+                }}>Error loading about sections: {aboutSectionsError}</Text>
+              </View>
+            ) : aboutSectionsData && aboutSectionsData.length > 0 ? (
+              aboutSectionsData.map((section, index) => (
+                <View key={section.id || index} style={{ marginBottom: 60 }} onLayout={e => { 
+                  const newY = e.nativeEvent.layout.y;
+                  const sectionKey = section.section_key || section.title?.toLowerCase().replace(/\s+/g, '-') || `section-${index}`;
+                  const oldY = aboutSectionOffsets.current[sectionKey];
+                  if (oldY !== newY) {
+                    console.log(`[ABOUT] ${sectionKey} layout changed: ${oldY} -> ${newY}`);
+                  }
+                  aboutSectionOffsets.current[sectionKey] = newY;
+                }}>
+                  <Text style={{ 
+                    fontSize: 28, 
+                    fontWeight: '700', 
+                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                    marginBottom: 16 
+                  }}>{section.title || 'Untitled Section'}</Text>
+                  <Text style={{ 
+                    fontSize: 16, 
+                    lineHeight: 24,
+                    color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
+                  }}>
+                    {section.content || section.description || 'No content available'}
+                  </Text>
+                </View>
+              ))
+            ) : (
+              // Fallback to hardcoded content if no Supabase data
+              <>
+                <View style={{ marginBottom: 60 }} onLayout={e => { 
+                  const newY = e.nativeEvent.layout.y;
+                  const oldY = aboutSectionOffsets.current['our-story'];
+                  if (oldY !== newY) {
+                    console.log(`[ABOUT] our-story layout changed: ${oldY} -> ${newY}`);
+                  }
+                  aboutSectionOffsets.current['our-story'] = newY;
+                }}>
+                  <Text style={{ 
+                    fontSize: 28, 
+                    fontWeight: '700', 
+                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                    marginBottom: 16 
+                  }}>Our Story</Text>
+                  <Text style={{ 
+                    fontSize: 16, 
+                    lineHeight: 24,
+                    color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
+                  }}>
+                    K.E Green Health Clinic was founded with a vision to transform healthcare through a patient-centered, functional medicine approach. Our journey began with a simple belief: that true healing comes from addressing the root causes of illness, not just managing symptoms. Over the years, we have grown from a small practice to a comprehensive healthcare center, serving thousands of patients with personalized care that honors each individual's unique health journey.
+                  </Text>
+                </View>
 
-            <View style={{ marginBottom: 60 }} onLayout={e => { 
-              const newY = e.nativeEvent.layout.y;
-              const oldY = aboutSectionOffsets.current['our-team'];
-              if (oldY !== newY) {
-                console.log(`[ABOUT] our-team layout changed: ${oldY} -> ${newY}`);
-              }
-              aboutSectionOffsets.current['our-team'] = newY;
-            }}>
-              <Text style={{ 
-                fontSize: 28, 
-                fontWeight: '700', 
-                color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                marginBottom: 16 
-              }}>Our Team</Text>
-              <Text style={{ 
-                fontSize: 16, 
-                lineHeight: 24,
-                color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
-              }}>
-                Our team consists of board-certified physicians, licensed nutritionists, certified health coaches, and compassionate support staff who share a passion for integrative medicine. Each member of our team brings specialized expertise and a commitment to ongoing learning in the latest advances in functional and metabolic medicine. We work collaboratively to provide you with comprehensive, coordinated care that addresses all aspects of your health.
-              </Text>
-            </View>
+                <View style={{ marginBottom: 60 }} onLayout={e => { 
+                  const newY = e.nativeEvent.layout.y;
+                  const oldY = aboutSectionOffsets.current['our-team'];
+                  if (oldY !== newY) {
+                    console.log(`[ABOUT] our-team layout changed: ${oldY} -> ${newY}`);
+                  }
+                  aboutSectionOffsets.current['our-team'] = newY;
+                }}>
+                  <Text style={{ 
+                    fontSize: 28, 
+                    fontWeight: '700', 
+                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                    marginBottom: 16 
+                  }}>Our Team</Text>
+                  <Text style={{ 
+                    fontSize: 16, 
+                    lineHeight: 24,
+                    color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
+                  }}>
+                    Our team consists of board-certified physicians, licensed nutritionists, certified health coaches, and compassionate support staff who share a passion for integrative medicine. Each member of our team brings specialized expertise and a commitment to ongoing learning in the latest advances in functional and metabolic medicine. We work collaboratively to provide you with comprehensive, coordinated care that addresses all aspects of your health.
+                  </Text>
+                </View>
 
-            <View style={{ marginBottom: 60 }} onLayout={e => { 
-              const newY = e.nativeEvent.layout.y;
-              const oldY = aboutSectionOffsets.current['patient-stories'];
-              if (oldY !== newY) {
-                console.log(`[ABOUT] patient-stories layout changed: ${oldY} -> ${newY}`);
-              }
-              aboutSectionOffsets.current['patient-stories'] = newY;
-            }}>
-              <Text style={{ 
-                fontSize: 28, 
-                fontWeight: '700', 
-                color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                marginBottom: 16 
-              }}>Patient Stories</Text>
-              <Text style={{ 
-                fontSize: 16, 
-                lineHeight: 24,
-                color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
-              }}>
-                Every patient's journey is unique, and we are honored to be part of so many transformative health stories. From overcoming chronic conditions that seemed insurmountable to achieving wellness goals that once felt out of reach, our patients inspire us daily. These stories of hope, healing, and renewed vitality are a testament to the power of personalized, root-cause medicine and the resilience of the human spirit.
-              </Text>
-            </View>
+                <View style={{ marginBottom: 60 }} onLayout={e => { 
+                  const newY = e.nativeEvent.layout.y;
+                  const oldY = aboutSectionOffsets.current['patient-stories'];
+                  if (oldY !== newY) {
+                    console.log(`[ABOUT] patient-stories layout changed: ${oldY} -> ${newY}`);
+                  }
+                  aboutSectionOffsets.current['patient-stories'] = newY;
+                }}>
+                  <Text style={{ 
+                    fontSize: 28, 
+                    fontWeight: '700', 
+                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                    marginBottom: 16 
+                  }}>Patient Stories</Text>
+                  <Text style={{ 
+                    fontSize: 16, 
+                    lineHeight: 24,
+                    color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
+                  }}>
+                    Every patient's journey is unique, and we are honored to be part of so many transformative health stories. From overcoming chronic conditions that seemed insurmountable to achieving wellness goals that once felt out of reach, our patients inspire us daily. These stories of hope, healing, and renewed vitality are a testament to the power of personalized, root-cause medicine and the resilience of the human spirit.
+                  </Text>
+                </View>
 
-            <View style={{ marginBottom: 60 }} onLayout={e => { 
-              const newY = e.nativeEvent.layout.y;
-              const oldY = aboutSectionOffsets.current['blog-news'];
-              if (oldY !== newY) {
-                console.log(`[ABOUT] blog-news layout changed: ${oldY} -> ${newY}`);
-              }
-              aboutSectionOffsets.current['blog-news'] = newY;
-            }}>
-              <Text style={{ 
-                fontSize: 28, 
-                fontWeight: '700', 
-                color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                marginBottom: 16 
-              }}>Blog & News</Text>
-              <Text style={{ 
-                fontSize: 16, 
-                lineHeight: 24,
-                color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
-              }}>
-                Stay informed with the latest insights from our team of healthcare experts. Our blog features articles on nutrition, lifestyle medicine, cutting-edge research, and practical tips for optimizing your health. We also share clinic news, upcoming events, and updates on the latest services we offer. Our goal is to empower you with knowledge that supports your journey to optimal health and wellness.
-              </Text>
-            </View>
+                <View style={{ marginBottom: 60 }} onLayout={e => { 
+                  const newY = e.nativeEvent.layout.y;
+                  const oldY = aboutSectionOffsets.current['blog-news'];
+                  if (oldY !== newY) {
+                    console.log(`[ABOUT] blog-news layout changed: ${oldY} -> ${newY}`);
+                  }
+                  aboutSectionOffsets.current['blog-news'] = newY;
+                }}>
+                  <Text style={{ 
+                    fontSize: 28, 
+                    fontWeight: '700', 
+                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                    marginBottom: 16 
+                  }}>Blog & News</Text>
+                  <Text style={{ 
+                    fontSize: 16, 
+                    lineHeight: 24,
+                    color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
+                  }}>
+                    Stay informed with the latest insights from our team of healthcare experts. Our blog features articles on nutrition, lifestyle medicine, cutting-edge research, and practical tips for optimizing your health. We also share clinic news, upcoming events, and updates on the latest services we offer. Our goal is to empower you with knowledge that supports your journey to optimal health and wellness.
+                  </Text>
+                </View>
 
-            <View style={{ marginBottom: 60 }} onLayout={e => { 
-              const newY = e.nativeEvent.layout.y;
-              const oldY = aboutSectionOffsets.current['vision-mission'];
-              if (oldY !== newY) {
-                console.log(`[ABOUT] vision-mission layout changed: ${oldY} -> ${newY}`);
-              }
-              aboutSectionOffsets.current['vision-mission'] = newY;
-            }}>
-              <Text style={{ 
-                fontSize: 28, 
-                fontWeight: '700', 
-                color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                marginBottom: 16 
-              }}>Vision & Mission</Text>
-              <Text style={{ 
-                fontSize: 16, 
-                lineHeight: 24,
-                color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
-              }}>
-                Our vision is to create a world where healthcare is truly personalized, preventive, and focused on root causes rather than symptoms. We envision a healthcare system that empowers individuals to take control of their health through education, lifestyle modification, and targeted interventions. Our mission is to provide exceptional functional and metabolic medicine services that transform lives, one patient at a time, through compassionate care, scientific rigor, and an unwavering commitment to optimal health outcomes.
-              </Text>
-            </View>
+                <View style={{ marginBottom: 60 }} onLayout={e => { 
+                  const newY = e.nativeEvent.layout.y;
+                  const oldY = aboutSectionOffsets.current['vision-mission'];
+                  if (oldY !== newY) {
+                    console.log(`[ABOUT] vision-mission layout changed: ${oldY} -> ${newY}`);
+                  }
+                  aboutSectionOffsets.current['vision-mission'] = newY;
+                }}>
+                  <Text style={{ 
+                    fontSize: 28, 
+                    fontWeight: '700', 
+                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                    marginBottom: 16 
+                  }}>Vision & Mission</Text>
+                  <Text style={{ 
+                    fontSize: 16, 
+                    lineHeight: 24,
+                    color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
+                  }}>
+                    Our vision is to create a world where healthcare is truly personalized, preventive, and focused on root causes rather than symptoms. We envision a healthcare system that empowers individuals to take control of their health through education, lifestyle modification, and targeted interventions. Our mission is to provide exceptional functional and metabolic medicine services that transform lives, one patient at a time, through compassionate care, scientific rigor, and an unwavering commitment to optimal health outcomes.
+                  </Text>
+                </View>
+              </>
+            )}
 
           </ScrollView>
 
