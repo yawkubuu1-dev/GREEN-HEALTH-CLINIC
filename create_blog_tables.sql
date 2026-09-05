@@ -39,6 +39,14 @@ CREATE TABLE IF NOT EXISTS public.blog_posts (
   excerpt TEXT, -- short summary
   content TEXT NOT NULL, -- full article content (markdown or HTML)
   featured_image_url TEXT,
+  
+  -- Video support (MP4 or external links)
+  video_url TEXT, -- Direct MP4 URL or external video link
+  video_type TEXT DEFAULT 'mp4' 
+    CHECK (video_type IN ('mp4', 'youtube', 'vimeo', 'other')),
+  video_duration TEXT, -- e.g., "5:30" or "N/A"
+  has_video BOOLEAN NOT NULL DEFAULT false,
+  
   category_id UUID REFERENCES public.blog_categories(id) ON DELETE SET NULL,
   author_id UUID REFERENCES public.blog_authors(id) ON DELETE SET NULL,
   

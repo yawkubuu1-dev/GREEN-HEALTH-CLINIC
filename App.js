@@ -40,6 +40,7 @@ import {
 
 import { supabase } from './lib/supabase';
 
+import HeroSlider from './components/HeroSlider';
 import CarouselComponent from './components/CarouselComponent';
 
 import ProductDetail from './components/ProductDetail';
@@ -1992,201 +1993,7 @@ function PatientStoryCard({ story, isUserDarkMode, surface, charcoal, green, gre
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-
-// ─── Hero Slider ─────────────────────────────────────────────────────────────
-// Props:
-//   slides      — array of { id, type:'image'|'video', uri, duration(ms) }
-//   maxCycles   — how many full loops before stopping on last slide (0 = infinite)
-//   height      — container height in px (default 510)
-//   onShopNow   — callback for SHOP NOW button
-//   onViewCart  — callback for VIEW CART button
-//   isPhone     — compact layout flag
-function HeroSlider({ slides, maxCycles = 0, height = 510, onShopNow, onViewCart, isPhone }) {
-  const [idx, setIdx]           = useState(0);
-  const [cycles, setCycles]     = useState(0);
-  const [stopped, setStopped]   = useState(false);
-  const fadeAnim                = useRef(new Animated.Value(1)).current;
-  const timerRef                = useRef(null);
-  const videoRef                = useRef(null);
-
-  const total = slides.length;
-
-  const advance = (nextIdx) => {
-    // Fade out → swap → fade in
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 400,
-      useNativeDriver: Platform.OS !== 'web',  // Native driver breaks on web
-    }).start(() => {
-      setIdx(nextIdx);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: Platform.OS !== 'web',  // Native driver breaks on web
-      }).start();
-    });
-  };
-
-  const goNext = () => {
-    clearTimer();
-    const next = (idx + 1) % total;
-    const newCycles = next === 0 ? cycles + 1 : cycles;
-    if (maxCycles > 0 && next === 0 && newCycles >= maxCycles) {
-      advance(total - 1);
-      setStopped(true);
-      setCycles(newCycles);
-      return;
-    }
-    setCycles(newCycles);
-    advance(next);
-  };
-
-  const goPrev = () => {
-    clearTimer();
-    advance((idx - 1 + total) % total);
-  };
-
-  const goTo = (i) => {
-    clearTimer();
-    advance(i);
-  };
-
-  const clearTimer = () => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  };
-
-  // Schedule next slide after current slide's duration
-  useEffect(() => {
-    if (stopped) return;
-    const slide = slides[idx];
-    timerRef.current = setTimeout(() => {
-      const next = (idx + 1) % total;
-      const newCycles = next === 0 ? cycles + 1 : cycles;
-      if (maxCycles > 0 && next === 0 && newCycles >= maxCycles) {
-        // Stop on last slide
-        advance(total - 1);
-        setStopped(true);
-        setCycles(newCycles);
-        return;
-      }
-      setCycles(newCycles);
-      advance(next);
-    }, slide.duration);
-
-    return () => clearTimer();
-  }, [idx, stopped]);
-
-  const slide = slides[idx];
-
-  return (
-    <View style={{ height, margin: 16, backgroundColor: '#1b1b1b', overflow: 'hidden', justifyContent: 'flex-end' }}>
-
-      {/* ── Slides layer ── */}
-      <Animated.View style={{ ...StyleSheet.absoluteFillObject, opacity: fadeAnim }}>
-        {slide.type === 'video' && Platform.OS === 'web' ? (
-          // Web video via DOM element — autoplay, muted, loops within its display duration
-          <View style={StyleSheet.absoluteFillObject}>
-            {React.createElement('video', {
-              key: slide.id,
-              ref: videoRef,
-              src: slide.uri,
-              autoPlay: true,
-              muted: true,
-              loop: true,
-              playsInline: true,
-              style: {
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-              },
-            })}
-          </View>
-        ) : (
-          <Image
-            source={{ uri: slide.uri }}
-            style={{ ...StyleSheet.absoluteFillObject, width: '100%', height: '100%' }}
-            resizeMode="cover"
-          />
-        )}
-        {/* Dark overlay removed for bright images */}
-      </Animated.View>
-
-      {/* ── Hero text ── */}
-      <View style={{ padding: isPhone ? 16 : 20, zIndex: 2 }}>
-        {slide.brandText && (
-          <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, letterSpacing: 2, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase' }}>
-            {slide.brandText}
-          </Text>
-        )}
-        {slide.title && (
-          <Text style={{ color: '#fff', fontSize: isPhone ? 22 : 34, fontWeight: '800', fontFamily: 'Georgia', lineHeight: isPhone ? 28 : 42, marginBottom: 10 }}>
-            {slide.title}
-          </Text>
-        )}
-        {slide.subtitle && (
-          <Text style={{ color: 'rgba(255,255,255,0.82)', fontSize: isPhone ? 13 : 15, lineHeight: 22, marginBottom: 20 }}>
-            {slide.subtitle}
-          </Text>
-        )}
-        <View style={{ flexDirection: 'row', gap: 12 }}>
-          <Pressable
-            onPress={onShopNow}
-            style={({ pressed }) => ({ backgroundColor: pressed ? '#1e5010' : '#296416', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 6 })}
-          >
-            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 12, letterSpacing: 1.5 }}>SHOP NOW</Text>
-          </Pressable>
-          <Pressable
-            onPress={onViewCart}
-            style={({ pressed }) => ({ borderWidth: 1.5, borderColor: '#fff', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 6, backgroundColor: pressed ? 'rgba(255,255,255,0.15)' : 'transparent' })}
-          >
-            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 12, letterSpacing: 1.5 }}>VIEW CART</Text>
-          </Pressable>
-        </View>
-      </View>
-
-      {/* ── Prev / Next arrows ── */}
-      <Pressable
-        onPress={goPrev}
-        style={{ position: 'absolute', left: 12, top: '50%', marginTop: -20, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.42)', justifyContent: 'center', alignItems: 'center', zIndex: 10 }}
-        accessibilityRole="button" accessibilityLabel="Previous slide"
-      >
-        <FontAwesome name="chevron-left" size={14} color="#fff" />
-      </Pressable>
-      <Pressable
-        onPress={goNext}
-        style={{ position: 'absolute', right: 12, top: '50%', marginTop: -20, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.42)', justifyContent: 'center', alignItems: 'center', zIndex: 10 }}
-        accessibilityRole="button" accessibilityLabel="Next slide"
-      >
-        <FontAwesome name="chevron-right" size={14} color="#fff" />
-      </Pressable>
-
-      {/* ── Dot indicators ── */}
-      <View style={{ position: 'absolute', bottom: 16, width: '100%', flexDirection: 'row', justifyContent: 'center', gap: 6, zIndex: 10 }}>
-        {slides.map((s, i) => (
-          <Pressable key={s.id} onPress={() => goTo(i)} accessibilityRole="button" accessibilityLabel={`Go to slide ${i + 1}`}>
-            <View style={{
-              width: i === idx ? 24 : 8,
-              height: 8,
-              borderRadius: 4,
-              backgroundColor: i === idx ? '#fff' : 'rgba(255,255,255,0.4)',
-            }} />
-          </Pressable>
-        ))}
-      </View>
-
-      {/* ── Slide type badge (video indicator) ── */}
-      {slide.type === 'video' && (
-        <View style={{ position: 'absolute', top: 14, right: 14, flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, zIndex: 10 }}>
-          <FontAwesome name="play-circle" size={12} color="#fff" />
-          <Text style={{ color: '#fff', fontSize: 11, fontWeight: '600' }}>VIDEO</Text>
-        </View>
-      )}
-    </View>
-  );
-}
+// Old HeroSlider component removed - now imported from components/HeroSlider.jsx
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function App() {
@@ -2426,7 +2233,7 @@ export default function App() {
   const [customerOrdersLoading, setCustomerOrdersLoading] = useState(false);
 
   const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
-  const [heroSlides, setHeroSlides] = useState([]);
+  // heroSlides state removed - now fetched inside HeroSlider component
 
 
 
@@ -3027,14 +2834,6 @@ const fetchFooterData = async () => {
 
       const catRes = await supabase.from('categories').select('*');
 
-      // Fetch hero slides
-      const heroRes = await supabase
-        .from('hero_slides')
-        .select('*')
-        .eq('is_active', true)
-        .order('position', { ascending: true });
-
-
       
 
       if (prodRes.error) {
@@ -3048,23 +2847,6 @@ const fetchFooterData = async () => {
       
 
       console.log('✅ Products fetched from Supabase:', prodRes.data?.length || 0, 'products');
-
-      // Process hero slides
-      if (heroRes.data && heroRes.data.length > 0) {
-        const formattedSlides = heroRes.data.map(slide => ({
-          id: slide.id,
-          type: slide.type || 'image',
-          uri: slide.url,
-          duration: slide.duration || 4000,
-          brandText: slide.brand_text || '',
-          title: slide.caption || '',
-          subtitle: '',
-        }));
-        setHeroSlides(formattedSlides);
-        console.log('🎬 Hero slides loaded:', formattedSlides.length);
-      } else {
-        console.log('⚠️ No hero slides found in database, using fallback');
-      }
       
 
       
@@ -3377,47 +3159,7 @@ const fetchFooterData = async () => {
 
 
 
-  const HERO_SLIDES = [
-    {
-      id: 's1',
-      type: 'image',
-      uri: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80',
-      duration: 4000,
-    },
-    {
-      id: 's2',
-      type: 'video',
-      uri: 'https://videos.pexels.com/video-files/3994841/3994841-uhd_2560_1440_25fps.mp4',
-      duration: 8000,
-    },
-    {
-      id: 's3',
-      type: 'image',
-      uri: 'https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9ff?auto=format&fit=crop&w=1200&q=80',
-      duration: 4000,
-    },
-    {
-      id: 's4',
-      type: 'video',
-      uri: 'https://videos.pexels.com/video-files/5698481/5698481-uhd_2560_1440_24fps.mp4',
-      duration: 7000,
-    },
-    {
-      id: 's5',
-      type: 'image',
-      uri: 'https://images.unsplash.com/photo-1543163521-1bf539e0cf6d?auto=format&fit=crop&w=1200&q=80',
-      duration: 4000,
-    },
-    {
-      id: 's6',
-      type: 'image',
-      uri: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=1200&q=80',
-      duration: 4000,
-    },
-  ];
-
-  // Keep legacy HERO_IMAGES in sync for any other references
-  const HERO_IMAGES = HERO_SLIDES.map(s => s.uri);
+  // HERO_SLIDES removed - now fetched directly in HeroSlider component from Supabase
 
 
 
@@ -9989,16 +9731,11 @@ const fetchFooterData = async () => {
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} bounces={false}>
 
-          <HeroSlider
-            slides={heroSlides.length > 0 ? heroSlides : HERO_SLIDES}
-            maxCycles={0}
-            height={isPhoneScreen ? 380 : 510}
-            onShopNow={() => setCurrentPage('home')}
-            onViewCart={openCart}
-            isPhone={isPhoneScreen}
-          />
-
-
+        {/* Hero Slider - Only on Shop Page */}
+        <HeroSlider 
+          height={isPhoneScreen ? 380 : 510}
+          isPhone={isPhoneScreen}
+        />
 
         {/* <CarouselComponent
 
