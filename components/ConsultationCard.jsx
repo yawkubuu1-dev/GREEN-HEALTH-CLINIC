@@ -304,6 +304,8 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
           style={[
             styles.containerNative,
             {
+              width: windowWidth,
+              height: windowHeight,
               opacity: opacityAnim,
             },
           ]}
@@ -339,7 +341,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     width: '100vw',
-    height: '100vh',
+    height: '100dvh', // Dynamic viewport height - better for mobile browsers
     zIndex: 99999,
     display: 'flex',
     alignItems: 'center',
@@ -578,7 +580,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     width: '100vw',
-    height: '100vh',
+    height: '100dvh', // Dynamic viewport height - better for mobile browsers
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     zIndex: 99998,
   },
