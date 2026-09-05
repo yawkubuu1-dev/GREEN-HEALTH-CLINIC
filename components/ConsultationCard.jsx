@@ -147,12 +147,17 @@ export default function ConsultationCard({ isPhone = false }) {
         )}
       </View>
 
-      {/* Submit Button */}
+      {/* Submit Button with Glassmorphism */}
       <Pressable
         style={({ pressed }) => [
           styles.submitButton,
           isPhone && styles.submitButtonPhone,
           pressed && styles.submitButtonPressed,
+          // Apply backdrop-filter as inline style for RN Web compatibility
+          Platform.OS === 'web' && {
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+          },
         ]}
         onPress={handleSubmit}
       >
@@ -319,7 +324,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   submitButton: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: 'rgba(46, 125, 50, 0.55)',
     borderRadius: 10,
     paddingVertical: 14,
     paddingHorizontal: 24,
@@ -327,6 +332,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     // Shadow for depth
     ...(Platform.OS === 'web' && {
       boxShadow: '0 4px 12px rgba(46, 125, 50, 0.25)',
@@ -343,7 +350,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   submitButtonPressed: {
-    backgroundColor: '#1b5e20',
+    backgroundColor: 'rgba(46, 125, 50, 0.75)',
+    borderColor: 'rgba(255, 255, 255, 0.4)',
     transform: [{ scale: 0.98 }],
   },
   submitButtonText: {
