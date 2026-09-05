@@ -193,23 +193,30 @@ export default function ConsultationCard({ isPhone = false }) {
 const styles = StyleSheet.create({
   container: {
     position: Platform.OS === 'web' ? 'fixed' : 'absolute',
-    top: Platform.OS === 'web' ? '180px' : 180,
-    right: Platform.OS === 'web' ? '8%' : '8%',
+    top: Platform.OS === 'web' ? '50%' : '50%',
+    left: Platform.OS === 'web' ? '50%' : '50%',
     width: 380,
     maxWidth: '90%',
     zIndex: 999,
     ...(Platform.OS === 'web' && {
-      // Fixed positioning on web for sticky behavior
-      position: 'fixed',
+      transform: 'translate(-50%, -50%)',
+    }),
+    ...(Platform.OS !== 'web' && {
+      transform: [{ translateX: -190 }, { translateY: -200 }],
     }),
   },
   containerPhone: {
     width: '92%',
-    right: '4%',
-    top: Platform.OS === 'web' ? '140px' : 140,
+    top: Platform.OS === 'web' ? '50%' : '50%',
+    ...(Platform.OS === 'web' && {
+      transform: 'translate(-50%, -50%)',
+    }),
+    ...(Platform.OS !== 'web' && {
+      transform: [{ translateX: '46%' }, { translateY: -150 }],
+    }),
   },
   cardWeb: {
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.75)',
     borderRadius: 20,
     padding: 24,
     ...(Platform.OS === 'web' && {
@@ -218,7 +225,7 @@ const styles = StyleSheet.create({
       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
     }),
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   cardNative: {
     backgroundColor: 'rgba(255, 255, 255, 0.75)',
@@ -268,6 +275,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 15,
     color: '#1a1a2e',
+    ...(Platform.OS === 'web' && {
+      outlineColor: '#2e7d32',
+    }),
   },
   inputPhone: {
     fontSize: 14,
@@ -283,6 +293,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#1a1a2e',
     minHeight: 100,
+    ...(Platform.OS === 'web' && {
+      outlineColor: '#2e7d32',
+    }),
   },
   textareaPhone: {
     fontSize: 14,
@@ -299,7 +312,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   submitButton: {
-    backgroundColor: '#1e3a8a',
+    backgroundColor: '#2e7d32',
     borderRadius: 10,
     paddingVertical: 14,
     paddingHorizontal: 24,
@@ -309,10 +322,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     // Shadow for depth
     ...(Platform.OS === 'web' && {
-      boxShadow: '0 4px 12px rgba(30, 58, 138, 0.25)',
+      boxShadow: '0 4px 12px rgba(46, 125, 50, 0.25)',
     }),
     ...(Platform.OS !== 'web' && {
-      shadowColor: '#1e3a8a',
+      shadowColor: '#2e7d32',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.25,
       shadowRadius: 12,
@@ -323,7 +336,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   submitButtonPressed: {
-    backgroundColor: '#1e40af',
+    backgroundColor: '#1b5e20',
     transform: [{ scale: 0.98 }],
   },
   submitButtonText: {
