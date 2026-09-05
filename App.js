@@ -4799,6 +4799,25 @@ const fetchFooterData = async () => {
 
   const heroTextTranslateY = useRef(new Animated.Value(30)).current;
 
+  // Homepage hero image aspect ratio
+  const [homeHeroAspectRatio, setHomeHeroAspectRatio] = useState(21 / 9); // Default wide banner aspect
+  const homeHeroImageUrl = 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1200&q=80';
+
+  // Preload homepage hero image dimensions on native
+  useEffect(() => {
+    if (Platform.OS !== 'web') {
+      Image.getSize(
+        homeHeroImageUrl,
+        (width, height) => {
+          const ratio = width / height;
+          setHomeHeroAspectRatio(ratio);
+          console.log(`📐 Homepage hero aspect ratio:`, ratio, `(${width}x${height})`);
+        },
+        (error) => console.warn('Failed to get homepage hero size:', error)
+      );
+    }
+  }, []);
+
 
 
   // Trigger hero entrance animation on mount or when navigating to home
@@ -8637,33 +8656,66 @@ const fetchFooterData = async () => {
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} bounces={false}>
 
-          <View style={[styles.homeHero, isPhoneScreen && { minHeight: 400 }]}>
+          <View style={[styles.homeHero, { aspectRatio: homeHeroAspectRatio }, isPhoneScreen && { minHeight: undefined }]}>
 
-            <Animated.Image
-
-              source={{ uri: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1200&q=80' }}
-
-              style={[
-
-                styles.homeHeroImage,
-
+            {Platform.OS === 'web' ? (
+              // Native img element on web for better performance and aspect ratio detection
+              <Animated.View style={[
+                StyleSheet.absoluteFillObject,
                 {
-
                   opacity: heroImageOpacity,
-
                   transform: [{ scale: heroImageScale }]
-
                 }
+              ]}>
+                {React.createElement('img', {
+                  src: homeHeroImageUrl,
+                  alt: 'K.E Green Health Clinic',
+                  onLoad: (e) => {
+                    const ratio = e.target.naturalWidth / e.target.naturalHeight;
+                    setHomeHeroAspectRatio(ratio);
+                    console.log(`📐 Homepage hero aspect ratio:`, ratio, `(${e.target.naturalWidth}x${e.target.naturalHeight})`);
+                    console.log('Image loaded successfully');
+                  },
+                  onError: (e) => console.log('Image error:', e),
+                  style: {
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    display: 'block',
+                  },
+                })}
+              </Animated.View>
+            ) : (
+              // React Native Image on native platforms
+              <Animated.Image
 
-              ]}
+                source={{ uri: homeHeroImageUrl }}
 
-              resizeMode="cover"
+                style={[
 
-              onLoad={() => console.log('Image loaded successfully')}
+                  styles.homeHeroImage,
 
-              onError={(e) => console.log('Image error:', e.nativeEvent.error)}
+                  {
 
-            />
+                    opacity: heroImageOpacity,
+
+                    transform: [{ scale: heroImageScale }]
+
+                  }
+
+                ]}
+
+                resizeMode="cover"
+
+                onLoad={() => console.log('Image loaded successfully')}
+
+                onError={(e) => console.log('Image error:', e.nativeEvent.error)}
+
+              />
+            )}
 
             <View style={[styles.homeHeroOverlay, { backgroundColor: 'rgba(0, 0, 0, 0.3)' }]} />
 
@@ -13169,7 +13221,9 @@ const styles = StyleSheet.create({
 
   homeHero: {
 
-    height: 510,
+    position: 'relative',
+
+    width: '100%',
 
     margin: 16,
 
@@ -13178,8 +13232,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
 
     justifyContent: 'flex-end',
-
-    position: 'relative',
 
   },
 
