@@ -267,26 +267,42 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
       {Platform.OS === 'web' ? (
         <Animated.View
           style={[
-            styles.container,
-            isMobile && {
-              opacity: opacityAnim,
-              pointerEvents: visible ? 'auto' : 'none', // Prevent blocking when hidden
+            isMobile ? styles.container : styles.containerDesktop,
+            {
+              opacity: isMobile ? opacityAnim : 1, // Only animate opacity on mobile
+              pointerEvents: visible ? 'auto' : 'none', // Always prevent blocking when hidden
             },
           ]}
         >
-          <Animated.View
-            style={[
-              styles.cardContainerWeb,
-              isMobile && styles.cardContainerWebMobile,
-              isMobile && {
-                transform: [{ scale: scaleAnim }],
-              },
-            ]}
-          >
+          {isMobile ? (
+            <Animated.View
+              style={[
+                styles.cardContainerWeb,
+                isMobile && styles.cardContainerWebMobile,
+                isMobile && {
+                  transform: [{ scale: scaleAnim }],
+                },
+              ]}
+            >
+              <View 
+                style={[
+                  styles.cardWeb,
+                  isMobile && styles.cardWebMobile,
+                  // Inline style override for backdrop-filter (RN Web compatibility)
+                  Platform.OS === 'web' && {
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                  },
+                ]}
+              >
+                {cardContent}
+              </View>
+            </Animated.View>
+          ) : (
+            // Desktop: Direct card without extra wrapper
             <View 
               style={[
                 styles.cardWeb,
-                isMobile && styles.cardWebMobile,
                 // Inline style override for backdrop-filter (RN Web compatibility)
                 Platform.OS === 'web' && {
                   backdropFilter: 'blur(16px)',
@@ -296,7 +312,7 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
             >
               {cardContent}
             </View>
-          </Animated.View>
+          )}
         </Animated.View>
       ) : (
         // React Native: Use full-screen flexbox container for centering
@@ -306,8 +322,8 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
             {
               width: windowWidth,
               height: windowHeight - 60, // Subtract header height
-              opacity: opacityAnim,
-              pointerEvents: visible ? 'auto' : 'none', // Prevent blocking when hidden
+              opacity: isMobile ? opacityAnim : 1, // Only animate opacity on mobile
+              pointerEvents: visible ? 'auto' : 'none', // Always prevent blocking when hidden
             },
           ]}
         >
@@ -348,6 +364,15 @@ const styles = StyleSheet.create({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  containerDesktop: {
+    // Desktop: Centered card position
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
+    width: 380,
+    zIndex: 1000, // Lower z-index for desktop
   },
   // React Native: Full-screen flexbox centering
   containerNative: {
