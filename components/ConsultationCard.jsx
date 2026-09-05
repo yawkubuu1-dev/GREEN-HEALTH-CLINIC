@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Platform,
   ScrollView,
+  useWindowDimensions,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 
@@ -20,6 +21,9 @@ export default function ConsultationCard({ isPhone = false }) {
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [medicalConcern, setMedicalConcern] = useState('');
   const [errors, setErrors] = useState({});
+  
+  const { width: windowWidth } = useWindowDimensions();
+  const isMobile = windowWidth <= 480;
 
   const validateForm = () => {
     const newErrors = {};
@@ -178,6 +182,7 @@ export default function ConsultationCard({ isPhone = false }) {
       style={[
         styles.container,
         isPhone && styles.containerPhone,
+        isMobile && styles.containerMobile,
       ]}
     >
       {Platform.OS === 'web' ? (
@@ -185,6 +190,7 @@ export default function ConsultationCard({ isPhone = false }) {
         <View 
           style={[
             styles.cardWeb,
+            isMobile && styles.cardWebMobile,
             // Inline style override for backdrop-filter (RN Web compatibility)
             Platform.OS === 'web' && {
               backdropFilter: 'blur(16px)',
@@ -196,7 +202,14 @@ export default function ConsultationCard({ isPhone = false }) {
         </View>
       ) : (
         // Native: BlurView
-        <BlurView intensity={80} tint="light" style={styles.cardNative}>
+        <BlurView 
+          intensity={80} 
+          tint="light" 
+          style={[
+            styles.cardNative,
+            isMobile && styles.cardNativeMobile,
+          ]}
+        >
           {cardContent}
         </BlurView>
       )}
@@ -371,5 +384,51 @@ const styles = StyleSheet.create({
   },
   trustLinePhone: {
     fontSize: 11,
+  },
+  // Mobile-specific responsive styles (≤480px)
+  containerMobile: {
+    width: 320,
+    maxWidth: '90%',
+  },
+  cardWebMobile: {
+    padding: 16,
+  },
+  cardNativeMobile: {
+    padding: 16,
+  },
+  headingMobile: {
+    fontSize: 18,
+    marginBottom: 6,
+  },
+  subheadingMobile: {
+    fontSize: 12,
+    marginBottom: 12,
+  },
+  inputContainerMobile: {
+    marginBottom: 10,
+  },
+  inputMobile: {
+    fontSize: 13,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  textareaMobile: {
+    fontSize: 13,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    minHeight: 70,
+  },
+  submitButtonMobile: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  submitButtonTextMobile: {
+    fontSize: 13,
+  },
+  trustLineMobile: {
+    fontSize: 10,
+    marginTop: 2,
   },
 });
