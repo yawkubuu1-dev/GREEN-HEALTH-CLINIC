@@ -234,13 +234,8 @@ const styles = StyleSheet.create({
   },
   containerPhone: {
     width: '92%',
-    top: Platform.OS === 'web' ? '50%' : '50%',
-    ...(Platform.OS === 'web' && {
-      transform: 'translate(-50%, -50%)',
-    }),
-    ...(Platform.OS !== 'web' && {
-      transform: [{ translateX: '46%' }, { translateY: -150 }],
-    }),
+    maxWidth: '92%',
+    // Do not override positioning - use base container's centering
   },
   cardWeb: {
     backgroundColor: 'rgba(255, 255, 255, 0.35)',
@@ -389,11 +384,8 @@ const styles = StyleSheet.create({
   containerMobile: {
     width: '85%',
     maxWidth: 300,
-    // Ensure viewport centering is maintained on mobile
-    top: Platform.OS === 'web' ? '50%' : '50%',
-    left: Platform.OS === 'web' ? '50%' : '50%',
+    // Do not override positioning - use base container's centering (left: 50%, transform: translate(-50%, -50%))
     ...(Platform.OS === 'web' && {
-      transform: 'translate(-50%, -50%)',
       maxHeight: '70vh',
     }),
   },
