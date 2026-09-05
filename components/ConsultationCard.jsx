@@ -389,6 +389,12 @@ const styles = StyleSheet.create({
   containerMobile: {
     width: 320,
     maxWidth: '90%',
+    // Ensure viewport centering is maintained on mobile
+    top: Platform.OS === 'web' ? '50%' : '50%',
+    left: Platform.OS === 'web' ? '50%' : '50%',
+    ...(Platform.OS === 'web' && {
+      transform: 'translate(-50%, -50%)',
+    }),
   },
   cardWebMobile: {
     padding: 14,
