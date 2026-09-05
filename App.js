@@ -6065,12 +6065,6 @@ const fetchFooterData = async () => {
 
                   <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); setCurrentPage('about'); }}>
 
-                    <Text style={[styles.mobileSubmenuItemText, { color: '#28A745' }]}>• Careers</Text>
-
-                  </Pressable>
-
-                  <Pressable style={styles.mobileSubmenuItem} onPress={() => { setMobileMenuVisible(false); setCurrentPage('about'); }}>
-
                     <Text style={[styles.mobileSubmenuItemText, { color: '#28A745' }]}>• Press & Media</Text>
 
                   </Pressable>
