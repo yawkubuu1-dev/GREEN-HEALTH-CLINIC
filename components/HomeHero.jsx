@@ -547,7 +547,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
   },
-});
   secondaryButtonPhone: {
     paddingHorizontal: 24,
     paddingVertical: 12,
