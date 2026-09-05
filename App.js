@@ -2475,7 +2475,7 @@ export default function App() {
 
   const cartBarAnim = useRef(new Animated.Value(0)).current;
 
-  const { width } = useWindowDimensions();
+  const { width, height: windowHeight } = useWindowDimensions();
 
 
 
