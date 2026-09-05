@@ -264,21 +264,18 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
       )}
       
       {/* Card */}
-      <Animated.View
-        style={[
-          styles.container,
-          isPhone && styles.containerPhone,
-          isMobile && styles.containerMobile,
-          isMobile && {
-            opacity: opacityAnim,
-            transform: Platform.OS === 'web' 
-              ? [{ scale: scaleAnim }]
-              : [{ scale: scaleAnim }],
-          },
-        ]}
-      >
-        {Platform.OS === 'web' ? (
-          // Web: CSS backdrop-filter applied as inline style for React Native Web compatibility
+      {Platform.OS === 'web' ? (
+        <Animated.View
+          style={[
+            styles.container,
+            isPhone && styles.containerPhone,
+            isMobile && styles.containerMobile,
+            isMobile && {
+              opacity: opacityAnim,
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+        >
           <View 
             style={[
               styles.cardWeb,
@@ -292,38 +289,62 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
           >
             {cardContent}
           </View>
-        ) : (
-          // Native: BlurView
-          <BlurView 
-            intensity={80} 
-            tint="light" 
+        </Animated.View>
+      ) : (
+        // React Native: Use full-screen flexbox container for centering
+        <Animated.View
+          style={[
+            styles.containerNative,
+            {
+              opacity: opacityAnim,
+            },
+          ]}
+        >
+          <Animated.View
             style={[
-              styles.cardNative,
-              isMobile && styles.cardNativeMobile,
+              styles.cardContainerNative,
+              {
+                transform: [{ scale: scaleAnim }],
+              },
             ]}
           >
-            {cardContent}
-          </BlurView>
-        )}
-      </Animated.View>
+            <BlurView 
+              intensity={80} 
+              tint="light" 
+              style={[
+                styles.cardNative,
+                isMobile && styles.cardNativeMobile,
+              ]}
+            >
+              {cardContent}
+            </BlurView>
+          </Animated.View>
+        </Animated.View>
+      )}
     </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    position: Platform.OS === 'web' ? 'fixed' : 'absolute',
-    top: Platform.OS === 'web' ? '50%' : '50%',
-    left: Platform.OS === 'web' ? '50%' : '50%',
-    width: 380,
-    maxWidth: '90%',
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    width: '85%',
+    maxWidth: 380,
     zIndex: 9999,
-    ...(Platform.OS === 'web' && {
-      transform: 'translate(-50%, -50%)',
-    }),
-    ...(Platform.OS !== 'web' && {
-      transform: [{ translateX: -190 }, { translateY: -200 }],
-    }),
+    transform: 'translate(-50%, -50%)',
+  },
+  // React Native: Full-screen flexbox centering
+  containerNative: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+  },
+  cardContainerNative: {
+    width: '85%',
+    maxWidth: 380,
   },
   containerPhone: {
     width: '92%',
@@ -475,8 +496,8 @@ const styles = StyleSheet.create({
   },
   // Mobile-specific responsive styles (≤480px)
   containerMobile: {
-    width: '85%',
-    maxWidth: 300,
+    width: '90%',
+    maxWidth: 320,
     // Do not override positioning - use base container's centering (left: 50%, transform: translate(-50%, -50%))
     ...(Platform.OS === 'web' && {
       maxHeight: '70vh',
