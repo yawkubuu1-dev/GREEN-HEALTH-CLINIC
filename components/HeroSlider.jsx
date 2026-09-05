@@ -241,6 +241,9 @@ export default function HeroSlider({ height = 510, isPhone = false }) {
               playsInline: true,
               onError: () => handleMediaError(slide.id),
               style: {
+                position: 'absolute',
+                top: 0,
+                left: 0,
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
@@ -256,9 +259,13 @@ export default function HeroSlider({ height = 510, isPhone = false }) {
               alt: slide.caption || 'Hero slide',
               onError: () => handleMediaError(slide.id),
               style: {
+                position: 'absolute',
+                top: 0,
+                left: 0,
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
+                display: 'block',
               },
             })}
           </View>
@@ -361,14 +368,21 @@ export default function HeroSlider({ height = 510, isPhone = false }) {
 
 const styles = StyleSheet.create({
   container: {
+    position: 'relative',
+    width: '100%',
     margin: 16,
     backgroundColor: '#1b1b1b',
     overflow: 'hidden',
-    justifyContent: 'flex-end',
     borderRadius: 8,
   },
   slideContainer: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
   },
   loadingContainer: {
     flex: 1,
@@ -419,11 +433,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   contentOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: 20,
+    paddingBottom: 80,
     zIndex: 2,
   },
   contentOverlayPhone: {
     padding: 16,
+    paddingBottom: 70,
   },
   brandText: {
     color: 'rgba(255,255,255,0.7)',
