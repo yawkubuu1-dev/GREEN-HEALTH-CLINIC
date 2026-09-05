@@ -270,6 +270,7 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
             styles.container,
             isMobile && {
               opacity: opacityAnim,
+              pointerEvents: visible ? 'auto' : 'none', // Prevent blocking when hidden
             },
           ]}
         >
@@ -306,6 +307,7 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
               width: windowWidth,
               height: windowHeight - 60, // Subtract header height
               opacity: opacityAnim,
+              pointerEvents: visible ? 'auto' : 'none', // Prevent blocking when hidden
             },
           ]}
         >

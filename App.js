@@ -8558,7 +8558,7 @@ const fetchFooterData = async () => {
               isPhoneScreen && { paddingBottom: 200 } // Extra padding on mobile for scroll room
             ]} 
             showsVerticalScrollIndicator={false} 
-            bounces={!isPhoneScreen} // Allow bounces on desktop, disable on mobile for better UX
+            bounces={true} // Enable bounces for natural mobile feel
             scrollEnabled={true} // Explicitly enable scrolling
           >
             <HomeHero 
