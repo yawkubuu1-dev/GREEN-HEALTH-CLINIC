@@ -268,8 +268,6 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
         <Animated.View
           style={[
             styles.container,
-            isPhone && styles.containerPhone,
-            isMobile && styles.containerMobile,
             isMobile && {
               opacity: opacityAnim,
             },
@@ -278,6 +276,7 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
           <Animated.View
             style={[
               styles.cardContainerWeb,
+              isMobile && styles.cardContainerWebMobile,
               isMobile && {
                 transform: [{ scale: scaleAnim }],
               },
@@ -313,6 +312,7 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
           <Animated.View
             style={[
               styles.cardContainerNative,
+              isMobile && styles.cardContainerNativeMobile,
               {
                 transform: [{ scale: scaleAnim }],
               },
@@ -362,14 +362,17 @@ const styles = StyleSheet.create({
     width: '85%',
     maxWidth: 380,
   },
+  cardContainerWebMobile: {
+    width: '90%',
+    maxWidth: 320,
+  },
   cardContainerNative: {
     width: '85%',
     maxWidth: 380,
   },
-  containerPhone: {
-    width: '92%',
-    maxWidth: '92%',
-    // Do not override positioning - use base container's centering
+  cardContainerNativeMobile: {
+    width: '90%', 
+    maxWidth: 320,
   },
   cardWeb: {
     backgroundColor: 'rgba(255, 255, 255, 0.35)',
@@ -514,14 +517,6 @@ const styles = StyleSheet.create({
   trustLinePhone: {
     fontSize: 11,
   },
-  // Mobile-specific responsive styles (≤480px)
-  containerMobile: {
-    width: '90%',
-    maxWidth: 320,
-    // Do not override positioning - use base container's centering (left: 50%, transform: translate(-50%, -50%))
-    ...(Platform.OS === 'web' && {
-      maxHeight: '70vh',
-    }),
   },
   cardWebMobile: {
     padding: 12,
