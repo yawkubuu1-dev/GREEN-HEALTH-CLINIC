@@ -653,8 +653,7 @@ export const patientStoryService = {
     const { data, error } = await supabase
       .from('patient_stories')
       .select('*')
-      .eq('is_featured', true)
-      .order('sort_order', { ascending: true });
+      .order('id', { ascending: true }); // Order by id instead of sort_order
     
     if (error) throw error;
     return data;
