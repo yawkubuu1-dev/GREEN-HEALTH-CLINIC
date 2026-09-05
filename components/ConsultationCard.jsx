@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
   closeButtonText: {
     fontSize: 28,
     lineHeight: 28,
-    color: '#666',
+    color: '#18477a', // Brand blue (same as CLINIC in logo)
     fontWeight: '300',
   },
 });
