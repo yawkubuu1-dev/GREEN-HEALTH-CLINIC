@@ -304,7 +304,7 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
             styles.containerNative,
             {
               width: windowWidth,
-              height: windowHeight,
+              height: windowHeight - 60, // Subtract header height
               opacity: opacityAnim,
             },
           ]}
@@ -338,10 +338,10 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
 const styles = StyleSheet.create({
   container: {
     position: 'fixed',
-    top: 0,
+    top: 60, // Header height offset
     left: 0,
     width: '100vw',
-    height: '100dvh', // Dynamic viewport height - better for mobile browsers
+    height: 'calc(100dvh - 60px)', // Subtract header height
     zIndex: 99999,
     display: 'flex',
     alignItems: 'center',
@@ -350,10 +350,10 @@ const styles = StyleSheet.create({
   // React Native: Full-screen flexbox centering
   containerNative: {
     position: 'absolute',
-    top: 0,
+    top: 60, // Header height offset
     left: 0,
     width: '100%',
-    height: '100%',
+    height: '100%', // Will be dynamically set to windowHeight - 60
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 99999,
@@ -571,10 +571,10 @@ const styles = StyleSheet.create({
   // Backdrop for mobile modal
   backdrop: {
     position: 'fixed',
-    top: 0,
+    top: 60, // Start below header
     left: 0,
     width: '100vw',
-    height: '100dvh', // Dynamic viewport height - better for mobile browsers
+    height: 'calc(100dvh - 60px)', // Subtract header height
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     zIndex: 99998,
   },
