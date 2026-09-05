@@ -55,7 +55,7 @@ import LocateUsSection from './components/LocateUsSection';
 import { Video } from 'expo-av';
 
 import { sendToDriver, formatDeliveryMessage, createWhatsAppLink } from './utils/whatsappHelper';
-import { serviceService } from './services/supabaseService';
+import { serviceService, aboutService } from './services/supabaseService';
 
 
 
