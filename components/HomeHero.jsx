@@ -495,6 +495,8 @@ const styles = StyleSheet.create({
   buttonsContainer: {
     flexDirection: 'row',
     gap: 12,
+    width: '100%',
+    justifyContent: 'space-between',
   },
   primaryButton: {
     backgroundColor: '#296416',
@@ -621,7 +623,6 @@ const styles = StyleSheet.create({
   // Mobile consultation button (alongside VISIT SHOP)
   primaryButtonMobile: {
     flex: 1,
-    marginRight: 6,
   },
   consultationButton: {
     backgroundColor: 'rgba(46, 125, 50, 0.55)',
@@ -629,7 +630,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 6,
     flex: 1,
-    marginLeft: 6,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
