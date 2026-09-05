@@ -3206,11 +3206,13 @@ const fetchFooterData = async () => {
       setAboutSectionsLoading(true);
       console.log('🔄 Fetching about sections from Supabase...');
       const aboutSections = await aboutService.getAll();
+      console.log('📊 About sections response:', aboutSections);
       setAboutSectionsData(aboutSections || []);
       console.log(`✅ Loaded ${aboutSections?.length || 0} about sections from Supabase`);
       setAboutSectionsError('');
     } catch (error) {
       console.error('❌ Failed to fetch about sections:', error);
+      console.error('❌ Error details:', error.message, error.details || '');
       setAboutSectionsError(`Failed to load about sections: ${error.message}`);
       setAboutSectionsData([]);
     } finally {
