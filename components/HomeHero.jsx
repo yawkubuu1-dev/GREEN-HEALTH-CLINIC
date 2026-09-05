@@ -16,7 +16,7 @@ import { supabase } from '../lib/supabase';
  * Fetches content from home_hero table (NOT hero_slides/hero_settings)
  * Single image only - no rotation, no videos, no cycles
  */
-export default function HomeHero({ isPhone = false }) {
+export default function HomeHero({ isPhone = false, onNavigate }) {
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -117,13 +117,19 @@ export default function HomeHero({ isPhone = false }) {
   const handleButtonPress = (link) => {
     if (!link) return;
     
+    // Handle internal navigation (page names like 'shop', 'services', etc.)
+    if (onNavigate && !link.startsWith('http')) {
+      // Remove leading slash if present
+      const page = link.replace(/^\//, '');
+      onNavigate(page);
+      return;
+    }
+    
+    // Handle external links
     if (link.startsWith('http')) {
       if (Platform.OS === 'web') {
         window.open(link, '_blank');
       }
-    } else {
-      // Internal navigation - could be handled by parent
-      console.log('Navigate to:', link);
     }
   };
 

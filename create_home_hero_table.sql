@@ -38,7 +38,7 @@ VALUES (
   'K.E GREEN HEALTH CLINIC',
   'Center for Functional & Metabolic Medicine',
   'EXPLORE SERVICES',
-  '/shop',
+  'shop',
   0.3,
   true
 )

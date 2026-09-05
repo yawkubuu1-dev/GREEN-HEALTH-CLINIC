@@ -8552,7 +8552,7 @@ const fetchFooterData = async () => {
           showsVerticalScrollIndicator={false} 
           bounces={false}
         >
-          <HomeHero isPhone={isPhoneScreen} />
+          <HomeHero isPhone={isPhoneScreen} onNavigate={setCurrentPage} />
         </ScrollView>
 
       ) : isServicesPage ? (
