@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     left: '50%',
     width: '85%',
     maxWidth: 380,
-    zIndex: 9999,
+    zIndex: 99999,
     transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
   },
   // React Native: Full-screen flexbox centering
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 9999,
+    zIndex: 99999,
   },
   cardContainerNative: {
     width: '85%',
@@ -558,7 +558,7 @@ const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    zIndex: 9998,
+    zIndex: 99998,
     ...(Platform.OS === 'web' && {
       position: 'fixed',
     }),
