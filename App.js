@@ -8547,7 +8547,13 @@ const fetchFooterData = async () => {
 
       ) : isHomePage ? (
 
-        <HomeHero isPhone={isPhoneScreen} />
+        <ScrollView 
+          contentContainerStyle={styles.content} 
+          showsVerticalScrollIndicator={false} 
+          bounces={false}
+        >
+          <HomeHero isPhone={isPhoneScreen} />
+        </ScrollView>
 
       ) : isServicesPage ? (
 
