@@ -33,8 +33,7 @@ export default function HomeHero({ isPhone = false, onNavigate }) {
   const DEFAULT_ASPECT_RATIO = 21 / 9;
 
   // Frosted glass blur band configuration
-  const BLUR_BAND_TOP = '45%'; // Position from top (adjustable)
-  const BLUR_BAND_HEIGHT = isPhone ? 120 : 140; // Height in pixels (adjustable)
+  const BLUR_BAND_HEIGHT = isPhone ? 200 : 220; // Height in pixels to fit heading, subtitle, and button
   const BLUR_INTENSITY = 40; // Blur strength for native (adjustable)
   const BLUR_BG_COLOR = 'rgba(0, 0, 0, 0.25)'; // Semi-transparent background
 
@@ -235,14 +234,14 @@ export default function HomeHero({ isPhone = false, onNavigate }) {
         ]}
       />
 
-      {/* Frosted Glass Blur Band (Glassmorphism) */}
+      {/* Frosted Glass Blur Band (Glassmorphism) - Bottom positioned */}
       {Platform.OS === 'web' ? (
         // Web: CSS backdrop-filter
         <Animated.View
           style={[
             styles.blurBand,
             {
-              top: BLUR_BAND_TOP,
+              bottom: 0,
               height: BLUR_BAND_HEIGHT,
               opacity: textOpacity,
             },
@@ -271,6 +270,39 @@ export default function HomeHero({ isPhone = false, onNavigate }) {
                 {content.subtitle}
               </Text>
             )}
+
+            {/* CTA Buttons inside blur band */}
+            <View style={styles.buttonsContainer}>
+              {content.primary_button_text && (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.primaryButton,
+                    pressed && styles.primaryButtonPressed,
+                    isPhone && styles.primaryButtonPhone,
+                  ]}
+                  onPress={() => handleButtonPress(content.primary_button_link)}
+                >
+                  <Text style={[styles.primaryButtonText, isPhone && styles.primaryButtonTextPhone]}>
+                    {content.primary_button_text}
+                  </Text>
+                </Pressable>
+              )}
+
+              {content.secondary_button_text && (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.secondaryButton,
+                    pressed && styles.secondaryButtonPressed,
+                    isPhone && styles.secondaryButtonPhone,
+                  ]}
+                  onPress={() => handleButtonPress(content.secondary_button_link)}
+                >
+                  <Text style={[styles.secondaryButtonText, isPhone && styles.secondaryButtonTextPhone]}>
+                    {content.secondary_button_text}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
           </View>
         </Animated.View>
       ) : (
@@ -279,7 +311,7 @@ export default function HomeHero({ isPhone = false, onNavigate }) {
           style={[
             styles.blurBand,
             {
-              top: BLUR_BAND_TOP,
+              bottom: 0,
               height: BLUR_BAND_HEIGHT,
               opacity: textOpacity,
             },
@@ -312,53 +344,42 @@ export default function HomeHero({ isPhone = false, onNavigate }) {
                 {content.subtitle}
               </Text>
             )}
+
+            {/* CTA Buttons inside blur band */}
+            <View style={styles.buttonsContainer}>
+              {content.primary_button_text && (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.primaryButton,
+                    pressed && styles.primaryButtonPressed,
+                    isPhone && styles.primaryButtonPhone,
+                  ]}
+                  onPress={() => handleButtonPress(content.primary_button_link)}
+                >
+                  <Text style={[styles.primaryButtonText, isPhone && styles.primaryButtonTextPhone]}>
+                    {content.primary_button_text}
+                  </Text>
+                </Pressable>
+              )}
+
+              {content.secondary_button_text && (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.secondaryButton,
+                    pressed && styles.secondaryButtonPressed,
+                    isPhone && styles.secondaryButtonPhone,
+                  ]}
+                  onPress={() => handleButtonPress(content.secondary_button_link)}
+                >
+                  <Text style={[styles.secondaryButtonText, isPhone && styles.secondaryButtonTextPhone]}>
+                    {content.secondary_button_text}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
           </BlurView>
         </Animated.View>
       )}
-
-      {/* Bottom CTA Buttons */}
-      <Animated.View
-        style={[
-          styles.content,
-          isPhone && styles.contentPhone,
-          {
-            opacity: textOpacity,
-            transform: [{ translateY: textTranslateY }],
-          },
-        ]}
-      >
-        <View style={styles.buttonsContainer}>
-          {content.primary_button_text && (
-            <Pressable
-              style={({ pressed }) => [
-                styles.primaryButton,
-                pressed && styles.primaryButtonPressed,
-                isPhone && styles.primaryButtonPhone,
-              ]}
-              onPress={() => handleButtonPress(content.primary_button_link)}
-            >
-              <Text style={[styles.primaryButtonText, isPhone && styles.primaryButtonTextPhone]}>
-                {content.primary_button_text}
-              </Text>
-            </Pressable>
-          )}
-
-          {content.secondary_button_text && (
-            <Pressable
-              style={({ pressed }) => [
-                styles.secondaryButton,
-                pressed && styles.secondaryButtonPressed,
-                isPhone && styles.secondaryButtonPhone,
-              ]}
-              onPress={() => handleButtonPress(content.secondary_button_link)}
-            >
-              <Text style={[styles.secondaryButtonText, isPhone && styles.secondaryButtonTextPhone]}>
-                {content.secondary_button_text}
-              </Text>
-            </Pressable>
-          )}
-        </View>
-      </Animated.View>
     </View>
   );
 }
@@ -505,6 +526,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
+    paddingVertical: 20,
     ...(Platform.OS === 'web' && {
       backdropFilter: 'blur(12px)',
       WebkitBackdropFilter: 'blur(12px)', // Safari support
@@ -517,6 +539,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
+    paddingVertical: 20,
     backgroundColor: 'rgba(0, 0, 0, 0.2)',
   },
   titleInBand: {
@@ -533,12 +556,14 @@ const styles = StyleSheet.create({
   titleInBandPhone: {
     fontSize: 24,
     lineHeight: 32,
+    marginBottom: 6,
   },
   subtitleInBand: {
     color: 'rgba(255,255,255,0.95)',
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
+    marginBottom: 16,
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
@@ -546,6 +571,7 @@ const styles = StyleSheet.create({
   subtitleInBandPhone: {
     fontSize: 13,
     lineHeight: 20,
+    marginBottom: 12,
   },
   secondaryButtonPhone: {
     paddingHorizontal: 24,
