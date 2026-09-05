@@ -235,7 +235,19 @@ export default function HomeHero({ isPhone = false }) {
       >
         {content.title && (
           <Text style={[styles.title, isPhone && styles.titlePhone]}>
-            {content.title}
+            {content.title.split(' ').map((word, index, arr) => {
+              // Make "CLINIC" blue, "GREEN" and "HEALTH" green, rest white
+              const upperWord = word.toUpperCase();
+              let color = '#fff';
+              if (upperWord.includes('CLINIC')) color = '#18477a';
+              else if (upperWord.includes('GREEN') || upperWord.includes('HEALTH')) color = '#008000';
+              
+              return (
+                <Text key={index} style={{ color }}>
+                  {word}{index < arr.length - 1 ? ' ' : ''}
+                </Text>
+              );
+            })}
           </Text>
         )}
 
