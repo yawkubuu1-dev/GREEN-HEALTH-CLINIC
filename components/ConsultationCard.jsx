@@ -517,7 +517,6 @@ const styles = StyleSheet.create({
   trustLinePhone: {
     fontSize: 11,
   },
-  },
   cardWebMobile: {
     padding: 12,
     paddingTop: 10,
