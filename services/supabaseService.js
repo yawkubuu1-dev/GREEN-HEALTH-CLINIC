@@ -421,7 +421,7 @@ export const aboutService = {
     const { data, error } = await supabase
       .from('about_sections')
       .select('*')
-      .order('id', { ascending: true }); // Order by id instead of sort_order
+      .order('position', { ascending: true }); // Order by position for correct sequence
     
     if (error) throw error;
     return data;

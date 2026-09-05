@@ -9337,7 +9337,7 @@ const fetchFooterData = async () => {
               aboutSectionsData.map((section, index) => (
                 <View key={section.id || index} style={{ marginBottom: 60 }} onLayout={e => { 
                   const newY = e.nativeEvent.layout.y;
-                  const sectionKey = section.section_key || section.title?.toLowerCase().replace(/\s+/g, '-') || `section-${index}`;
+                  const sectionKey = section.slug || section.title?.toLowerCase().replace(/\s+/g, '-') || `section-${index}`;
                   const oldY = aboutSectionOffsets.current[sectionKey];
                   if (oldY !== newY) {
                     console.log(`[ABOUT] ${sectionKey} layout changed: ${oldY} -> ${newY}`);
