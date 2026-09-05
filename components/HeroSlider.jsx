@@ -16,7 +16,7 @@ import { supabase } from '../lib/supabase';
  * Fetches slides and settings from Supabase, supports images and videos,
  * per-slide duration/autoplay, global cycle limits, and CTA buttons
  */
-export default function HeroSlider({ height = 510, isPhone = false }) {
+export default function HeroSlider({ isPhone = false }) {
   const [slides, setSlides] = useState([]);
   const [settings, setSettings] = useState(null);
   const [idx, setIdx] = useState(0);
@@ -25,11 +25,13 @@ export default function HeroSlider({ height = 510, isPhone = false }) {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [imageErrors, setImageErrors] = useState({});
+  const [aspectRatios, setAspectRatios] = useState({});
   
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const timerRef = useRef(null);
 
   const total = slides.length;
+  const DEFAULT_ASPECT_RATIO = 21 / 9; // Default hero banner aspect ratio
 
   // Fetch slides and settings from Supabase on mount
   useEffect(() => {
@@ -165,6 +167,28 @@ export default function HeroSlider({ height = 510, isPhone = false }) {
     setImageErrors(prev => ({ ...prev, [slideId]: true }));
   };
 
+  // Calculate aspect ratio for a slide
+  const handleImageLoad = (slideId, naturalWidth, naturalHeight) => {
+    const ratio = naturalWidth / naturalHeight;
+    setAspectRatios(prev => ({ ...prev, [slideId]: ratio }));
+    console.log(`📐 Slide ${slideId} aspect ratio:`, ratio, `(${naturalWidth}x${naturalHeight})`);
+  };
+
+  // Preload aspect ratios for native platforms
+  useEffect(() => {
+    if (Platform.OS !== 'web' && slides.length > 0) {
+      slides.forEach(slide => {
+        if (slide.type === 'image' && slide.url) {
+          RNImage.getSize(
+            slide.url,
+            (width, height) => handleImageLoad(slide.id, width, height),
+            (error) => console.warn(`Failed to get size for slide ${slide.id}:`, error)
+          );
+        }
+      });
+    }
+  }, [slides]);
+
   const handleCTAPress = (link) => {
     if (!link) return;
     
@@ -181,7 +205,7 @@ export default function HeroSlider({ height = 510, isPhone = false }) {
   // Loading state
   if (loading) {
     return (
-      <View style={[styles.container, { height }]}>
+      <View style={[styles.container, { aspectRatio: DEFAULT_ASPECT_RATIO }]}>
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading slides...</Text>
         </View>
@@ -192,7 +216,7 @@ export default function HeroSlider({ height = 510, isPhone = false }) {
   // Error state
   if (loadError) {
     return (
-      <View style={[styles.container, { height }]}>
+      <View style={[styles.container, { aspectRatio: DEFAULT_ASPECT_RATIO }]}>
         <View style={styles.errorContainer}>
           <FontAwesome name="exclamation-circle" size={32} color="#d32f2f" />
           <Text style={styles.errorTitle}>Failed to load hero slider</Text>
@@ -205,7 +229,7 @@ export default function HeroSlider({ height = 510, isPhone = false }) {
   // No slides state
   if (!slides.length) {
     return (
-      <View style={[styles.container, { height }]}>
+      <View style={[styles.container, { aspectRatio: DEFAULT_ASPECT_RATIO }]}>
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>No active slides</Text>
         </View>
@@ -215,9 +239,10 @@ export default function HeroSlider({ height = 510, isPhone = false }) {
 
   const slide = slides[idx];
   const hasError = imageErrors[slide.id];
+  const currentAspectRatio = aspectRatios[slide.id] || DEFAULT_ASPECT_RATIO;
 
   return (
-    <View style={[styles.container, { height }]}>
+    <View style={[styles.container, { aspectRatio: currentAspectRatio }]}>
       {/* Slides layer with fade animation */}
       <Animated.View style={[styles.slideContainer, { opacity: fadeAnim }]}>
         {hasError ? (
@@ -239,6 +264,9 @@ export default function HeroSlider({ height = 510, isPhone = false }) {
               muted: true,
               loop: true,
               playsInline: true,
+              onLoadedMetadata: (e) => {
+                handleImageLoad(slide.id, e.target.videoWidth, e.target.videoHeight);
+              },
               onError: () => handleMediaError(slide.id),
               style: {
                 position: 'absolute',
@@ -246,7 +274,7 @@ export default function HeroSlider({ height = 510, isPhone = false }) {
                 left: 0,
                 width: '100%',
                 height: '100%',
-                objectFit: 'cover',
+                objectFit: 'contain',
               },
             })}
           </View>
@@ -257,6 +285,9 @@ export default function HeroSlider({ height = 510, isPhone = false }) {
               key: slide.id,
               src: slide.url,
               alt: slide.caption || 'Hero slide',
+              onLoad: (e) => {
+                handleImageLoad(slide.id, e.target.naturalWidth, e.target.naturalHeight);
+              },
               onError: () => handleMediaError(slide.id),
               style: {
                 position: 'absolute',
@@ -264,7 +295,7 @@ export default function HeroSlider({ height = 510, isPhone = false }) {
                 left: 0,
                 width: '100%',
                 height: '100%',
-                objectFit: 'cover',
+                objectFit: 'contain',
                 display: 'block',
               },
             })}
@@ -274,7 +305,7 @@ export default function HeroSlider({ height = 510, isPhone = false }) {
           <RNImage
             source={{ uri: slide.url }}
             style={StyleSheet.absoluteFill}
-            resizeMode="cover"
+            resizeMode="contain"
             onError={() => handleMediaError(slide.id)}
           />
         )}

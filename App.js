@@ -9733,7 +9733,6 @@ const fetchFooterData = async () => {
 
         {/* Hero Slider - Only on Shop Page */}
         <HeroSlider 
-          height={isPhoneScreen ? 380 : 510}
           isPhone={isPhoneScreen}
         />
 
