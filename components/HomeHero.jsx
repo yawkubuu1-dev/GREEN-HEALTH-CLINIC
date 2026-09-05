@@ -8,6 +8,7 @@ import {
   Platform,
   Image as RNImage,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { supabase } from '../lib/supabase';
 
 /**
@@ -30,6 +31,12 @@ export default function HomeHero({ isPhone = false, onNavigate }) {
   const textTranslateY = useRef(new Animated.Value(30)).current;
 
   const DEFAULT_ASPECT_RATIO = 21 / 9;
+
+  // Frosted glass blur band configuration
+  const BLUR_BAND_TOP = '45%'; // Position from top (adjustable)
+  const BLUR_BAND_HEIGHT = isPhone ? 120 : 140; // Height in pixels (adjustable)
+  const BLUR_INTENSITY = 40; // Blur strength for native (adjustable)
+  const BLUR_BG_COLOR = 'rgba(0, 0, 0, 0.25)'; // Semi-transparent background
 
   // Fetch homepage hero content from Supabase
   useEffect(() => {
@@ -228,7 +235,88 @@ export default function HomeHero({ isPhone = false, onNavigate }) {
         ]}
       />
 
-      {/* Content Overlay */}
+      {/* Frosted Glass Blur Band (Glassmorphism) */}
+      {Platform.OS === 'web' ? (
+        // Web: CSS backdrop-filter
+        <Animated.View
+          style={[
+            styles.blurBand,
+            {
+              top: BLUR_BAND_TOP,
+              height: BLUR_BAND_HEIGHT,
+              opacity: textOpacity,
+            },
+          ]}
+        >
+          <View style={styles.blurBandWeb}>
+            {content.title && (
+              <Text style={[styles.titleInBand, isPhone && styles.titleInBandPhone]}>
+                {content.title.split(' ').map((word, index, arr) => {
+                  // Make "CLINIC" blue, everything else green (K.E, GREEN, HEALTH)
+                  const upperWord = word.toUpperCase();
+                  let color = '#008000'; // Default green
+                  if (upperWord.includes('CLINIC')) color = '#18477a'; // Blue for CLINIC
+                  
+                  return (
+                    <Text key={index} style={{ color }}>
+                      {word}{index < arr.length - 1 ? ' ' : ''}
+                    </Text>
+                  );
+                })}
+              </Text>
+            )}
+
+            {content.subtitle && (
+              <Text style={[styles.subtitleInBand, isPhone && styles.subtitleInBandPhone]}>
+                {content.subtitle}
+              </Text>
+            )}
+          </View>
+        </Animated.View>
+      ) : (
+        // Native: BlurView component
+        <Animated.View
+          style={[
+            styles.blurBand,
+            {
+              top: BLUR_BAND_TOP,
+              height: BLUR_BAND_HEIGHT,
+              opacity: textOpacity,
+            },
+          ]}
+        >
+          <BlurView
+            intensity={BLUR_INTENSITY}
+            tint="dark"
+            style={styles.blurViewNative}
+          >
+            {content.title && (
+              <Text style={[styles.titleInBand, isPhone && styles.titleInBandPhone]}>
+                {content.title.split(' ').map((word, index, arr) => {
+                  // Make "CLINIC" blue, everything else green (K.E, GREEN, HEALTH)
+                  const upperWord = word.toUpperCase();
+                  let color = '#008000'; // Default green
+                  if (upperWord.includes('CLINIC')) color = '#18477a'; // Blue for CLINIC
+                  
+                  return (
+                    <Text key={index} style={{ color }}>
+                      {word}{index < arr.length - 1 ? ' ' : ''}
+                    </Text>
+                  );
+                })}
+              </Text>
+            )}
+
+            {content.subtitle && (
+              <Text style={[styles.subtitleInBand, isPhone && styles.subtitleInBandPhone]}>
+                {content.subtitle}
+              </Text>
+            )}
+          </BlurView>
+        </Animated.View>
+      )}
+
+      {/* Bottom CTA Buttons */}
       <Animated.View
         style={[
           styles.content,
@@ -239,29 +327,6 @@ export default function HomeHero({ isPhone = false, onNavigate }) {
           },
         ]}
       >
-        {content.title && (
-          <Text style={[styles.title, isPhone && styles.titlePhone]}>
-            {content.title.split(' ').map((word, index, arr) => {
-              // Make "CLINIC" blue, everything else green (K.E, GREEN, HEALTH)
-              const upperWord = word.toUpperCase();
-              let color = '#008000'; // Default green
-              if (upperWord.includes('CLINIC')) color = '#18477a'; // Blue for CLINIC
-              
-              return (
-                <Text key={index} style={{ color }}>
-                  {word}{index < arr.length - 1 ? ' ' : ''}
-                </Text>
-              );
-            })}
-          </Text>
-        )}
-
-        {content.subtitle && (
-          <Text style={[styles.subtitle, isPhone && styles.subtitlePhone]}>
-            {content.subtitle}
-          </Text>
-        )}
-
         <View style={styles.buttonsContainer}>
           {content.primary_button_text && (
             <Pressable
@@ -374,28 +439,6 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 32,
   },
-  title: {
-    color: '#fff',
-    fontSize: 40,
-    fontWeight: '700',
-    marginBottom: 12,
-    lineHeight: 48,
-  },
-  titlePhone: {
-    fontSize: 24,
-    lineHeight: 32,
-  },
-  subtitle: {
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: 18,
-    marginBottom: 24,
-    lineHeight: 26,
-  },
-  subtitlePhone: {
-    fontSize: 14,
-    marginBottom: 20,
-    lineHeight: 20,
-  },
   buttonsContainer: {
     flexDirection: 'row',
     gap: 12,
@@ -433,6 +476,78 @@ const styles = StyleSheet.create({
   secondaryButtonPressed: {
     backgroundColor: 'rgba(255,255,255,0.15)',
   },
+  secondaryButtonPhone: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+  },
+  secondaryButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
+    letterSpacing: 1.5,
+  },
+  secondaryButtonTextPhone: {
+    fontSize: 12,
+  },
+  // Frosted glass blur band (glassmorphism effect)
+  blurBand: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  blurBandWeb: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    ...(Platform.OS === 'web' && {
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)', // Safari support
+    }),
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+  },
+  blurViewNative: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+  },
+  titleInBand: {
+    color: '#fff',
+    fontSize: 40,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 8,
+    lineHeight: 48,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  titleInBandPhone: {
+    fontSize: 24,
+    lineHeight: 32,
+  },
+  subtitleInBand: {
+    color: 'rgba(255,255,255,0.95)',
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  subtitleInBandPhone: {
+    fontSize: 13,
+    lineHeight: 20,
+  },
+});
   secondaryButtonPhone: {
     paddingHorizontal: 24,
     paddingVertical: 12,
