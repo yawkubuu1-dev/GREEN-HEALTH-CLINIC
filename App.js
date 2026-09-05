@@ -8553,15 +8553,38 @@ const fetchFooterData = async () => {
 
         <View style={{ flex: 1, position: 'relative' }}>
           <ScrollView 
-            contentContainerStyle={styles.content} 
+            contentContainerStyle={[
+              styles.content,
+              isPhoneScreen && { paddingBottom: 200 } // Extra padding on mobile for scroll room
+            ]} 
             showsVerticalScrollIndicator={false} 
-            bounces={false}
+            bounces={!isPhoneScreen} // Allow bounces on desktop, disable on mobile for better UX
+            scrollEnabled={true} // Explicitly enable scrolling
           >
             <HomeHero 
               isPhone={isPhoneScreen} 
               onNavigate={setCurrentPage}
               onOpenConsultation={() => setConsultationCardVisible(true)}
             />
+            
+            {/* Additional content for mobile scrolling - ensure there's enough height */}
+            {isPhoneScreen && (
+              <View style={{ 
+                height: Math.max(200, windowHeight * 0.5), // At least 200px or 50% of screen height
+                justifyContent: 'center', 
+                alignItems: 'center',
+                paddingHorizontal: 20
+              }}>
+                <Text style={{ 
+                  textAlign: 'center', 
+                  color: '#666', 
+                  fontSize: 16,
+                  lineHeight: 24
+                }}>
+                  {/* Placeholder content to ensure scrolling works */}
+                </Text>
+              </View>
+            )}
           </ScrollView>
           
           {/* Fixed consultation card - outside ScrollView for true fixed positioning */}
