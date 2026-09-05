@@ -460,7 +460,7 @@ export const serviceService = {
     const { data, error } = await supabase
       .from('services')
       .select('*')
-      .order('sort_order', { ascending: true });
+      .order('id', { ascending: true }); // Order by id instead of sort_order
     
     if (error) throw error;
     return data;
