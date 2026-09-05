@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Platform,
   ScrollView,
   useWindowDimensions,
+  Animated,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 
