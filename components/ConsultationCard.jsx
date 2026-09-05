@@ -391,44 +391,48 @@ const styles = StyleSheet.create({
     maxWidth: '90%',
   },
   cardWebMobile: {
-    padding: 16,
+    padding: 14,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
   cardNativeMobile: {
-    padding: 16,
+    padding: 14,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
   headingMobile: {
     fontSize: 18,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   subheadingMobile: {
     fontSize: 12,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   inputContainerMobile: {
-    marginBottom: 10,
+    marginBottom: 8,
   },
   inputMobile: {
     fontSize: 13,
     paddingHorizontal: 12,
-    paddingVertical: 9,
+    paddingVertical: 8,
   },
   textareaMobile: {
     fontSize: 13,
     paddingHorizontal: 12,
-    paddingVertical: 9,
-    minHeight: 70,
+    paddingVertical: 8,
+    minHeight: 60,
   },
   submitButtonMobile: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    marginTop: 4,
-    marginBottom: 8,
+    paddingVertical: 9,
+    paddingHorizontal: 18,
+    marginTop: 2,
+    marginBottom: 6,
   },
   submitButtonTextMobile: {
     fontSize: 13,
   },
   trustLineMobile: {
     fontSize: 10,
-    marginTop: 2,
+    marginTop: 0,
   },
 });
