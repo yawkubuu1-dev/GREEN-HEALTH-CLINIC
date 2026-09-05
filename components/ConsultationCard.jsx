@@ -272,23 +272,31 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
             isMobile && styles.containerMobile,
             isMobile && {
               opacity: opacityAnim,
-              transform: [{ scale: scaleAnim }],
             },
           ]}
         >
-          <View 
+          <Animated.View
             style={[
-              styles.cardWeb,
-              isMobile && styles.cardWebMobile,
-              // Inline style override for backdrop-filter (RN Web compatibility)
-              Platform.OS === 'web' && {
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
+              styles.cardContainerWeb,
+              isMobile && {
+                transform: [{ scale: scaleAnim }],
               },
             ]}
           >
-            {cardContent}
-          </View>
+            <View 
+              style={[
+                styles.cardWeb,
+                isMobile && styles.cardWebMobile,
+                // Inline style override for backdrop-filter (RN Web compatibility)
+                Platform.OS === 'web' && {
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                },
+              ]}
+            >
+              {cardContent}
+            </View>
+          </Animated.View>
         </Animated.View>
       ) : (
         // React Native: Use full-screen flexbox container for centering
@@ -328,12 +336,14 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
 const styles = StyleSheet.create({
   container: {
     position: 'fixed',
-    top: '50%',
-    left: '50%',
-    width: '85%',
-    maxWidth: 380,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     zIndex: 99999,
-    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
   },
   // React Native: Full-screen flexbox centering
   containerNative: {
@@ -341,6 +351,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 99999,
+  },
+  cardContainerWeb: {
+    width: '85%',
+    maxWidth: 380,
   },
   cardContainerNative: {
     width: '85%',
