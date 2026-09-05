@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
     width: '85%',
     maxWidth: 380,
     zIndex: 9999,
-    transform: 'translate(-50%, -50%)',
+    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
   },
   // React Native: Full-screen flexbox centering
   containerNative: {
