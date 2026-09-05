@@ -8548,14 +8548,18 @@ const fetchFooterData = async () => {
 
       ) : isHomePage ? (
 
-        <ScrollView 
-          contentContainerStyle={styles.content} 
-          showsVerticalScrollIndicator={false} 
-          bounces={false}
-        >
-          <HomeHero isPhone={isPhoneScreen} onNavigate={setCurrentPage} />
+        <View style={{ flex: 1, position: 'relative' }}>
+          <ScrollView 
+            contentContainerStyle={styles.content} 
+            showsVerticalScrollIndicator={false} 
+            bounces={false}
+          >
+            <HomeHero isPhone={isPhoneScreen} onNavigate={setCurrentPage} />
+          </ScrollView>
+          
+          {/* Fixed consultation card - outside ScrollView for true fixed positioning */}
           <ConsultationCard isPhone={isPhoneScreen} />
-        </ScrollView>
+        </View>
 
       ) : isServicesPage ? (
 

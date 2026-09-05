@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     left: Platform.OS === 'web' ? '50%' : '50%',
     width: 380,
     maxWidth: '90%',
-    zIndex: 999,
+    zIndex: 9999,
     ...(Platform.OS === 'web' && {
       transform: 'translate(-50%, -50%)',
     }),
