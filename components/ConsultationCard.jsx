@@ -338,16 +338,20 @@ const styles = StyleSheet.create({
     position: 'fixed',
     top: 0,
     left: 0,
-    right: 0,
-    bottom: 0,
+    width: '100vw',
+    height: '100vh',
     zIndex: 99999,
     display: 'flex',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   // React Native: Full-screen flexbox centering
   containerNative: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 99999,
@@ -570,12 +574,13 @@ const styles = StyleSheet.create({
   },
   // Backdrop for mobile modal
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100vw',
+    height: '100vh',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     zIndex: 99998,
-    ...(Platform.OS === 'web' && {
-      position: 'fixed',
-    }),
   },
   // Close button (mobile only)
   closeButton: {
