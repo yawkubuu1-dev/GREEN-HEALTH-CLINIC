@@ -22,7 +22,7 @@ export default function ConsultationCard({ isPhone = false }) {
   const [medicalConcern, setMedicalConcern] = useState('');
   const [errors, setErrors] = useState({});
   
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isMobile = windowWidth <= 480;
 
   const validateForm = () => {
@@ -387,58 +387,65 @@ const styles = StyleSheet.create({
   },
   // Mobile-specific responsive styles (≤480px)
   containerMobile: {
-    width: 320,
-    maxWidth: '90%',
+    width: '85%',
+    maxWidth: 300,
     // Ensure viewport centering is maintained on mobile
     top: Platform.OS === 'web' ? '50%' : '50%',
     left: Platform.OS === 'web' ? '50%' : '50%',
     ...(Platform.OS === 'web' && {
       transform: 'translate(-50%, -50%)',
+      maxHeight: '70vh',
     }),
   },
   cardWebMobile: {
-    padding: 14,
-    paddingTop: 12,
-    paddingBottom: 12,
+    padding: 12,
+    paddingTop: 10,
+    paddingBottom: 10,
+    ...(Platform.OS === 'web' && {
+      maxHeight: '70vh',
+      overflowY: 'auto',
+    }),
   },
   cardNativeMobile: {
-    padding: 14,
-    paddingTop: 12,
-    paddingBottom: 12,
+    padding: 12,
+    paddingTop: 10,
+    paddingBottom: 10,
   },
   headingMobile: {
-    fontSize: 18,
-    marginBottom: 4,
+    fontSize: 16,
+    marginBottom: 3,
   },
   subheadingMobile: {
-    fontSize: 12,
-    marginBottom: 10,
-  },
-  inputContainerMobile: {
+    fontSize: 11,
     marginBottom: 8,
   },
-  inputMobile: {
-    fontSize: 13,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  textareaMobile: {
-    fontSize: 13,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    minHeight: 60,
-  },
-  submitButtonMobile: {
-    paddingVertical: 9,
-    paddingHorizontal: 18,
-    marginTop: 2,
+  inputContainerMobile: {
     marginBottom: 6,
   },
+  inputMobile: {
+    fontSize: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    minHeight: 36,
+  },
+  textareaMobile: {
+    fontSize: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    minHeight: 50,
+    maxHeight: 50,
+  },
+  submitButtonMobile: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginTop: 2,
+    marginBottom: 5,
+  },
   submitButtonTextMobile: {
-    fontSize: 13,
+    fontSize: 12,
   },
   trustLineMobile: {
-    fontSize: 10,
+    fontSize: 9,
     marginTop: 0,
   },
 });
