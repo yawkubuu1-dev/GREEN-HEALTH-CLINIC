@@ -341,9 +341,9 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 99999,
+    display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    flexDirection: 'row',
   },
   // React Native: Full-screen flexbox centering
   containerNative: {
