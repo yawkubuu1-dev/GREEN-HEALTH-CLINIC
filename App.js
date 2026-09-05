@@ -55,7 +55,7 @@ import LocateUsSection from './components/LocateUsSection';
 import { Video } from 'expo-av';
 
 import { sendToDriver, formatDeliveryMessage, createWhatsAppLink } from './utils/whatsappHelper';
-import { serviceService, aboutService } from './services/supabaseService';
+import { serviceService, aboutService, patientStoryService } from './services/supabaseService';
 
 
 
@@ -2108,6 +2108,11 @@ export default function App() {
   const [servicesData, setServicesData] = useState([]);
   const [servicesLoading, setServicesLoading] = useState(true);
   const [servicesError, setServicesError] = useState('');
+  
+  // Patient stories data from Supabase
+  const [patientStoriesData, setPatientStoriesData] = useState([]);
+  const [patientStoriesLoading, setPatientStoriesLoading] = useState(true);
+  const [patientStoriesError, setPatientStoriesError] = useState('');
 
   // About sections data from Supabase
   const [aboutSectionsData, setAboutSectionsData] = useState([]);
@@ -2749,6 +2754,7 @@ const fetchFooterData = async () => {
 
     fetchFooterData();
     fetchServicesData(); // Load services from Supabase
+    fetchPatientStoriesData(); // Load patient stories from Supabase
     fetchAboutSectionsData(); // Load about sections from Supabase
 
     if (showLoading) {
@@ -3197,6 +3203,24 @@ const fetchFooterData = async () => {
       setServicesData([]);
     } finally {
       setServicesLoading(false);
+    }
+  };
+
+  // Fetch patient stories data from Supabase
+  const fetchPatientStoriesData = async () => {
+    try {
+      setPatientStoriesLoading(true);
+      console.log('🔄 Fetching patient stories from Supabase...');
+      const stories = await patientStoryService.getAll();
+      setPatientStoriesData(stories || []);
+      console.log(`✅ Loaded ${stories?.length || 0} patient stories from Supabase`);
+      setPatientStoriesError('');
+    } catch (error) {
+      console.error('❌ Failed to fetch patient stories:', error);
+      setPatientStoriesError(`Failed to load patient stories: ${error.message}`);
+      setPatientStoriesData([]);
+    } finally {
+      setPatientStoriesLoading(false);
     }
   };
 
