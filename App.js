@@ -2109,6 +2109,11 @@ export default function App() {
   const [servicesLoading, setServicesLoading] = useState(true);
   const [servicesError, setServicesError] = useState('');
 
+  // About sections data from Supabase
+  const [aboutSectionsData, setAboutSectionsData] = useState([]);
+  const [aboutSectionsLoading, setAboutSectionsLoading] = useState(true);
+  const [aboutSectionsError, setAboutSectionsError] = useState('');
+
   const servicesScrollViewRef = useRef(null);
   const isServicesScrollingProgrammatically = useRef(false);
   const servicesChipBarHeight = useRef(116); // Will be measured dynamically
@@ -2744,6 +2749,7 @@ const fetchFooterData = async () => {
 
     fetchFooterData();
     fetchServicesData(); // Load services from Supabase
+    fetchAboutSectionsData(); // Load about sections from Supabase
 
     if (showLoading) {
 
@@ -3191,6 +3197,24 @@ const fetchFooterData = async () => {
       setServicesData([]);
     } finally {
       setServicesLoading(false);
+    }
+  };
+
+  // Fetch about sections data from Supabase
+  const fetchAboutSectionsData = async () => {
+    try {
+      setAboutSectionsLoading(true);
+      console.log('🔄 Fetching about sections from Supabase...');
+      const aboutSections = await aboutService.getAll();
+      setAboutSectionsData(aboutSections || []);
+      console.log(`✅ Loaded ${aboutSections?.length || 0} about sections from Supabase`);
+      setAboutSectionsError('');
+    } catch (error) {
+      console.error('❌ Failed to fetch about sections:', error);
+      setAboutSectionsError(`Failed to load about sections: ${error.message}`);
+      setAboutSectionsData([]);
+    } finally {
+      setAboutSectionsLoading(false);
     }
   };
 
