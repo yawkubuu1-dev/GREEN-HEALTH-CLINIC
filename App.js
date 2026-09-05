@@ -8542,10 +8542,7 @@ const fetchFooterData = async () => {
 
         <View style={{ flex: 1, position: 'relative' }}>
           <ScrollView 
-            contentContainerStyle={[
-              styles.content,
-              isPhoneScreen && { paddingBottom: 200 } // Extra padding on mobile for scroll room
-            ]} 
+            contentContainerStyle={styles.content} 
             showsVerticalScrollIndicator={false} 
             bounces={true} // Enable bounces for natural mobile feel
             scrollEnabled={true} // Explicitly enable scrolling
@@ -8557,25 +8554,6 @@ const fetchFooterData = async () => {
             />
             
             <HealthPrioritySection />
-            
-            {/* Additional content for mobile scrolling - ensure there's enough height */}
-            {isPhoneScreen && (
-              <View style={{ 
-                height: Math.max(200, windowHeight * 0.5), // At least 200px or 50% of screen height
-                justifyContent: 'center', 
-                alignItems: 'center',
-                paddingHorizontal: 20
-              }}>
-                <Text style={{ 
-                  textAlign: 'center', 
-                  color: '#666', 
-                  fontSize: 16,
-                  lineHeight: 24
-                }}>
-                  {/* Placeholder content to ensure scrolling works */}
-                </Text>
-              </View>
-            )}
           </ScrollView>
           
           {/* Fixed consultation card - outside ScrollView for true fixed positioning */}
