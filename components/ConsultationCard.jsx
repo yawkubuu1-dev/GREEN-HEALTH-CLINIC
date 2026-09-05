@@ -176,8 +176,17 @@ export default function ConsultationCard({ isPhone = false }) {
       ]}
     >
       {Platform.OS === 'web' ? (
-        // Web: CSS backdrop-filter
-        <View style={styles.cardWeb}>
+        // Web: CSS backdrop-filter applied as inline style for React Native Web compatibility
+        <View 
+          style={[
+            styles.cardWeb,
+            // Inline style override for backdrop-filter (RN Web compatibility)
+            Platform.OS === 'web' && {
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+            },
+          ]}
+        >
           {cardContent}
         </View>
       ) : (
@@ -216,23 +225,21 @@ const styles = StyleSheet.create({
     }),
   },
   cardWeb: {
-    backgroundColor: 'rgba(255, 255, 255, 0.75)',
+    backgroundColor: 'rgba(255, 255, 255, 0.35)',
     borderRadius: 20,
     padding: 24,
     ...(Platform.OS === 'web' && {
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
     }),
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
+    borderColor: 'rgba(255, 255, 255, 0.5)',
   },
   cardNative: {
-    backgroundColor: 'rgba(255, 255, 255, 0.75)',
+    backgroundColor: 'rgba(255, 255, 255, 0.35)',
     borderRadius: 20,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.5)',
     // Shadow for native
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
@@ -267,7 +274,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   input: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderWidth: 1,
     borderColor: '#d1d5db',
     borderRadius: 10,
@@ -284,7 +291,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   textarea: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderWidth: 1,
     borderColor: '#d1d5db',
     borderRadius: 10,
