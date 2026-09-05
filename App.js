@@ -42,6 +42,7 @@ import { supabase } from './lib/supabase';
 
 import HeroSlider from './components/HeroSlider';
 import HomeHero from './components/HomeHero';
+import HealthPrioritySection from './components/HealthPrioritySection';
 import ConsultationCard from './components/ConsultationCard';
 import CarouselComponent from './components/CarouselComponent';
 
@@ -8554,6 +8555,8 @@ const fetchFooterData = async () => {
               onNavigate={setCurrentPage}
               onOpenConsultation={() => setConsultationCardVisible(true)}
             />
+            
+            <HealthPrioritySection />
             
             {/* Additional content for mobile scrolling - ensure there's enough height */}
             {isPhoneScreen && (
