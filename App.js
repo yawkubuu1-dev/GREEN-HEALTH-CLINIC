@@ -42,6 +42,7 @@ import { supabase } from './lib/supabase';
 
 import HeroSlider from './components/HeroSlider';
 import HomeHero from './components/HomeHero';
+import ConsultationCard from './components/ConsultationCard';
 import CarouselComponent from './components/CarouselComponent';
 
 import ProductDetail from './components/ProductDetail';
@@ -8553,6 +8554,7 @@ const fetchFooterData = async () => {
           bounces={false}
         >
           <HomeHero isPhone={isPhoneScreen} onNavigate={setCurrentPage} />
+          <ConsultationCard isPhone={isPhoneScreen} />
         </ScrollView>
 
       ) : isServicesPage ? (
