@@ -15,8 +15,10 @@ import { BlurView } from 'expo-blur';
  * ConsultationCard - Free consultation form widget for Homepage only
  * Glassmorphism card with sticky/fixed positioning
  * NOT related to Shop Hero Slider or any other page
+ * On mobile: modal with open/close animation
+ * On desktop/tablet: always visible, sticky
  */
-export default function ConsultationCard({ isPhone = false }) {
+export default function ConsultationCard({ isPhone = false, visible = true, onClose }) {
   const [fullName, setFullName] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [medicalConcern, setMedicalConcern] = useState('');
@@ -24,6 +26,61 @@ export default function ConsultationCard({ isPhone = false }) {
   
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isMobile = windowWidth <= 480;
+  
+  // Animation values for modal
+  const scaleAnim = useRef(new Animated.Value(isMobile ? 0.9 : 1)).current;
+  const opacityAnim = useRef(new Animated.Value(isMobile ? 0 : 1)).current;
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
+
+  // Animate in/out on visibility change (mobile only)
+  useEffect(() => {
+    if (isMobile) {
+      if (visible) {
+        // Animate in
+        Animated.parallel([
+          Animated.timing(scaleAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: Platform.OS !== 'web',
+          }),
+          Animated.timing(opacityAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: Platform.OS !== 'web',
+          }),
+          Animated.timing(backdropOpacity, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: Platform.OS !== 'web',
+          }),
+        ]).start();
+      } else {
+        // Animate out
+        Animated.parallel([
+          Animated.timing(scaleAnim, {
+            toValue: 0.9,
+            duration: 250,
+            useNativeDriver: Platform.OS !== 'web',
+          }),
+          Animated.timing(opacityAnim, {
+            toValue: 0,
+            duration: 250,
+            useNativeDriver: Platform.OS !== 'web',
+          }),
+          Animated.timing(backdropOpacity, {
+            toValue: 0,
+            duration: 250,
+            useNativeDriver: Platform.OS !== 'web',
+          }),
+        ]).start();
+      }
+    }
+  }, [visible, isMobile]);
+
+  // Don't render on mobile if not visible
+  if (isMobile && !visible) {
+    return null;
+  }
 
   const validateForm = () => {
     const newErrors = {};
@@ -68,13 +125,24 @@ export default function ConsultationCard({ isPhone = false }) {
 
   const cardContent = (
     <View style={styles.cardInner}>
+      {/* Close button (mobile only) */}
+      {isMobile && onClose && (
+        <Pressable 
+          style={styles.closeButton}
+          onPress={onClose}
+          hitSlop={8}
+        >
+          <Text style={styles.closeButtonText}>×</Text>
+        </Pressable>
+      )}
+      
       {/* Heading */}
-      <Text style={[styles.heading, isPhone && styles.headingPhone]}>
+      <Text style={[styles.heading, isMobile && styles.headingMobile]}>
         Get Free Consultation
       </Text>
 
       {/* Subheading */}
-      <Text style={[styles.subheading, isPhone && styles.subheadingPhone]}>
+      <Text style={[styles.subheading, isMobile && styles.subheadingMobile]}>
         Our care team replies within minutes
       </Text>
 
@@ -178,42 +246,66 @@ export default function ConsultationCard({ isPhone = false }) {
   );
 
   return (
-    <View
-      style={[
-        styles.container,
-        isPhone && styles.containerPhone,
-        isMobile && styles.containerMobile,
-      ]}
-    >
-      {Platform.OS === 'web' ? (
-        // Web: CSS backdrop-filter applied as inline style for React Native Web compatibility
-        <View 
+    <>
+      {/* Backdrop (mobile only) */}
+      {isMobile && (
+        <Animated.View
           style={[
-            styles.cardWeb,
-            isMobile && styles.cardWebMobile,
-            // Inline style override for backdrop-filter (RN Web compatibility)
-            Platform.OS === 'web' && {
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
+            styles.backdrop,
+            {
+              opacity: backdropOpacity,
+              pointerEvents: visible ? 'auto' : 'none',
             },
           ]}
         >
-          {cardContent}
-        </View>
-      ) : (
-        // Native: BlurView
-        <BlurView 
-          intensity={80} 
-          tint="light" 
-          style={[
-            styles.cardNative,
-            isMobile && styles.cardNativeMobile,
-          ]}
-        >
-          {cardContent}
-        </BlurView>
+          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        </Animated.View>
       )}
-    </View>
+      
+      {/* Card */}
+      <Animated.View
+        style={[
+          styles.container,
+          isPhone && styles.containerPhone,
+          isMobile && styles.containerMobile,
+          isMobile && {
+            opacity: opacityAnim,
+            transform: Platform.OS === 'web' 
+              ? [{ scale: scaleAnim }]
+              : [{ scale: scaleAnim }],
+          },
+        ]}
+      >
+        {Platform.OS === 'web' ? (
+          // Web: CSS backdrop-filter applied as inline style for React Native Web compatibility
+          <View 
+            style={[
+              styles.cardWeb,
+              isMobile && styles.cardWebMobile,
+              // Inline style override for backdrop-filter (RN Web compatibility)
+              Platform.OS === 'web' && {
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+              },
+            ]}
+          >
+            {cardContent}
+          </View>
+        ) : (
+          // Native: BlurView
+          <BlurView 
+            intensity={80} 
+            tint="light" 
+            style={[
+              styles.cardNative,
+              isMobile && styles.cardNativeMobile,
+            ]}
+          >
+            {cardContent}
+          </BlurView>
+        )}
+      </Animated.View>
+    </>
   );
 }
 
@@ -439,5 +531,33 @@ const styles = StyleSheet.create({
   trustLineMobile: {
     fontSize: 9,
     marginTop: 0,
+  },
+  // Backdrop for mobile modal
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 9998,
+    ...(Platform.OS === 'web' && {
+      position: 'fixed',
+    }),
+  },
+  // Close button (mobile only)
+  closeButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  closeButtonText: {
+    fontSize: 28,
+    lineHeight: 28,
+    color: '#666',
+    fontWeight: '300',
   },
 });

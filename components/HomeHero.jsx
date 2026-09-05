@@ -17,7 +17,7 @@ import { supabase } from '../lib/supabase';
  * Fetches content from home_hero table (NOT hero_slides/hero_settings)
  * Single image only - no rotation, no videos, no cycles
  */
-export default function HomeHero({ isPhone = false, onNavigate }) {
+export default function HomeHero({ isPhone = false, onNavigate, onOpenConsultation }) {
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -279,6 +279,7 @@ export default function HomeHero({ isPhone = false, onNavigate }) {
                     styles.primaryButton,
                     pressed && styles.primaryButtonPressed,
                     isPhone && styles.primaryButtonPhone,
+                    isPhone && onOpenConsultation && styles.primaryButtonMobile,
                   ]}
                   onPress={() => handleButtonPress(content.primary_button_link)}
                 >
@@ -288,7 +289,22 @@ export default function HomeHero({ isPhone = false, onNavigate }) {
                 </Pressable>
               )}
 
-              {content.secondary_button_text && (
+              {/* Consultation button (mobile only) */}
+              {isPhone && onOpenConsultation && (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.consultationButton,
+                    pressed && styles.consultationButtonPressed,
+                  ]}
+                  onPress={onOpenConsultation}
+                >
+                  <Text style={styles.consultationButtonText}>
+                    Get Free Consultation
+                  </Text>
+                </Pressable>
+              )}
+
+              {content.secondary_button_text && !isPhone && (
                 <Pressable
                   style={({ pressed }) => [
                     styles.secondaryButton,
@@ -353,6 +369,7 @@ export default function HomeHero({ isPhone = false, onNavigate }) {
                     styles.primaryButton,
                     pressed && styles.primaryButtonPressed,
                     isPhone && styles.primaryButtonPhone,
+                    isPhone && onOpenConsultation && styles.primaryButtonMobile,
                   ]}
                   onPress={() => handleButtonPress(content.primary_button_link)}
                 >
@@ -362,7 +379,22 @@ export default function HomeHero({ isPhone = false, onNavigate }) {
                 </Pressable>
               )}
 
-              {content.secondary_button_text && (
+              {/* Consultation button (mobile only) */}
+              {isPhone && onOpenConsultation && (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.consultationButton,
+                    pressed && styles.consultationButtonPressed,
+                  ]}
+                  onPress={onOpenConsultation}
+                >
+                  <Text style={styles.consultationButtonText}>
+                    Get Free Consultation
+                  </Text>
+                </Pressable>
+              )}
+
+              {content.secondary_button_text && !isPhone && (
                 <Pressable
                   style={({ pressed }) => [
                     styles.secondaryButton,
@@ -585,5 +617,32 @@ const styles = StyleSheet.create({
   },
   secondaryButtonTextPhone: {
     fontSize: 12,
+  },
+  // Mobile consultation button (alongside VISIT SHOP)
+  primaryButtonMobile: {
+    flex: 1,
+    marginRight: 6,
+  },
+  consultationButton: {
+    backgroundColor: 'rgba(46, 125, 50, 0.55)',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 6,
+    flex: 1,
+    marginLeft: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  consultationButtonPressed: {
+    backgroundColor: 'rgba(46, 125, 50, 0.75)',
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+  },
+  consultationButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 12,
+    letterSpacing: 1.5,
   },
 });

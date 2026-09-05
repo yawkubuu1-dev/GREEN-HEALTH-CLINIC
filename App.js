@@ -2082,6 +2082,9 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
 
   const [currency, setCurrency] = useState('GHC');
+  
+  // Consultation card visibility (mobile modal)
+  const [consultationCardVisible, setConsultationCardVisible] = useState(false);
 
   const [adminEmail, setAdminEmail] = useState('');
 
@@ -8554,11 +8557,19 @@ const fetchFooterData = async () => {
             showsVerticalScrollIndicator={false} 
             bounces={false}
           >
-            <HomeHero isPhone={isPhoneScreen} onNavigate={setCurrentPage} />
+            <HomeHero 
+              isPhone={isPhoneScreen} 
+              onNavigate={setCurrentPage}
+              onOpenConsultation={() => setConsultationCardVisible(true)}
+            />
           </ScrollView>
           
           {/* Fixed consultation card - outside ScrollView for true fixed positioning */}
-          <ConsultationCard isPhone={isPhoneScreen} />
+          <ConsultationCard 
+            isPhone={isPhoneScreen}
+            visible={isPhoneScreen ? consultationCardVisible : true}
+            onClose={() => setConsultationCardVisible(false)}
+          />
         </View>
 
       ) : isServicesPage ? (
