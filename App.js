@@ -986,7 +986,7 @@ function FloatingSocialColumn() {
   // One animated value per icon: drives both translateX and opacity
   const anims = useRef(
     SOCIAL_BADGES.map(() => ({
-      translateX: new Animated.Value(80),
+      translateX: new Animated.Value(-80),
       opacity: new Animated.Value(0),
     }))
   ).current;
@@ -1015,7 +1015,7 @@ function FloatingSocialColumn() {
     <View
       style={{
         position: 'fixed',
-        right: 0,
+        left: 0,
         top: '50%',
         marginTop: -104,
         zIndex: 9998,
@@ -1025,10 +1025,10 @@ function FloatingSocialColumn() {
         paddingVertical: 12,
         paddingHorizontal: 8,
         backgroundColor: 'rgba(255,255,255,0.92)',
-        borderTopLeftRadius: 16,
-        borderBottomLeftRadius: 16,
+        borderTopRightRadius: 16,
+        borderBottomRightRadius: 16,
         shadowColor: '#000',
-        shadowOffset: { width: -2, height: 0 },
+        shadowOffset: { width: 2, height: 0 },
         shadowOpacity: 0.12,
         shadowRadius: 12,
       }}
@@ -2006,8 +2006,6 @@ export default function App() {
   const [search, setSearch] = useState('');
 
   const [cartItems, setCartItems] = useState([]);
-
-
 
   // Cart Bottom Sheet State & Animation
 
@@ -3160,8 +3158,6 @@ const fetchFooterData = async () => {
     };
 
   }, []);
-
-
 
   useEffect(() => {
 
@@ -8687,8 +8683,9 @@ const fetchFooterData = async () => {
 
         <View style={{ flex: 1, position: 'relative' }}>
           <ScrollView 
-            contentContainerStyle={styles.content} 
-            showsVerticalScrollIndicator={false} 
+            contentContainerStyle={styles.content}
+            showsVerticalScrollIndicator={Platform.OS !== 'web'} // Native scrollbars for mobile
+            style={Platform.OS === 'web' ? styles.webScrollView : undefined}
             bounces={true} // Enable bounces for natural mobile feel
             scrollEnabled={true} // Explicitly enable scrolling
           >
@@ -9767,7 +9764,7 @@ const fetchFooterData = async () => {
 
       ) : isShopPage ? (
 
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} bounces={false}>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={Platform.OS !== 'web'} bounces={false}>
 
         {/* Hero Slider - Only on Shop Page */}
         <HeroSlider 
@@ -12714,7 +12711,7 @@ const fetchFooterData = async () => {
 
       {/* Floating social column — desktop/tablet only, fixed to right edge, hidden on Shop/Services/About/Blogs pages */}
       {!isPhoneScreen && !['shop', 'services', 'about', 'blogs'].includes(currentPage) && <FloatingSocialColumn />}
-
+      
     </SafeAreaView>
 
   );
@@ -13200,9 +13197,13 @@ const styles = StyleSheet.create({
   },
 
   content: {
+    flexGrow: 1,
+    paddingBottom: 400, // Temporary increase to ensure scrollable content
+  },
 
-    paddingBottom: 40,
-
+  webScrollView: {
+    flex: 1,
+    overflowY: 'auto', // Enable scrolling on web
   },
 
   hero: {

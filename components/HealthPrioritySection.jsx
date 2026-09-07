@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
 
 /**
  * HealthPrioritySection - Text content section for Homepage
- * Positioned below HomeHero with clinic messaging and mission statement
+ * Static content positioned below HomeHero with clinic messaging and mission statement
  */
 export default function HealthPrioritySection() {
   const { width } = useWindowDimensions();
