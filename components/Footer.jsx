@@ -100,11 +100,11 @@ export default function Footer({ onNavigate }) {
           onLayout={handleLayout}
         >
           {/* Column 1 - Quick Links */}
-          <View style={[styles.column, isPhone && styles.columnPhone]}>
+          <View style={[styles.column, styles.quickLinksColumn, isPhone && styles.columnPhone]}>
             <Text style={[styles.columnTitle, isPhone && styles.columnTitlePhone]}>
               Quick Links
             </Text>
-            <View style={styles.linksList}>
+            <View style={[styles.linksList, isPhone && styles.linksListPhone]}>
               {[
                 { label: 'Home', page: 'home' },
                 { label: 'Shop', page: 'shop' },
@@ -130,11 +130,11 @@ export default function Footer({ onNavigate }) {
           </View>
 
           {/* Column 2 - Contact Info */}
-          <View style={[styles.column, isPhone && styles.columnPhone]}>
+          <View style={[styles.column, isPhone && styles.columnPhone, !isPhone && styles.contactInfoColumn, isPhone && styles.contactInfoColumnPhone]}>
             <Text style={[styles.columnTitle, isPhone && styles.columnTitlePhone]}>
               Contact Info
             </Text>
-            <View style={styles.contactInfo}>
+            <View style={[styles.contactInfo, isPhone && styles.contactInfoPhone]}>
               {/* Address */}
               <View style={styles.contactItem}>
                 <Text style={[styles.contactIcon, isPhone && styles.contactIconPhone]}>📍</Text>
@@ -178,7 +178,7 @@ export default function Footer({ onNavigate }) {
           </View>
 
           {/* Column 3 - Follow Us */}
-          <View style={[styles.column, isPhone && styles.columnPhone]}>
+          <View style={[styles.column, styles.followUsColumn, isPhone && styles.columnPhone]}>
             <Text style={[styles.columnTitle, isPhone && styles.columnTitlePhone]}>
               Follow Us
             </Text>
@@ -280,13 +280,27 @@ const styles = StyleSheet.create({
   },
   column: {
     flex: 1,
-    marginRight: 32,
-    minWidth: 250,
+    marginRight: 40,
+    minWidth: 0,
+  },
+  quickLinksColumn: {
+    flex: 1,
+  },
+  contactInfoColumn: {
+    flex: 2,
+  },
+  followUsColumn: {
+    flex: 1,
   },
   columnPhone: {
     marginRight: 0,
     marginBottom: 32,
     minWidth: '100%',
+    maxWidth: '100%',
+    flex: 'unset',
+  },
+  contactInfoColumnPhone: {
+    maxWidth: '100%',
   },
   
   // Column Titles
@@ -303,7 +317,14 @@ const styles = StyleSheet.create({
   
   // Quick Links
   linksList: {
-    gap: 8,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+  },
+  linksListPhone: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
   },
   footerLink: {
     paddingVertical: 4,
@@ -323,25 +344,43 @@ const styles = StyleSheet.create({
   
   // Contact Info
   contactInfo: {
-    gap: 12,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 24,
+  },
+  contactInfoPhone: {
+    flexDirection: 'column',
+    gap: 16,
   },
   contactItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
+    gap: 8,
   },
   contactIcon: {
     fontSize: 16,
-    marginRight: 8,
+    width: 18,
+    height: 18,
+    flexShrink: 0,
     marginTop: 2,
   },
   contactIconPhone: {
     fontSize: 14,
+    width: 16,
+    height: 16,
   },
   contactText: {
     fontSize: 14,
     color: '#E0E0E0',
     flex: 1,
     lineHeight: 18,
+    flexWrap: 'wrap',
+  },
+  addressText: {
+    flexWrap: 'wrap',
+  },
+  addressTextPhone: {
+    maxWidth: '100%',
   },
   contactTextPhone: {
     fontSize: 13,
@@ -362,7 +401,7 @@ const styles = StyleSheet.create({
   },
   socialLinksPhone: {
     justifyContent: 'center',
-    gap: 12,
+    gap: 16,
   },
   socialLink: {
     paddingVertical: 4,
