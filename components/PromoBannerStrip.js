@@ -88,7 +88,7 @@ export default function PromoBannerStrip({ onBannerPress }) {
     <View style={styles.container}>
       <ScrollView
         horizontal
-        showsHorizontalScrollIndicator={false}
+        showsHorizontalScrollIndicator={true}
         contentContainerStyle={styles.scrollContent}
         centerContent={banners.length <= 3}
       >

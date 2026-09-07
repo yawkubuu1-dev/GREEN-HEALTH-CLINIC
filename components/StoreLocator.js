@@ -80,7 +80,7 @@ const StoreLocator = ({ onClose }) => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={true}>
       {/* Header */}
       <View style={styles.header}>
         <View>

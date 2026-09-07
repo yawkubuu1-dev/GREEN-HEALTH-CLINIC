@@ -213,7 +213,7 @@ const DeliveryTracker = ({ orderId, storeLat = 5.6037, storeLng = -0.1870, onClo
   // Mobile fallback view
   if (Platform.OS !== 'web') {
     return (
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={true}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Delivery Tracking</Text>
           {onClose && (
@@ -244,7 +244,7 @@ const DeliveryTracker = ({ orderId, storeLat = 5.6037, storeLng = -0.1870, onClo
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={true}>
       {/* Header */}
       <View style={styles.header}>
         <View>

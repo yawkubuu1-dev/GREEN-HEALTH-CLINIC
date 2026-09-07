@@ -43,8 +43,10 @@ import { supabase } from './lib/supabase';
 import HeroSlider from './components/HeroSlider';
 import HomeHero from './components/HomeHero';
 import HealthPrioritySection from './components/HealthPrioritySection';
+import Footer from './components/Footer';
 import ConsultationCard from './components/ConsultationCard';
 import CarouselComponent from './components/CarouselComponent';
+import { FooterProvider } from './contexts/FooterContext';
 
 import ProductDetail from './components/ProductDetail';
 
@@ -1225,7 +1227,7 @@ const PATIENT_STORIES = [
 const BLOG_PAGE_SIZE = 6;
 
 // ─── Blog Page Component ──────────────────────────────────────────────────────
-function BlogPage({ isUserDarkMode, isPhoneScreen, isTabletScreen }) {
+function BlogPage({ isUserDarkMode, isPhoneScreen, isTabletScreen, footer = null }) {
   const bg        = isUserDarkMode ? darkPalette.background   : palette.background;
   const surface   = isUserDarkMode ? darkPalette.surface      : palette.surface;
   const charcoal  = isUserDarkMode ? darkPalette.charcoal     : palette.charcoal;
@@ -1274,7 +1276,7 @@ function BlogPage({ isUserDarkMode, isPhoneScreen, isTabletScreen }) {
     <ScrollView
       style={{ flex: 1, backgroundColor: bg }}
       contentContainerStyle={{ paddingBottom: 80 }}
-      showsVerticalScrollIndicator={false}
+      showsVerticalScrollIndicator={true}
     >
       {/* ── Page header ── */}
       <View style={{
@@ -1693,6 +1695,9 @@ function BlogPage({ isUserDarkMode, isPhoneScreen, isTabletScreen }) {
           })}
         </View>
       </View>
+      
+      {/* Render footer if provided */}
+      {footer}
     </ScrollView>
   );
 }
@@ -4780,7 +4785,7 @@ const fetchFooterData = async () => {
 
     return (
 
-      <ScrollView contentContainerStyle={styles.adminLoginContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.adminLoginContent} showsVerticalScrollIndicator={true}>
 
         <View style={styles.adminLoginCard}>
 
@@ -5421,7 +5426,8 @@ const fetchFooterData = async () => {
 
   return (
 
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: isUserDarkMode ? darkPalette.background : palette.background }]}>
+    <FooterProvider>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: isUserDarkMode ? darkPalette.background : palette.background }]}>
 
       <StatusBar style={isUserDarkMode ? "light" : "dark"} />
 
@@ -6407,7 +6413,7 @@ const fetchFooterData = async () => {
 
       ) : isAdminLoginPage ? (
 
-        <ScrollView contentContainerStyle={{ flex: 1, backgroundColor: palette.background, justifyContent: 'center', alignItems: 'center', padding: 24, minHeight: 500 }} showsVerticalScrollIndicator={false} bounces={false}>
+        <ScrollView contentContainerStyle={{ flex: 1, backgroundColor: palette.background, justifyContent: 'center', alignItems: 'center', padding: 24, minHeight: 500 }} showsVerticalScrollIndicator={true} bounces={false}>
 
           <View style={{ width: '100%', maxWidth: 420, backgroundColor: '#fff', borderTopWidth: 4, borderTopColor: palette.oxblood, padding: 36, shadowColor: '#000', shadowOffset: {width: 0, height: 8}, shadowOpacity: 0.08, shadowRadius: 24 }}>
 
@@ -8005,7 +8011,7 @@ const fetchFooterData = async () => {
 
             {/* Main Nav Items */}
 
-            <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+            <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={true}>
 
               <View style={{ paddingTop: 8 }}>
 
@@ -8259,7 +8265,7 @@ const fetchFooterData = async () => {
 
                 {/* Rider List */}
 
-                <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
+                <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={true}>
 
                   <View style={{ padding: 16, gap: 10 }}>
 
@@ -8682,9 +8688,9 @@ const fetchFooterData = async () => {
       ) : isHomePage ? (
 
         <View style={{ flex: 1, position: 'relative' }}>
-          <ScrollView 
+          <ScrollView
             contentContainerStyle={styles.content}
-            showsVerticalScrollIndicator={Platform.OS !== 'web'} // Native scrollbars for mobile
+            showsVerticalScrollIndicator={true} // Show scrollbars on all platforms
             style={Platform.OS === 'web' ? styles.webScrollView : undefined}
             bounces={true} // Enable bounces for natural mobile feel
             scrollEnabled={true} // Explicitly enable scrolling
@@ -8696,6 +8702,9 @@ const fetchFooterData = async () => {
             />
             
             <HealthPrioritySection />
+            
+            {/* Footer - only on Homepage */}
+            <Footer onNavigate={setCurrentPage} />
           </ScrollView>
           
           {/* Fixed consultation card - outside ScrollView for true fixed positioning */}
@@ -8744,22 +8753,22 @@ const fetchFooterData = async () => {
                     console.log(`[SERVICES] Chip tapped: ${item.key}`);
                     isServicesScrollingProgrammatically.current = true;
                     setActiveServiceSection(item.key);
-                    
+
                     // Use dynamically measured chip bar height
                     const STICKY_HEIGHT = servicesChipBarHeight.current;
                     const raw = sectionOffsets.current[item.key] ?? 0;
                     const targetY = Math.max(0, raw - STICKY_HEIGHT);
                     console.log(`[SERVICES] Scrolling to ${item.key}: raw=${raw}, stickyHeight=${STICKY_HEIGHT}, target=${targetY}`);
-                    
-                    servicesScrollViewRef.current?.scrollTo({ 
-                      y: targetY, 
-                      animated: false 
+
+                    servicesScrollViewRef.current?.scrollTo({
+                      y: targetY,
+                      animated: false
                     });
-                    
+
                     // Longer timeout to ensure scroll completes
-                    setTimeout(() => { 
+                    setTimeout(() => {
                       console.log(`[SERVICES] Unlocking programmatic scroll flag for ${item.key}`);
-                      isServicesScrollingProgrammatically.current = false; 
+                      isServicesScrollingProgrammatically.current = false;
                     }, 500);
                   }}
                   style={{
@@ -8786,7 +8795,7 @@ const fetchFooterData = async () => {
               ))}
             </ScrollView>
           ) : (
-          <View style={{ 
+          <View style={{
             width: 220,
             backgroundColor: isUserDarkMode ? darkPalette.surface : '#f8f9fa',
             borderRightWidth: 1,
@@ -8798,22 +8807,22 @@ const fetchFooterData = async () => {
             paddingHorizontal: 16
           }}>
 
-            <Text style={{ 
-              fontSize: 20, 
-              fontWeight: '700', 
+            <Text style={{
+              fontSize: 20,
+              fontWeight: '700',
               color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-              marginBottom: 20 
+              marginBottom: 20
             }}>Our Services</Text>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={true}>
 
-              <Pressable 
-                style={{ 
-                  paddingVertical: 12, 
+              <Pressable
+                style={{
+                  paddingVertical: 12,
                   paddingHorizontal: 12,
                   marginBottom: 4,
                   borderRadius: 6,
-                  backgroundColor: activeServiceSection === 'functional-medicine' 
+                  backgroundColor: activeServiceSection === 'functional-medicine'
                     ? (isUserDarkMode ? '#008000' : '#e8f5e9')
                     : 'transparent'
                 }}
@@ -8824,22 +8833,22 @@ const fetchFooterData = async () => {
                   setTimeout(() => { isServicesScrollingProgrammatically.current = false; }, 300);
                 }}
               >
-                <Text style={{ 
-                  fontSize: 14, 
-                  color: activeServiceSection === 'functional-medicine' 
-                    ? '#fff' 
+                <Text style={{
+                  fontSize: 14,
+                  color: activeServiceSection === 'functional-medicine'
+                    ? '#fff'
                     : (isUserDarkMode ? darkPalette.secondary : palette.secondary),
                   fontWeight: activeServiceSection === 'functional-medicine' ? '600' : '400'
                 }}>• Functional Medicine</Text>
               </Pressable>
 
-              <Pressable 
-                style={{ 
-                  paddingVertical: 12, 
+              <Pressable
+                style={{
+                  paddingVertical: 12,
                   paddingHorizontal: 12,
                   marginBottom: 4,
                   borderRadius: 6,
-                  backgroundColor: activeServiceSection === 'metabolic-health' 
+                  backgroundColor: activeServiceSection === 'metabolic-health'
                     ? (isUserDarkMode ? '#008000' : '#e8f5e9')
                     : 'transparent'
                 }}
@@ -8850,22 +8859,22 @@ const fetchFooterData = async () => {
                   setTimeout(() => { isServicesScrollingProgrammatically.current = false; }, 300);
                 }}
               >
-                <Text style={{ 
-                  fontSize: 14, 
-                  color: activeServiceSection === 'metabolic-health' 
-                    ? '#fff' 
+                <Text style={{
+                  fontSize: 14,
+                  color: activeServiceSection === 'metabolic-health'
+                    ? '#fff'
                     : (isUserDarkMode ? darkPalette.secondary : palette.secondary),
                   fontWeight: activeServiceSection === 'metabolic-health' ? '600' : '400'
                 }}>• Metabolic Health</Text>
               </Pressable>
 
-              <Pressable 
-                style={{ 
-                  paddingVertical: 12, 
+              <Pressable
+                style={{
+                  paddingVertical: 12,
                   paddingHorizontal: 12,
                   marginBottom: 4,
                   borderRadius: 6,
-                  backgroundColor: activeServiceSection === 'chronic-disease' 
+                  backgroundColor: activeServiceSection === 'chronic-disease'
                     ? (isUserDarkMode ? '#008000' : '#e8f5e9')
                     : 'transparent'
                 }}
@@ -8876,22 +8885,22 @@ const fetchFooterData = async () => {
                   setTimeout(() => { isServicesScrollingProgrammatically.current = false; }, 300);
                 }}
               >
-                <Text style={{ 
-                  fontSize: 14, 
-                  color: activeServiceSection === 'chronic-disease' 
-                    ? '#fff' 
+                <Text style={{
+                  fontSize: 14,
+                  color: activeServiceSection === 'chronic-disease'
+                    ? '#fff'
                     : (isUserDarkMode ? darkPalette.secondary : palette.secondary),
                   fontWeight: activeServiceSection === 'chronic-disease' ? '600' : '400'
                 }}>• Chronic Disease Management</Text>
               </Pressable>
 
-              <Pressable 
-                style={{ 
-                  paddingVertical: 12, 
+              <Pressable
+                style={{
+                  paddingVertical: 12,
                   paddingHorizontal: 12,
                   marginBottom: 4,
                   borderRadius: 6,
-                  backgroundColor: activeServiceSection === 'nutrition' 
+                  backgroundColor: activeServiceSection === 'nutrition'
                     ? (isUserDarkMode ? '#008000' : '#e8f5e9')
                     : 'transparent'
                 }}
@@ -8902,22 +8911,22 @@ const fetchFooterData = async () => {
                   setTimeout(() => { isServicesScrollingProgrammatically.current = false; }, 300);
                 }}
               >
-                <Text style={{ 
-                  fontSize: 14, 
-                  color: activeServiceSection === 'nutrition' 
-                    ? '#fff' 
+                <Text style={{
+                  fontSize: 14,
+                  color: activeServiceSection === 'nutrition'
+                    ? '#fff'
                     : (isUserDarkMode ? darkPalette.secondary : palette.secondary),
                   fontWeight: activeServiceSection === 'nutrition' ? '600' : '400'
                 }}>• Nutrition & Lifestyle Coaching</Text>
               </Pressable>
 
-              <Pressable 
-                style={{ 
-                  paddingVertical: 12, 
+              <Pressable
+                style={{
+                  paddingVertical: 12,
                   paddingHorizontal: 12,
                   marginBottom: 4,
                   borderRadius: 6,
-                  backgroundColor: activeServiceSection === 'diagnostics' 
+                  backgroundColor: activeServiceSection === 'diagnostics'
                     ? (isUserDarkMode ? '#008000' : '#e8f5e9')
                     : 'transparent'
                 }}
@@ -8928,22 +8937,22 @@ const fetchFooterData = async () => {
                   setTimeout(() => { isServicesScrollingProgrammatically.current = false; }, 300);
                 }}
               >
-                <Text style={{ 
-                  fontSize: 14, 
-                  color: activeServiceSection === 'diagnostics' 
-                    ? '#fff' 
+                <Text style={{
+                  fontSize: 14,
+                  color: activeServiceSection === 'diagnostics'
+                    ? '#fff'
                     : (isUserDarkMode ? darkPalette.secondary : palette.secondary),
                   fontWeight: activeServiceSection === 'diagnostics' ? '600' : '400'
                 }}>• Diagnostics & Lab Services</Text>
               </Pressable>
 
-              <Pressable 
-                style={{ 
-                  paddingVertical: 12, 
+              <Pressable
+                style={{
+                  paddingVertical: 12,
                   paddingHorizontal: 12,
                   marginBottom: 4,
                   borderRadius: 6,
-                  backgroundColor: activeServiceSection === 'pharmacy' 
+                  backgroundColor: activeServiceSection === 'pharmacy'
                     ? (isUserDarkMode ? '#008000' : '#e8f5e9')
                     : 'transparent'
                 }}
@@ -8954,10 +8963,10 @@ const fetchFooterData = async () => {
                   setTimeout(() => { isServicesScrollingProgrammatically.current = false; }, 300);
                 }}
               >
-                <Text style={{ 
-                  fontSize: 14, 
-                  color: activeServiceSection === 'pharmacy' 
-                    ? '#fff' 
+                <Text style={{
+                  fontSize: 14,
+                  color: activeServiceSection === 'pharmacy'
+                    ? '#fff'
                     : (isUserDarkMode ? darkPalette.secondary : palette.secondary),
                   fontWeight: activeServiceSection === 'pharmacy' ? '600' : '400'
                 }}>• Pharmacy</Text>
@@ -8968,177 +8977,194 @@ const fetchFooterData = async () => {
           </View>
           )}
 
-          <ScrollView 
-            ref={servicesScrollViewRef}
-            contentContainerStyle={{ padding: isPhoneScreen ? 20 : 40 }} 
-            showsVerticalScrollIndicator={false}
-            bounces={false}
-            overScrollMode="never"
-            onScroll={(event) => {
-              // ✅ FIX: Only process scroll events when Services page is active
-              if (currentPage !== 'services') {
-                return;
-              }
-              if (isServicesScrollingProgrammatically.current) {
-                console.log('[SERVICES] onScroll blocked - programmatic scroll in progress');
-                return;
-              }
-              const offsetY = event.nativeEvent.contentOffset.y;
-              const STICKY_HEIGHT = isPhoneScreen ? servicesChipBarHeight.current : 0;
-              const offs = sectionOffsets.current;
-              const order = ['functional-medicine','metabolic-health','chronic-disease','nutrition','diagnostics','pharmacy'];
-              let active = order[0];
-              for (const key of order) {
-                if ((offs[key] ?? 0) - STICKY_HEIGHT <= offsetY + 20) active = key;
-              }
-              console.log(`[SERVICES] onScroll: offsetY=${offsetY.toFixed(1)}, calculated active=${active}`);
-              if (active !== activeServiceSection) {
-                console.log(`[SERVICES] Active section changing: ${activeServiceSection} -> ${active}`);
-              }
-              setActiveServiceSection(active);
-            }}
-            scrollEventThrottle={100}
-          >
+          <View style={{ flex: 1, flexDirection: 'column' }}>
+            <ScrollView
+              ref={servicesScrollViewRef}
+              contentContainerStyle={{}}
+              showsVerticalScrollIndicator={true}
+              bounces={false}
+              overScrollMode="never"
+              onScroll={(event) => {
+                // ✅ FIX: Only process scroll events when Services page is active
+                if (currentPage !== 'services') {
+                  return;
+                }
+                if (isServicesScrollingProgrammatically.current) {
+                  console.log('[SERVICES] onScroll blocked - programmatic scroll in progress');
+                  return;
+                }
+                const offsetY = event.nativeEvent.contentOffset.y;
+                const STICKY_HEIGHT = isPhoneScreen ? servicesChipBarHeight.current : 0;
+                const offs = sectionOffsets.current;
+                const order = ['functional-medicine','metabolic-health','chronic-disease','nutrition','diagnostics','pharmacy'];
+                let active = order[0];
+                for (const key of order) {
+                  if ((offs[key] ?? 0) - STICKY_HEIGHT <= offsetY + 20) active = key;
+                }
+                console.log(`[SERVICES] onScroll: offsetY=${offsetY.toFixed(1)}, calculated active=${active}`);
+                if (active !== activeServiceSection) {
+                  console.log(`[SERVICES] Active section changing: ${activeServiceSection} -> ${active}`);
+                }
+                setActiveServiceSection(active);
+              }}
+              scrollEventThrottle={100}
+            >
 
-            <View ref={r => sectionRefs.current['functional-medicine'] = r} style={{ marginBottom: 60 }} onLayout={e => { 
-              const newY = e.nativeEvent.layout.y;
-              const oldY = sectionOffsets.current['functional-medicine'];
-              if (oldY !== newY) {
-                console.log(`[SERVICES] functional-medicine layout changed: ${oldY} -> ${newY}`);
-              }
-              sectionOffsets.current['functional-medicine'] = newY;
-            }}>
-              <Text style={{ 
-                fontSize: 28, 
-                fontWeight: '700', 
-                color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                marginBottom: 16 
-              }}>Functional Medicine</Text>
-              <Text style={{ 
-                fontSize: 16, 
-                lineHeight: 24,
-                color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
+              <View style={{
+                paddingHorizontal: isPhoneScreen ? 20 : 40,
+                paddingTop: isPhoneScreen ? 20 : 40,
+                paddingBottom: 64,
+                width: '100%',
+                maxWidth: 1180,
+                alignSelf: 'center',
               }}>
-                Functional medicine is a systems biology-based approach that focuses on identifying and addressing the root cause of disease. Each symptom or differential diagnosis may be one of many contributing to an individual's illness. Our practitioners look at the interactions among genetic, environmental, and lifestyle factors that can influence long-term health and complex, chronic disease.
-              </Text>
-            </View>
 
-            <View ref={r => sectionRefs.current['metabolic-health'] = r} style={{ marginBottom: 60 }} onLayout={e => { 
-              const newY = e.nativeEvent.layout.y;
-              const oldY = sectionOffsets.current['metabolic-health'];
-              if (oldY !== newY) {
-                console.log(`[SERVICES] metabolic-health layout changed: ${oldY} -> ${newY}`);
-              }
-              sectionOffsets.current['metabolic-health'] = newY;
-            }}>
-              <Text style={{ 
-                fontSize: 28, 
-                fontWeight: '700', 
-                color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                marginBottom: 16 
-              }}>Metabolic Health</Text>
-              <Text style={{ 
-                fontSize: 16, 
-                lineHeight: 24,
-                color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
-              }}>
-                Metabolic health encompasses the biochemical processes that occur within your body to maintain life, including how your body converts food into energy. Our metabolic health services focus on optimizing these processes through personalized nutrition plans, exercise recommendations, and targeted supplementation to help you achieve optimal energy levels and prevent metabolic disorders.
-              </Text>
-            </View>
+                <View ref={r => sectionRefs.current['functional-medicine'] = r} style={{ marginBottom: 60 }} onLayout={e => {
+                  const newY = e.nativeEvent.layout.y;
+                  const oldY = sectionOffsets.current['functional-medicine'];
+                  if (oldY !== newY) {
+                    console.log(`[SERVICES] functional-medicine layout changed: ${oldY} -> ${newY}`);
+                  }
+                  sectionOffsets.current['functional-medicine'] = newY;
+                }}>
+                  <Text style={{
+                    fontSize: 28,
+                    fontWeight: '700',
+                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                    marginBottom: 16
+                  }}>Functional Medicine</Text>
+                  <Text style={{
+                    fontSize: 16,
+                    lineHeight: 24,
+                    color: isUserDarkMode ? darkPalette.secondary : palette.secondary
+                  }}>
+                    Functional medicine is a systems biology-based approach that focuses on identifying and addressing the root cause of disease. Each symptom or differential diagnosis may be one of many contributing to an individual's illness. Our practitioners look at the interactions among genetic, environmental, and lifestyle factors that can influence long-term health and complex, chronic disease.
+                  </Text>
+                </View>
 
-            <View ref={r => sectionRefs.current['chronic-disease'] = r} style={{ marginBottom: 60 }} onLayout={e => { 
-              const newY = e.nativeEvent.layout.y;
-              const oldY = sectionOffsets.current['chronic-disease'];
-              if (oldY !== newY) {
-                console.log(`[SERVICES] chronic-disease layout changed: ${oldY} -> ${newY}`);
-              }
-              sectionOffsets.current['chronic-disease'] = newY;
-            }}>
-              <Text style={{ 
-                fontSize: 28, 
-                fontWeight: '700', 
-                color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                marginBottom: 16 
-              }}>Chronic Disease Management</Text>
-              <Text style={{ 
-                fontSize: 16, 
-                lineHeight: 24,
-                color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
-              }}>
-                Chronic diseases such as diabetes, heart disease, and autoimmune conditions require comprehensive, ongoing care. Our chronic disease management programs combine conventional medicine with lifestyle interventions to help you manage symptoms, prevent complications, and improve your overall quality of life through evidence-based treatment protocols.
-              </Text>
-            </View>
+                <View ref={r => sectionRefs.current['metabolic-health'] = r} style={{ marginBottom: 60 }} onLayout={e => {
+                  const newY = e.nativeEvent.layout.y;
+                  const oldY = sectionOffsets.current['metabolic-health'];
+                  if (oldY !== newY) {
+                    console.log(`[SERVICES] metabolic-health layout changed: ${oldY} -> ${newY}`);
+                  }
+                  sectionOffsets.current['metabolic-health'] = newY;
+                }}>
+                  <Text style={{
+                    fontSize: 28,
+                    fontWeight: '700',
+                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                    marginBottom: 16
+                  }}>Metabolic Health</Text>
+                  <Text style={{
+                    fontSize: 16,
+                    lineHeight: 24,
+                    color: isUserDarkMode ? darkPalette.secondary : palette.secondary
+                  }}>
+                    Metabolic health encompasses the biochemical processes that occur within your body to maintain life, including how your body converts food into energy. Our metabolic health services focus on optimizing these processes through personalized nutrition plans, exercise recommendations, and targeted supplementation to help you achieve optimal energy levels and prevent metabolic disorders.
+                  </Text>
+                </View>
 
-            <View ref={r => sectionRefs.current['nutrition'] = r} style={{ marginBottom: 60 }} onLayout={e => { 
-              const newY = e.nativeEvent.layout.y;
-              const oldY = sectionOffsets.current['nutrition'];
-              if (oldY !== newY) {
-                console.log(`[SERVICES] nutrition layout changed: ${oldY} -> ${newY}`);
-              }
-              sectionOffsets.current['nutrition'] = newY;
-            }}>
-              <Text style={{ 
-                fontSize: 28, 
-                fontWeight: '700', 
-                color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                marginBottom: 16 
-              }}>Nutrition & Lifestyle Coaching</Text>
-              <Text style={{ 
-                fontSize: 16, 
-                lineHeight: 24,
-                color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
-              }}>
-                Nutrition and lifestyle are foundational to health and wellness. Our certified nutritionists and health coaches work with you to develop sustainable habits that support your health goals. From meal planning and grocery shopping guidance to stress management techniques and sleep optimization, we provide the tools you need for lasting change.
-              </Text>
-            </View>
+                <View ref={r => sectionRefs.current['chronic-disease'] = r} style={{ marginBottom: 60 }} onLayout={e => {
+                  const newY = e.nativeEvent.layout.y;
+                  const oldY = sectionOffsets.current['chronic-disease'];
+                  if (oldY !== newY) {
+                    console.log(`[SERVICES] chronic-disease layout changed: ${oldY} -> ${newY}`);
+                  }
+                  sectionOffsets.current['chronic-disease'] = newY;
+                }}>
+                  <Text style={{
+                    fontSize: 28,
+                    fontWeight: '700',
+                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                    marginBottom: 16
+                  }}>Chronic Disease Management</Text>
+                  <Text style={{
+                    fontSize: 16,
+                    lineHeight: 24,
+                    color: isUserDarkMode ? darkPalette.secondary : palette.secondary
+                  }}>
+                    Chronic disease management requires a comprehensive, personalized approach that addresses the underlying factors contributing to long-term health conditions. Our team works with you to develop sustainable strategies for managing conditions such as diabetes, cardiovascular disease, autoimmune disorders, and other chronic illnesses through lifestyle modification, targeted nutrition, and evidence-based interventions.
+                  </Text>
+                </View>
 
-            <View ref={r => sectionRefs.current['diagnostics'] = r} style={{ marginBottom: 60 }} onLayout={e => { 
-              const newY = e.nativeEvent.layout.y;
-              const oldY = sectionOffsets.current['diagnostics'];
-              if (oldY !== newY) {
-                console.log(`[SERVICES] diagnostics layout changed: ${oldY} -> ${newY}`);
-              }
-              sectionOffsets.current['diagnostics'] = newY;
-            }}>
-              <Text style={{ 
-                fontSize: 28, 
-                fontWeight: '700', 
-                color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                marginBottom: 16 
-              }}>Diagnostics & Lab Services</Text>
-              <Text style={{ 
-                fontSize: 16, 
-                lineHeight: 24,
-                color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
-              }}>
-                Accurate diagnosis is essential for effective treatment. We offer comprehensive diagnostic testing and laboratory services, including advanced biomarker panels, genetic testing, hormone analysis, and specialized functional medicine tests. Our state-of-the-art facilities ensure reliable results to guide your personalized treatment plan.
-              </Text>
-            </View>
+                <View ref={r => sectionRefs.current['nutrition'] = r} style={{ marginBottom: 60 }} onLayout={e => {
+                  const newY = e.nativeEvent.layout.y;
+                  const oldY = sectionOffsets.current['nutrition'];
+                  if (oldY !== newY) {
+                    console.log(`[SERVICES] nutrition layout changed: ${oldY} -> ${newY}`);
+                  }
+                  sectionOffsets.current['nutrition'] = newY;
+                }}>
+                  <Text style={{
+                    fontSize: 28,
+                    fontWeight: '700',
+                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                    marginBottom: 16
+                  }}>Nutrition & Lifestyle Coaching</Text>
+                  <Text style={{
+                    fontSize: 16,
+                    lineHeight: 24,
+                    color: isUserDarkMode ? darkPalette.secondary : palette.secondary
+                  }}>
+                    Nutrition and lifestyle are foundational to health and wellness. Our certified nutritionists and health coaches work with you to develop sustainable habits that support your health goals. From meal planning and grocery shopping guidance to stress management techniques and sleep optimization, we provide the tools you need for lasting change.
+                  </Text>
+                </View>
 
-            <View ref={r => sectionRefs.current['pharmacy'] = r} style={{ marginBottom: 60 }} onLayout={e => { 
-              const newY = e.nativeEvent.layout.y;
-              const oldY = sectionOffsets.current['pharmacy'];
-              if (oldY !== newY) {
-                console.log(`[SERVICES] pharmacy layout changed: ${oldY} -> ${newY}`);
-              }
-              sectionOffsets.current['pharmacy'] = newY;
-            }}>
-              <Text style={{ 
-                fontSize: 28, 
-                fontWeight: '700', 
-                color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                marginBottom: 16 
-              }}>Pharmacy</Text>
-              <Text style={{ 
-                fontSize: 16, 
-                lineHeight: 24,
-                color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
-              }}>
-                Our integrated pharmacy services provide convenient access to prescription medications, compounded formulations, and high-quality supplements. Our pharmacists work closely with your healthcare team to ensure medication safety, proper dosing, and optimal therapeutic outcomes. We also offer medication counseling and adherence support.
-              </Text>
-            </View>
+                <View ref={r => sectionRefs.current['diagnostics'] = r} style={{ marginBottom: 60 }} onLayout={e => {
+                  const newY = e.nativeEvent.layout.y;
+                  const oldY = sectionOffsets.current['diagnostics'];
+                  if (oldY !== newY) {
+                    console.log(`[SERVICES] diagnostics layout changed: ${oldY} -> ${newY}`);
+                  }
+                  sectionOffsets.current['diagnostics'] = newY;
+                }}>
+                  <Text style={{
+                    fontSize: 28,
+                    fontWeight: '700',
+                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                    marginBottom: 16
+                  }}>Diagnostics & Lab Services</Text>
+                  <Text style={{
+                    fontSize: 16,
+                    lineHeight: 24,
+                    color: isUserDarkMode ? darkPalette.secondary : palette.secondary
+                  }}>
+                    Accurate diagnosis is essential for effective treatment. We offer comprehensive diagnostic testing and laboratory services, including advanced biomarker panels, genetic testing, hormone analysis, and specialized functional medicine tests. Our state-of-the-art facilities ensure reliable results to guide your personalized treatment plan.
+                  </Text>
+                </View>
 
-          </ScrollView>
+                <View ref={r => sectionRefs.current['pharmacy'] = r} style={{ marginBottom: 60 }} onLayout={e => {
+                  const newY = e.nativeEvent.layout.y;
+                  const oldY = sectionOffsets.current['pharmacy'];
+                  if (oldY !== newY) {
+                    console.log(`[SERVICES] pharmacy layout changed: ${oldY} -> ${newY}`);
+                  }
+                  sectionOffsets.current['pharmacy'] = newY;
+                }}>
+                  <Text style={{
+                    fontSize: 28,
+                    fontWeight: '700',
+                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                    marginBottom: 16
+                  }}>Pharmacy</Text>
+                  <Text style={{
+                    fontSize: 16,
+                    lineHeight: 24,
+                    color: isUserDarkMode ? darkPalette.secondary : palette.secondary
+                  }}>
+                    Our integrated pharmacy services provide convenient access to prescription medications, compounded formulations, and high-quality supplements. Our pharmacists work closely with your healthcare team to ensure medication safety, proper dosing, and optimal therapeutic outcomes. We also offer medication counseling and adherence support.
+                  </Text>
+                </View>
+
+              </View>
+
+            </ScrollView>
+
+            {/* Footer - inside column to span full width */}
+            <Footer onNavigate={setCurrentPage} />
+
+          </View>
 
         </View>
 
@@ -9179,22 +9205,22 @@ const fetchFooterData = async () => {
                     console.log(`[ABOUT] Chip tapped: ${item.key}`);
                     isAboutScrollingProgrammatically.current = true;
                     setActiveAboutSection(item.key);
-                    
+
                     // Use dynamically measured chip bar height
                     const STICKY_HEIGHT = aboutChipBarHeight.current;
                     const raw = aboutSectionOffsets.current[item.key] ?? 0;
                     const targetY = Math.max(0, raw - STICKY_HEIGHT);
                     console.log(`[ABOUT] Scrolling to ${item.key}: raw=${raw}, stickyHeight=${STICKY_HEIGHT}, target=${targetY}`);
-                    
-                    aboutScrollViewRef.current?.scrollTo({ 
-                      y: targetY, 
-                      animated: false 
+
+                    aboutScrollViewRef.current?.scrollTo({
+                      y: targetY,
+                      animated: false
                     });
-                    
+
                     // Longer timeout to ensure scroll completes
-                    setTimeout(() => { 
+                    setTimeout(() => {
                       console.log(`[ABOUT] Unlocking programmatic scroll flag for ${item.key}`);
-                      isAboutScrollingProgrammatically.current = false; 
+                      isAboutScrollingProgrammatically.current = false;
                     }, 500);
                   }}
                   style={{
@@ -9221,7 +9247,7 @@ const fetchFooterData = async () => {
               ))}
             </ScrollView>
           ) : (
-          <View style={{ 
+          <View style={{
             width: 220,
             backgroundColor: isUserDarkMode ? darkPalette.surface : '#f8f9fa',
             borderRightWidth: 1,
@@ -9233,22 +9259,22 @@ const fetchFooterData = async () => {
             paddingHorizontal: 16
           }}>
 
-            <Text style={{ 
-              fontSize: 20, 
-              fontWeight: '700', 
+            <Text style={{
+              fontSize: 20,
+              fontWeight: '700',
               color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-              marginBottom: 20 
+              marginBottom: 20
             }}>About</Text>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={true}>
 
-              <Pressable 
-                style={{ 
-                  paddingVertical: 12, 
+              <Pressable
+                style={{
+                  paddingVertical: 12,
                   paddingHorizontal: 12,
                   marginBottom: 4,
                   borderRadius: 6,
-                  backgroundColor: activeAboutSection === 'our-story' 
+                  backgroundColor: activeAboutSection === 'our-story'
                     ? (isUserDarkMode ? '#008000' : '#e8f5e9')
                     : 'transparent'
                 }}
@@ -9259,22 +9285,22 @@ const fetchFooterData = async () => {
                   setTimeout(() => { isAboutScrollingProgrammatically.current = false; }, 300);
                 }}
               >
-                <Text style={{ 
-                  fontSize: 14, 
-                  color: activeAboutSection === 'our-story' 
-                    ? '#fff' 
+                <Text style={{
+                  fontSize: 14,
+                  color: activeAboutSection === 'our-story'
+                    ? '#fff'
                     : (isUserDarkMode ? darkPalette.secondary : palette.secondary),
                   fontWeight: activeAboutSection === 'our-story' ? '600' : '400'
                 }}>• Our Story</Text>
               </Pressable>
 
-              <Pressable 
-                style={{ 
-                  paddingVertical: 12, 
+              <Pressable
+                style={{
+                  paddingVertical: 12,
                   paddingHorizontal: 12,
                   marginBottom: 4,
                   borderRadius: 6,
-                  backgroundColor: activeAboutSection === 'our-team' 
+                  backgroundColor: activeAboutSection === 'our-team'
                     ? (isUserDarkMode ? '#008000' : '#e8f5e9')
                     : 'transparent'
                 }}
@@ -9285,22 +9311,22 @@ const fetchFooterData = async () => {
                   setTimeout(() => { isAboutScrollingProgrammatically.current = false; }, 300);
                 }}
               >
-                <Text style={{ 
-                  fontSize: 14, 
-                  color: activeAboutSection === 'our-team' 
-                    ? '#fff' 
+                <Text style={{
+                  fontSize: 14,
+                  color: activeAboutSection === 'our-team'
+                    ? '#fff'
                     : (isUserDarkMode ? darkPalette.secondary : palette.secondary),
                   fontWeight: activeAboutSection === 'our-team' ? '600' : '400'
                 }}>• Our Team</Text>
               </Pressable>
 
-              <Pressable 
-                style={{ 
-                  paddingVertical: 12, 
+              <Pressable
+                style={{
+                  paddingVertical: 12,
                   paddingHorizontal: 12,
                   marginBottom: 4,
                   borderRadius: 6,
-                  backgroundColor: activeAboutSection === 'patient-stories' 
+                  backgroundColor: activeAboutSection === 'patient-stories'
                     ? (isUserDarkMode ? '#008000' : '#e8f5e9')
                     : 'transparent'
                 }}
@@ -9311,22 +9337,22 @@ const fetchFooterData = async () => {
                   setTimeout(() => { isAboutScrollingProgrammatically.current = false; }, 300);
                 }}
               >
-                <Text style={{ 
-                  fontSize: 14, 
-                  color: activeAboutSection === 'patient-stories' 
-                    ? '#fff' 
+                <Text style={{
+                  fontSize: 14,
+                  color: activeAboutSection === 'patient-stories'
+                    ? '#fff'
                     : (isUserDarkMode ? darkPalette.secondary : palette.secondary),
                   fontWeight: activeAboutSection === 'patient-stories' ? '600' : '400'
                 }}>• Patient Stories</Text>
               </Pressable>
 
-              <Pressable 
-                style={{ 
-                  paddingVertical: 12, 
+              <Pressable
+                style={{
+                  paddingVertical: 12,
                   paddingHorizontal: 12,
                   marginBottom: 4,
                   borderRadius: 6,
-                  backgroundColor: activeAboutSection === 'blog-news' 
+                  backgroundColor: activeAboutSection === 'blog-news'
                     ? (isUserDarkMode ? '#008000' : '#e8f5e9')
                     : 'transparent'
                 }}
@@ -9337,22 +9363,22 @@ const fetchFooterData = async () => {
                   setTimeout(() => { isAboutScrollingProgrammatically.current = false; }, 300);
                 }}
               >
-                <Text style={{ 
-                  fontSize: 14, 
-                  color: activeAboutSection === 'blog-news' 
-                    ? '#fff' 
+                <Text style={{
+                  fontSize: 14,
+                  color: activeAboutSection === 'blog-news'
+                    ? '#fff'
                     : (isUserDarkMode ? darkPalette.secondary : palette.secondary),
                   fontWeight: activeAboutSection === 'blog-news' ? '600' : '400'
                 }}>• Blog & News</Text>
               </Pressable>
 
-              <Pressable 
-                style={{ 
-                  paddingVertical: 12, 
+              <Pressable
+                style={{
+                  paddingVertical: 12,
                   paddingHorizontal: 12,
                   marginBottom: 4,
                   borderRadius: 6,
-                  backgroundColor: activeAboutSection === 'vision-mission' 
+                  backgroundColor: activeAboutSection === 'vision-mission'
                     ? (isUserDarkMode ? '#008000' : '#e8f5e9')
                     : 'transparent'
                 }}
@@ -9363,10 +9389,10 @@ const fetchFooterData = async () => {
                   setTimeout(() => { isAboutScrollingProgrammatically.current = false; }, 300);
                 }}
               >
-                <Text style={{ 
-                  fontSize: 14, 
-                  color: activeAboutSection === 'vision-mission' 
-                    ? '#fff' 
+                <Text style={{
+                  fontSize: 14,
+                  color: activeAboutSection === 'vision-mission'
+                    ? '#fff'
                     : (isUserDarkMode ? darkPalette.secondary : palette.secondary),
                   fontWeight: activeAboutSection === 'vision-mission' ? '600' : '400'
                 }}>• Vision & Mission</Text>
@@ -9377,394 +9403,421 @@ const fetchFooterData = async () => {
           </View>
           )}
 
-          <ScrollView 
-            ref={aboutScrollViewRef}
-            contentContainerStyle={{ padding: isPhoneScreen ? 20 : 40 }} 
-            showsVerticalScrollIndicator={false}
-            bounces={false}
-            overScrollMode="never"
-            onScroll={(event) => {
-              // ✅ FIX: Only process scroll events when About page is active
-              if (currentPage !== 'about') {
-                return;
-              }
-              if (isAboutScrollingProgrammatically.current) {
-                console.log('[ABOUT] onScroll blocked - programmatic scroll in progress');
-                return;
-              }
-              const offsetY = event.nativeEvent.contentOffset.y;
-              const STICKY_HEIGHT = isPhoneScreen ? aboutChipBarHeight.current : 0;
-              const offs = aboutSectionOffsets.current;
-              const order = ['our-story','our-team','patient-stories','blog-news','vision-mission'];
-              let active = order[0];
-              for (const key of order) {
-                if ((offs[key] ?? 0) - STICKY_HEIGHT <= offsetY + 20) active = key;
-              }
-              console.log(`[ABOUT] onScroll: offsetY=${offsetY.toFixed(1)}, calculated active=${active}`);
-              if (active !== activeAboutSection) {
-                console.log(`[ABOUT] Active section changing: ${activeAboutSection} -> ${active}`);
-              }
-              setActiveAboutSection(active);
-            }}
-            scrollEventThrottle={100}
-          >
+          <View style={{ flex: 1, flexDirection: 'column' }}>
+            <ScrollView
+              ref={aboutScrollViewRef}
+              contentContainerStyle={{}}
+              showsVerticalScrollIndicator={true}
+              bounces={false}
+              overScrollMode="never"
+              onScroll={(event) => {
+                // ✅ FIX: Only process scroll events when About page is active
+                if (currentPage !== 'about') {
+                  return;
+                }
+                if (isAboutScrollingProgrammatically.current) {
+                  console.log('[ABOUT] onScroll blocked - programmatic scroll in progress');
+                  return;
+                }
+                const offsetY = event.nativeEvent.contentOffset.y;
+                const STICKY_HEIGHT = isPhoneScreen ? aboutChipBarHeight.current : 0;
+                const offs = aboutSectionOffsets.current;
+                const order = ['our-story','our-team','patient-stories','blog-news','vision-mission'];
+                let active = order[0];
+                for (const key of order) {
+                  if ((offs[key] ?? 0) - STICKY_HEIGHT <= offsetY + 20) active = key;
+                }
+                console.log(`[ABOUT] onScroll: offsetY=${offsetY.toFixed(1)}, calculated active=${active}`);
+                if (active !== activeAboutSection) {
+                  console.log(`[ABOUT] Active section changing: ${activeAboutSection} -> ${active}`);
+                }
+                setActiveAboutSection(active);
+              }}
+              scrollEventThrottle={100}
+            >
 
-            {/* Dynamic About Sections from Supabase */}
-            {aboutSectionsLoading ? (
-              <View style={{ marginBottom: 60, alignItems: 'center' }}>
-                <Text style={{ 
-                  fontSize: 16, 
-                  color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
-                }}>Loading about sections...</Text>
+              <View style={{
+                paddingHorizontal: isPhoneScreen ? 20 : 40,
+                paddingTop: isPhoneScreen ? 20 : 40,
+                paddingBottom: 64,
+                width: '100%',
+                maxWidth: 1180,
+                alignSelf: 'center',
+              }}>
+
+                {/* Dynamic About Sections from Supabase */}
+                {aboutSectionsLoading ? (
+                  <View style={{ marginBottom: 60, alignItems: 'center' }}>
+                    <Text style={{
+                      fontSize: 16,
+                      color: isUserDarkMode ? darkPalette.secondary : palette.secondary
+                    }}>Loading about sections...</Text>
+                  </View>
+                ) : aboutSectionsError ? (
+                  <View style={{ marginBottom: 60, alignItems: 'center' }}>
+                    <Text style={{
+                      fontSize: 16,
+                      color: 'red'
+                    }}>Error loading about sections: {aboutSectionsError}</Text>
+                  </View>
+                ) : aboutSectionsData && aboutSectionsData.length > 0 ? (
+                  aboutSectionsData.map((section, index) => (
+                    <View key={section.id || index} style={{ marginBottom: 60 }} onLayout={e => {
+                      const newY = e.nativeEvent.layout.y;
+                      const sectionKey = section.slug || section.title?.toLowerCase().replace(/\s+/g, '-') || `section-${index}`;
+                      const oldY = aboutSectionOffsets.current[sectionKey];
+                      if (oldY !== newY) {
+                        console.log(`[ABOUT] ${sectionKey} layout changed: ${oldY} -> ${newY}`);
+                      }
+                      aboutSectionOffsets.current[sectionKey] = newY;
+                    }}>
+                      <Text style={{
+                        fontSize: 28,
+                        fontWeight: '700',
+                        color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                        marginBottom: 16
+                      }}>{section.title || 'Untitled Section'}</Text>
+                      <Text style={{
+                        fontSize: 16,
+                        lineHeight: 24,
+                      color: isUserDarkMode ? darkPalette.secondary : palette.secondary
+                      }}>
+                        {section.content || section.description || 'No content available'}
+                      </Text>
+                    </View>
+                  ))
+                ) : (
+                  // Fallback to hardcoded content if no Supabase data
+                  <>
+                    <View style={{ marginBottom: 60 }} onLayout={e => {
+                      const newY = e.nativeEvent.layout.y;
+                      const oldY = aboutSectionOffsets.current['our-story'];
+                      if (oldY !== newY) {
+                        console.log(`[ABOUT] our-story layout changed: ${oldY} -> ${newY}`);
+                      }
+                      aboutSectionOffsets.current['our-story'] = newY;
+                    }}>
+                      <Text style={{
+                        fontSize: 28,
+                        fontWeight: '700',
+                        color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                        marginBottom: 16
+                      }}>Our Story</Text>
+                      <Text style={{
+                        fontSize: 16,
+                        lineHeight: 24,
+                        color: isUserDarkMode ? darkPalette.secondary : palette.secondary
+                      }}>
+                        K.E Green Health Clinic was founded with a vision to transform healthcare through a patient-centered, functional medicine approach. Our journey began with a simple belief: that true healing comes from addressing the root causes of illness, not just managing symptoms. Over the years, we have grown from a small practice to a comprehensive healthcare center, serving thousands of patients with personalized care that honors each individual's unique health journey.
+                      </Text>
+                    </View>
+
+                    <View style={{ marginBottom: 60 }} onLayout={e => {
+                      const newY = e.nativeEvent.layout.y;
+                      const oldY = aboutSectionOffsets.current['our-team'];
+                      if (oldY !== newY) {
+                        console.log(`[ABOUT] our-team layout changed: ${oldY} -> ${newY}`);
+                      }
+                      aboutSectionOffsets.current['our-team'] = newY;
+                    }}>
+                      <Text style={{
+                        fontSize: 28,
+                        fontWeight: '700',
+                        color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                        marginBottom: 16
+                      }}>Our Team</Text>
+                      <Text style={{
+                        fontSize: 16,
+                        lineHeight: 24,
+                        color: isUserDarkMode ? darkPalette.secondary : palette.secondary
+                      }}>
+                        Our team consists of board-certified physicians, licensed nutritionists, certified health coaches, and compassionate support staff who share a passion for integrative medicine. Each member of our team brings specialized expertise and a commitment to ongoing learning in the latest advances in functional and metabolic medicine. We work collaboratively to provide you with comprehensive, coordinated care that addresses all aspects of your health.
+                      </Text>
+                    </View>
+
+                    <View style={{ marginBottom: 60 }} onLayout={e => {
+                      const newY = e.nativeEvent.layout.y;
+                      const oldY = aboutSectionOffsets.current['patient-stories'];
+                      if (oldY !== newY) {
+                        console.log(`[ABOUT] patient-stories layout changed: ${oldY} -> ${newY}`);
+                      }
+                      aboutSectionOffsets.current['patient-stories'] = newY;
+                    }}>
+                      <Text style={{
+                        fontSize: 28,
+                        fontWeight: '700',
+                        color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                        marginBottom: 16
+                      }}>Patient Stories</Text>
+                      <Text style={{
+                        fontSize: 16,
+                        lineHeight: 24,
+                        color: isUserDarkMode ? darkPalette.secondary : palette.secondary
+                      }}>
+                        Every patient's journey is unique, and we are honored to be part of so many transformative health stories. From overcoming chronic conditions that seemed insurmountable to achieving wellness goals that once felt out of reach, our patients inspire us daily. These stories of hope, healing, and renewed vitality are a testament to the power of personalized, root-cause medicine and the resilience of the human spirit.
+                      </Text>
+                    </View>
+
+                    <View style={{ marginBottom: 60 }} onLayout={e => {
+                      const newY = e.nativeEvent.layout.y;
+                      const oldY = aboutSectionOffsets.current['blog-news'];
+                      if (oldY !== newY) {
+                        console.log(`[ABOUT] blog-news layout changed: ${oldY} -> ${newY}`);
+                      }
+                      aboutSectionOffsets.current['blog-news'] = newY;
+                    }}>
+                      <Text style={{
+                        fontSize: 28,
+                        fontWeight: '700',
+                        color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                        marginBottom: 16
+                      }}>Blog & News</Text>
+                      <Text style={{
+                        fontSize: 16,
+                        lineHeight: 24,
+                        color: isUserDarkMode ? darkPalette.secondary : palette.secondary
+                      }}>
+                        Stay informed with the latest insights from our team of healthcare experts. Our blog features articles on nutrition, lifestyle medicine, cutting-edge research, and practical tips for optimizing your health. We also share clinic news, upcoming events, and updates on the latest services we offer. Our goal is to empower you with knowledge that supports your journey to optimal health and wellness.
+                      </Text>
+                    </View>
+
+                    <View style={{ marginBottom: 60 }} onLayout={e => {
+                      const newY = e.nativeEvent.layout.y;
+                      const oldY = aboutSectionOffsets.current['vision-mission'];
+                      if (oldY !== newY) {
+                        console.log(`[ABOUT] vision-mission layout changed: ${oldY} -> ${newY}`);
+                      }
+                      aboutSectionOffsets.current['vision-mission'] = newY;
+                    }}>
+                      <Text style={{
+                        fontSize: 28,
+                        fontWeight: '700',
+                        color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                        marginBottom: 16
+                      }}>Vision & Mission</Text>
+                      <Text style={{
+                        fontSize: 16,
+                        lineHeight: 24,
+                        color: isUserDarkMode ? darkPalette.secondary : palette.secondary
+                      }}>
+                        Our vision is to create a world where healthcare is truly personalized, preventive, and focused on root causes rather than symptoms. We envision a healthcare system that empowers individuals to take control of their health through education, lifestyle modification, and targeted interventions. Our mission is to provide exceptional functional and metabolic medicine services that transform lives, one patient at a time, through compassionate care, scientific rigor, and an unwavering commitment to optimal health outcomes.
+                      </Text>
+                    </View>
+                  </>
+                )}
+
               </View>
-            ) : aboutSectionsError ? (
-              <View style={{ marginBottom: 60, alignItems: 'center' }}>
-                <Text style={{ 
-                  fontSize: 16, 
-                  color: 'red' 
-                }}>Error loading about sections: {aboutSectionsError}</Text>
-              </View>
-            ) : aboutSectionsData && aboutSectionsData.length > 0 ? (
-              aboutSectionsData.map((section, index) => (
-                <View key={section.id || index} style={{ marginBottom: 60 }} onLayout={e => { 
-                  const newY = e.nativeEvent.layout.y;
-                  const sectionKey = section.slug || section.title?.toLowerCase().replace(/\s+/g, '-') || `section-${index}`;
-                  const oldY = aboutSectionOffsets.current[sectionKey];
-                  if (oldY !== newY) {
-                    console.log(`[ABOUT] ${sectionKey} layout changed: ${oldY} -> ${newY}`);
-                  }
-                  aboutSectionOffsets.current[sectionKey] = newY;
-                }}>
-                  <Text style={{ 
-                    fontSize: 28, 
-                    fontWeight: '700', 
-                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                    marginBottom: 16 
-                  }}>{section.title || 'Untitled Section'}</Text>
-                  <Text style={{ 
-                    fontSize: 16, 
-                    lineHeight: 24,
-                    color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
-                  }}>
-                    {section.content || section.description || 'No content available'}
-                  </Text>
-                </View>
-              ))
-            ) : (
-              // Fallback to hardcoded content if no Supabase data
-              <>
-                <View style={{ marginBottom: 60 }} onLayout={e => { 
-                  const newY = e.nativeEvent.layout.y;
-                  const oldY = aboutSectionOffsets.current['our-story'];
-                  if (oldY !== newY) {
-                    console.log(`[ABOUT] our-story layout changed: ${oldY} -> ${newY}`);
-                  }
-                  aboutSectionOffsets.current['our-story'] = newY;
-                }}>
-                  <Text style={{ 
-                    fontSize: 28, 
-                    fontWeight: '700', 
-                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                    marginBottom: 16 
-                  }}>Our Story</Text>
-                  <Text style={{ 
-                    fontSize: 16, 
-                    lineHeight: 24,
-                    color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
-                  }}>
-                    K.E Green Health Clinic was founded with a vision to transform healthcare through a patient-centered, functional medicine approach. Our journey began with a simple belief: that true healing comes from addressing the root causes of illness, not just managing symptoms. Over the years, we have grown from a small practice to a comprehensive healthcare center, serving thousands of patients with personalized care that honors each individual's unique health journey.
-                  </Text>
-                </View>
 
-                <View style={{ marginBottom: 60 }} onLayout={e => { 
-                  const newY = e.nativeEvent.layout.y;
-                  const oldY = aboutSectionOffsets.current['our-team'];
-                  if (oldY !== newY) {
-                    console.log(`[ABOUT] our-team layout changed: ${oldY} -> ${newY}`);
-                  }
-                  aboutSectionOffsets.current['our-team'] = newY;
-                }}>
-                  <Text style={{ 
-                    fontSize: 28, 
-                    fontWeight: '700', 
-                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                    marginBottom: 16 
-                  }}>Our Team</Text>
-                  <Text style={{ 
-                    fontSize: 16, 
-                    lineHeight: 24,
-                    color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
-                  }}>
-                    Our team consists of board-certified physicians, licensed nutritionists, certified health coaches, and compassionate support staff who share a passion for integrative medicine. Each member of our team brings specialized expertise and a commitment to ongoing learning in the latest advances in functional and metabolic medicine. We work collaboratively to provide you with comprehensive, coordinated care that addresses all aspects of your health.
-                  </Text>
-                </View>
+            </ScrollView>
 
-                <View style={{ marginBottom: 60 }} onLayout={e => { 
-                  const newY = e.nativeEvent.layout.y;
-                  const oldY = aboutSectionOffsets.current['patient-stories'];
-                  if (oldY !== newY) {
-                    console.log(`[ABOUT] patient-stories layout changed: ${oldY} -> ${newY}`);
-                  }
-                  aboutSectionOffsets.current['patient-stories'] = newY;
-                }}>
-                  <Text style={{ 
-                    fontSize: 28, 
-                    fontWeight: '700', 
-                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                    marginBottom: 16 
-                  }}>Patient Stories</Text>
-                  <Text style={{ 
-                    fontSize: 16, 
-                    lineHeight: 24,
-                    color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
-                  }}>
-                    Every patient's journey is unique, and we are honored to be part of so many transformative health stories. From overcoming chronic conditions that seemed insurmountable to achieving wellness goals that once felt out of reach, our patients inspire us daily. These stories of hope, healing, and renewed vitality are a testament to the power of personalized, root-cause medicine and the resilience of the human spirit.
-                  </Text>
-                </View>
+            {/* Footer - inside column to span full width */}
+            <Footer onNavigate={setCurrentPage} />
 
-                <View style={{ marginBottom: 60 }} onLayout={e => { 
-                  const newY = e.nativeEvent.layout.y;
-                  const oldY = aboutSectionOffsets.current['blog-news'];
-                  if (oldY !== newY) {
-                    console.log(`[ABOUT] blog-news layout changed: ${oldY} -> ${newY}`);
-                  }
-                  aboutSectionOffsets.current['blog-news'] = newY;
-                }}>
-                  <Text style={{ 
-                    fontSize: 28, 
-                    fontWeight: '700', 
-                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                    marginBottom: 16 
-                  }}>Blog & News</Text>
-                  <Text style={{ 
-                    fontSize: 16, 
-                    lineHeight: 24,
-                    color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
-                  }}>
-                    Stay informed with the latest insights from our team of healthcare experts. Our blog features articles on nutrition, lifestyle medicine, cutting-edge research, and practical tips for optimizing your health. We also share clinic news, upcoming events, and updates on the latest services we offer. Our goal is to empower you with knowledge that supports your journey to optimal health and wellness.
-                  </Text>
-                </View>
-
-                <View style={{ marginBottom: 60 }} onLayout={e => { 
-                  const newY = e.nativeEvent.layout.y;
-                  const oldY = aboutSectionOffsets.current['vision-mission'];
-                  if (oldY !== newY) {
-                    console.log(`[ABOUT] vision-mission layout changed: ${oldY} -> ${newY}`);
-                  }
-                  aboutSectionOffsets.current['vision-mission'] = newY;
-                }}>
-                  <Text style={{ 
-                    fontSize: 28, 
-                    fontWeight: '700', 
-                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                    marginBottom: 16 
-                  }}>Vision & Mission</Text>
-                  <Text style={{ 
-                    fontSize: 16, 
-                    lineHeight: 24,
-                    color: isUserDarkMode ? darkPalette.secondary : palette.secondary 
-                  }}>
-                    Our vision is to create a world where healthcare is truly personalized, preventive, and focused on root causes rather than symptoms. We envision a healthcare system that empowers individuals to take control of their health through education, lifestyle modification, and targeted interventions. Our mission is to provide exceptional functional and metabolic medicine services that transform lives, one patient at a time, through compassionate care, scientific rigor, and an unwavering commitment to optimal health outcomes.
-                  </Text>
-                </View>
-              </>
-            )}
-
-          </ScrollView>
+          </View>
 
         </View>
 
       ) : isContactPage ? (
 
-        <View style={{ flex: 1, width: '100%', overflow: 'hidden' }}>
+        <View style={{ flex: 1, flexDirection: 'column' }}>
 
           <ScrollView
-            contentContainerStyle={{
+            contentContainerStyle={{}}
+            showsVerticalScrollIndicator={true}
+            style={{ flex: 1, width: '100%' }}
+          >
+
+            <View style={{
               paddingHorizontal: isPhoneScreen ? 16 : isTabletScreen ? 24 : 40,
               paddingTop: isPhoneScreen ? 20 : 32,
               paddingBottom: 64,
               width: '100%',
               maxWidth: 1180,
               alignSelf: 'center',
-            }}
-            showsVerticalScrollIndicator={false}
-            style={{ flex: 1, width: '100%' }}
-          >
+            }}>
 
-            <View style={{ maxWidth: isPhoneScreen ? '100%' : 640, alignSelf: 'center', width: '100%' }}>
+              <View style={{ maxWidth: isPhoneScreen ? '100%' : 640, alignSelf: 'center', width: '100%' }}>
 
-              <Text style={{ 
-                fontSize: isPhoneScreen ? 24 : isTabletScreen ? 28 : 32, 
-                fontWeight: '700', 
-                color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                marginBottom: 8,
-                textAlign: 'center'
-              }}>Contact Us</Text>
-
-              <Text style={{ 
-                fontSize: isPhoneScreen ? 14 : 16, 
-                color: isUserDarkMode ? darkPalette.secondary : palette.secondary,
-                marginBottom: isPhoneScreen ? 24 : 32,
-                textAlign: 'center',
-                lineHeight: isPhoneScreen ? 20 : 24,
-                paddingHorizontal: isPhoneScreen ? 4 : 0,
-              }}>We'd love to hear from you. Send us a message and we'll respond as soon as possible.</Text>
-
-              <View style={{ marginBottom: 20, width: '100%' }}>
-                <Text style={{ 
-                  fontSize: 14, 
-                  fontWeight: '600',
+                <Text style={{
+                  fontSize: isPhoneScreen ? 24 : isTabletScreen ? 28 : 32,
+                  fontWeight: '700',
                   color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                  marginBottom: 8
-                }}>Name *</Text>
-                <TextInput
+                  marginBottom: 8,
+                  textAlign: 'center'
+                }}>Contact Us</Text>
+
+                <Text style={{
+                  fontSize: isPhoneScreen ? 14 : 16,
+                  color: isUserDarkMode ? darkPalette.secondary : palette.secondary,
+                  marginBottom: isPhoneScreen ? 24 : 32,
+                  textAlign: 'center',
+                  lineHeight: isPhoneScreen ? 20 : 24,
+                  paddingHorizontal: isPhoneScreen ? 4 : 0,
+                }}>We'd love to hear from you. Send us a message and we'll respond as soon as possible.</Text>
+
+                <View style={{ marginBottom: 20, width: '100%' }}>
+                  <Text style={{
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                    marginBottom: 8
+                  }}>Name *</Text>
+                  <TextInput
+                    style={{
+                      borderWidth: 1,
+                      borderColor: isUserDarkMode ? '#333' : '#e0e0e0',
+                      borderRadius: 8,
+                      paddingVertical: isPhoneScreen ? 10 : 12,
+                      paddingHorizontal: 12,
+                      fontSize: isPhoneScreen ? 15 : 16,
+                      color: isUserDarkMode ? '#fff' : '#000',
+                      backgroundColor: isUserDarkMode ? darkPalette.surface : '#fff',
+                      width: '100%',
+                      maxWidth: '100%',
+                    }}
+                    placeholder="Enter your name"
+                    placeholderTextColor={isUserDarkMode ? '#888' : '#888'}
+                    value={contactForm.name}
+                    onChangeText={(text) => setContactForm({...contactForm, name: text})}
+                  />
+                </View>
+
+                <View style={{ marginBottom: 20, width: '100%' }}>
+                  <Text style={{
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                    marginBottom: 8
+                  }}>Email *</Text>
+                  <TextInput
+                    style={{
+                      borderWidth: 1,
+                      borderColor: isUserDarkMode ? '#333' : '#e0e0e0',
+                      borderRadius: 8,
+                      paddingVertical: isPhoneScreen ? 10 : 12,
+                      paddingHorizontal: 12,
+                      fontSize: isPhoneScreen ? 15 : 16,
+                      color: isUserDarkMode ? '#fff' : '#000',
+                      backgroundColor: isUserDarkMode ? darkPalette.surface : '#fff',
+                      width: '100%',
+                      maxWidth: '100%',
+                    }}
+                    placeholder="Enter your email"
+                    placeholderTextColor={isUserDarkMode ? '#888' : '#888'}
+                    value={contactForm.email}
+                    onChangeText={(text) => setContactForm({...contactForm, email: text})}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+
+                <View style={{ marginBottom: 20, width: '100%' }}>
+                  <Text style={{
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                    marginBottom: 8
+                  }}>Phone Number *</Text>
+                  <TextInput
+                    style={{
+                      borderWidth: 1,
+                      borderColor: isUserDarkMode ? '#333' : '#e0e0e0',
+                      borderRadius: 8,
+                      paddingVertical: isPhoneScreen ? 10 : 12,
+                      paddingHorizontal: 12,
+                      fontSize: isPhoneScreen ? 15 : 16,
+                      color: isUserDarkMode ? '#fff' : '#000',
+                      backgroundColor: isUserDarkMode ? darkPalette.surface : '#fff',
+                      width: '100%',
+                      maxWidth: '100%',
+                    }}
+                    placeholder="Enter your phone number"
+                    placeholderTextColor={isUserDarkMode ? '#888' : '#888'}
+                    value={contactForm.phone}
+                    onChangeText={(text) => setContactForm({...contactForm, phone: text})}
+                    keyboardType="phone-pad"
+                  />
+                </View>
+
+                <View style={{ marginBottom: 24, width: '100%' }}>
+                  <Text style={{
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
+                    marginBottom: 8
+                  }}>Message *</Text>
+                  <TextInput
+                    style={{
+                      borderWidth: 1,
+                      borderColor: isUserDarkMode ? '#333' : '#e0e0e0',
+                      borderRadius: 8,
+                      paddingVertical: isPhoneScreen ? 10 : 12,
+                      paddingHorizontal: 12,
+                      fontSize: isPhoneScreen ? 15 : 16,
+                      color: isUserDarkMode ? '#fff' : '#000',
+                      backgroundColor: isUserDarkMode ? darkPalette.surface : '#fff',
+                      minHeight: isPhoneScreen ? 110 : 120,
+                      textAlignVertical: 'top',
+                      width: '100%',
+                      maxWidth: '100%',
+                    }}
+                    placeholder="Enter your message"
+                    placeholderTextColor={isUserDarkMode ? '#888' : '#888'}
+                    value={contactForm.message}
+                    onChangeText={(text) => setContactForm({...contactForm, message: text})}
+                    multiline
+                    numberOfLines={4}
+                  />
+                </View>
+
+                <Pressable
                   style={{
-                    borderWidth: 1,
-                    borderColor: isUserDarkMode ? '#333' : '#e0e0e0',
+                    backgroundColor: contactFormSubmitting ? '#666' : '#008000',
+                    paddingVertical: isPhoneScreen ? 12 : 14,
+                    paddingHorizontal: 32,
                     borderRadius: 8,
-                    paddingVertical: isPhoneScreen ? 10 : 12,
-                    paddingHorizontal: 12,
-                    fontSize: isPhoneScreen ? 15 : 16,
-                    color: isUserDarkMode ? '#fff' : '#000',
-                    backgroundColor: isUserDarkMode ? darkPalette.surface : '#fff',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: isPhoneScreen ? 32 : 40,
                     width: '100%',
-                    maxWidth: '100%',
+                    maxWidth: isPhoneScreen ? '100%' : 280,
+                    alignSelf: isPhoneScreen ? 'stretch' : 'center',
                   }}
-                  placeholder="Enter your name"
-                  placeholderTextColor={isUserDarkMode ? '#888' : '#888'}
-                  value={contactForm.name}
-                  onChangeText={(text) => setContactForm({...contactForm, name: text})}
-                />
+                  onPress={handleContactFormSubmit}
+                  disabled={contactFormSubmitting}
+                >
+                  <Text style={{ color: '#fff', fontSize: isPhoneScreen ? 15 : 16, fontWeight: '600' }}>
+                    {contactFormSubmitting ? 'Submitting...' : 'Submit'}
+                  </Text>
+                </Pressable>
+
               </View>
 
-              <View style={{ marginBottom: 20, width: '100%' }}>
-                <Text style={{ 
-                  fontSize: 14, 
-                  fontWeight: '600',
-                  color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                  marginBottom: 8
-                }}>Email *</Text>
-                <TextInput
-                  style={{
-                    borderWidth: 1,
-                    borderColor: isUserDarkMode ? '#333' : '#e0e0e0',
-                    borderRadius: 8,
-                    paddingVertical: isPhoneScreen ? 10 : 12,
-                    paddingHorizontal: 12,
-                    fontSize: isPhoneScreen ? 15 : 16,
-                    color: isUserDarkMode ? '#fff' : '#000',
-                    backgroundColor: isUserDarkMode ? darkPalette.surface : '#fff',
-                    width: '100%',
-                    maxWidth: '100%',
-                  }}
-                  placeholder="Enter your email"
-                  placeholderTextColor={isUserDarkMode ? '#888' : '#888'}
-                  value={contactForm.email}
-                  onChangeText={(text) => setContactForm({...contactForm, email: text})}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={{ marginBottom: 20, width: '100%' }}>
-                <Text style={{ 
-                  fontSize: 14, 
-                  fontWeight: '600',
-                  color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                  marginBottom: 8
-                }}>Phone Number *</Text>
-                <TextInput
-                  style={{
-                    borderWidth: 1,
-                    borderColor: isUserDarkMode ? '#333' : '#e0e0e0',
-                    borderRadius: 8,
-                    paddingVertical: isPhoneScreen ? 10 : 12,
-                    paddingHorizontal: 12,
-                    fontSize: isPhoneScreen ? 15 : 16,
-                    color: isUserDarkMode ? '#fff' : '#000',
-                    backgroundColor: isUserDarkMode ? darkPalette.surface : '#fff',
-                    width: '100%',
-                    maxWidth: '100%',
-                  }}
-                  placeholder="Enter your phone number"
-                  placeholderTextColor={isUserDarkMode ? '#888' : '#888'}
-                  value={contactForm.phone}
-                  onChangeText={(text) => setContactForm({...contactForm, phone: text})}
-                  keyboardType="phone-pad"
-                />
-              </View>
-
-              <View style={{ marginBottom: 24, width: '100%' }}>
-                <Text style={{ 
-                  fontSize: 14, 
-                  fontWeight: '600',
-                  color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal,
-                  marginBottom: 8
-                }}>Message *</Text>
-                <TextInput
-                  style={{
-                    borderWidth: 1,
-                    borderColor: isUserDarkMode ? '#333' : '#e0e0e0',
-                    borderRadius: 8,
-                    paddingVertical: isPhoneScreen ? 10 : 12,
-                    paddingHorizontal: 12,
-                    fontSize: isPhoneScreen ? 15 : 16,
-                    color: isUserDarkMode ? '#fff' : '#000',
-                    backgroundColor: isUserDarkMode ? darkPalette.surface : '#fff',
-                    minHeight: isPhoneScreen ? 110 : 120,
-                    textAlignVertical: 'top',
-                    width: '100%',
-                    maxWidth: '100%',
-                  }}
-                  placeholder="Enter your message"
-                  placeholderTextColor={isUserDarkMode ? '#888' : '#888'}
-                  value={contactForm.message}
-                  onChangeText={(text) => setContactForm({...contactForm, message: text})}
-                  multiline
-                  numberOfLines={4}
-                />
-              </View>
-
-              <Pressable
-                style={{
-                  backgroundColor: contactFormSubmitting ? '#666' : '#008000',
-                  paddingVertical: isPhoneScreen ? 12 : 14,
-                  paddingHorizontal: 32,
-                  borderRadius: 8,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: isPhoneScreen ? 32 : 40,
-                  width: '100%',
-                  maxWidth: isPhoneScreen ? '100%' : 280,
-                  alignSelf: isPhoneScreen ? 'stretch' : 'center',
-                }}
-                onPress={handleContactFormSubmit}
-                disabled={contactFormSubmitting}
-              >
-                <Text style={{ color: '#fff', fontSize: isPhoneScreen ? 15 : 16, fontWeight: '600' }}>
-                  {contactFormSubmitting ? 'Submitting...' : 'Submit'}
-                </Text>
-              </Pressable>
+              <LocateUsSection isDarkMode={isUserDarkMode} />
 
             </View>
 
-            <LocateUsSection isDarkMode={isUserDarkMode} />
-
           </ScrollView>
+
+          {/* Footer - inside column to span full width */}
+          <Footer onNavigate={setCurrentPage} />
 
         </View>
 
       ) : isBlogsPage ? (
 
-        <BlogPage
-          isUserDarkMode={isUserDarkMode}
-          isPhoneScreen={isPhoneScreen}
-          isTabletScreen={isTabletScreen}
-        />
+        <View style={{ flex: 1 }}>
+          <BlogPage
+            isUserDarkMode={isUserDarkMode}
+            isPhoneScreen={isPhoneScreen}
+            isTabletScreen={isTabletScreen}
+            footer={<Footer onNavigate={setCurrentPage} />}
+          />
+        </View>
 
       ) : isShopPage ? (
 
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={Platform.OS !== 'web'} bounces={false}>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={true} bounces={false}>
 
         {/* Hero Slider - Only on Shop Page */}
         <HeroSlider 
@@ -10197,9 +10250,9 @@ const fetchFooterData = async () => {
 
           }}>
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 14 }}>
+            <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ gap: 14 }}>
 
-              <Text style={{ 
+              <Text style={{
 
                 color: isUserDarkMode ? darkPalette.oxbloodSoft : palette.oxbloodSoft, 
 
@@ -10573,7 +10626,7 @@ const fetchFooterData = async () => {
 
 
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingBottom: 24 }}>
+            <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ gap: 14, paddingBottom: 24 }}>
 
               {cartItems.length > 0 ? (
 
@@ -10973,7 +11026,7 @@ const fetchFooterData = async () => {
 
           }}>
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 14 }}>
+            <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ gap: 14 }}>
 
               <Text style={{ color: palette.oxbloodSoft, fontSize: 11, letterSpacing: 1.8, fontWeight: '700' }}>CATALOG MANAGER</Text>
 
@@ -11411,7 +11464,7 @@ const fetchFooterData = async () => {
 
             }}>
 
-              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 14 }}>
+              <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ gap: 14 }}>
 
                 <Text style={{ color: palette.oxbloodSoft, fontSize: 11, letterSpacing: 1.8, fontWeight: '700' }}>CATALOG MANAGER</Text>
 
@@ -11905,7 +11958,7 @@ const fetchFooterData = async () => {
 
 
 
-            <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
+            <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 48 }} showsVerticalScrollIndicator={true}>
 
 
 
@@ -12339,7 +12392,7 @@ const fetchFooterData = async () => {
 
 
 
-            <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
+            <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={true}>
 
               <View style={{ padding: 20 }}>
 
@@ -12711,8 +12764,9 @@ const fetchFooterData = async () => {
 
       {/* Floating social column — desktop/tablet only, fixed to right edge, hidden on Shop/Services/About/Blogs pages */}
       {!isPhoneScreen && !['shop', 'services', 'about', 'blogs'].includes(currentPage) && <FloatingSocialColumn />}
-      
+
     </SafeAreaView>
+    </FooterProvider>
 
   );
 
@@ -13198,7 +13252,7 @@ const styles = StyleSheet.create({
 
   content: {
     flexGrow: 1,
-    paddingBottom: 400, // Temporary increase to ensure scrollable content
+    paddingBottom: 0, // Removed excessive padding - Footer provides proper spacing now
   },
 
   webScrollView: {

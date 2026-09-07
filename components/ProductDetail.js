@@ -223,14 +223,14 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
             </Pressable>
           </View>
 
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <ScrollView style={styles.content} showsVerticalScrollIndicator={true}>
             {/* Image Gallery with Blurred Background */}
             <View style={styles.imageGalleryContainer}>
               <ScrollView
                 ref={scrollViewRef}
                 horizontal
                 pagingEnabled
-                showsHorizontalScrollIndicator={false}
+                showsHorizontalScrollIndicator={true}
                 onScroll={handleImageScroll}
                 scrollEventThrottle={16}
                 style={styles.imageScrollView}
@@ -262,7 +262,7 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
               {images.length > 1 && (
                 <ScrollView
                   horizontal
-                  showsHorizontalScrollIndicator={false}
+                  showsHorizontalScrollIndicator={true}
                   style={styles.thumbnailContainer}
                   contentContainerStyle={styles.thumbnailContent}
                 >
