@@ -420,10 +420,8 @@ const styles = StyleSheet.create({
   container: {
     position: 'relative',
     width: '100%',
-    margin: 16,
     backgroundColor: '#1b1b1b',
     overflow: 'hidden',
-    borderRadius: 8,
   },
   image: {
     ...StyleSheet.absoluteFillObject,

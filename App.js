@@ -55,7 +55,7 @@ import LocateUsSection from './components/LocateUsSection';
 import { Video } from 'expo-av';
 
 import { sendToDriver, formatDeliveryMessage, createWhatsAppLink } from './utils/whatsappHelper';
-import { serviceService, aboutService, patientStoryService } from './services/supabaseService';
+import { serviceService, aboutService, patientStoryService, consultationWidgetService, consultationSubmissionService, contactInfoService, contactSubmissionService } from './services/supabaseService';
 
 
 
@@ -2119,6 +2119,21 @@ export default function App() {
   const [aboutSectionsLoading, setAboutSectionsLoading] = useState(true);
   const [aboutSectionsError, setAboutSectionsError] = useState('');
 
+  // Contact info data from Supabase
+  const [contactInfoData, setContactInfoData] = useState([]);
+  const [contactInfoLoading, setContactInfoLoading] = useState(true);
+  const [contactInfoError, setContactInfoError] = useState('');
+  
+  // Contact form state
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: ''
+  });
+  const [contactFormSubmitting, setContactFormSubmitting] = useState(false);
+
   const servicesScrollViewRef = useRef(null);
   const isServicesScrollingProgrammatically = useRef(false);
   const servicesChipBarHeight = useRef(116); // Will be measured dynamically
@@ -2138,13 +2153,6 @@ export default function App() {
   const isAboutScrollingProgrammatically = useRef(false);
   const aboutChipBarHeight = useRef(116); // Will be measured dynamically
   const aboutSectionOffsets = useRef({ 'our-story': 0, 'our-team': 0, 'patient-stories': 0, 'blog-news': 0, 'vision-mission': 0 });
-
-  const [contactForm, setContactForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: ''
-  });
 
   const dropdownAnim = useRef(new Animated.Value(0)).current;
 
@@ -2756,6 +2764,7 @@ const fetchFooterData = async () => {
     fetchServicesData(); // Load services from Supabase
     fetchPatientStoriesData(); // Load patient stories from Supabase
     fetchAboutSectionsData(); // Load about sections from Supabase
+    fetchContactInfoData(); // Load contact info from Supabase
 
     if (showLoading) {
 
@@ -3221,6 +3230,67 @@ const fetchFooterData = async () => {
       setPatientStoriesData([]);
     } finally {
       setPatientStoriesLoading(false);
+    }
+  };
+
+  // Fetch contact info data from Supabase
+  const fetchContactInfoData = async () => {
+    try {
+      setContactInfoLoading(true);
+      console.log('🔄 Fetching contact info from Supabase...');
+      const contactInfo = await contactInfoService.getAll();
+      setContactInfoData(contactInfo || []);
+      console.log(`✅ Loaded ${contactInfo?.length || 0} contact info items from Supabase`);
+      setContactInfoError('');
+    } catch (error) {
+      console.error('❌ Failed to fetch contact info:', error);
+      setContactInfoError(`Failed to load contact info: ${error.message}`);
+      setContactInfoData([]);
+    } finally {
+      setContactInfoLoading(false);
+    }
+  };
+
+  // Handle contact form submission
+  const handleContactFormSubmit = async () => {
+    try {
+      // Validate form
+      if (!contactForm.name.trim() || !contactForm.email.trim() || !contactForm.message.trim()) {
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      setContactFormSubmitting(true);
+      console.log('🔄 Submitting contact form...');
+      
+      const submission = {
+        name: contactForm.name.trim(),
+        email: contactForm.email.trim(),
+        phone: contactForm.phone.trim() || null,
+        subject: contactForm.subject.trim() || 'Contact Form Submission',
+        message: contactForm.message.trim(),
+        is_read: false,
+        created_at: new Date().toISOString()
+      };
+
+      await contactSubmissionService.create(submission);
+      console.log('✅ Contact form submitted successfully');
+      
+      // Reset form
+      setContactForm({
+        name: '',
+        email: '',
+        phone: '',
+        subject: '',
+        message: ''
+      });
+      
+      alert('Thank you! Your message has been sent. We\'ll respond as soon as possible.');
+    } catch (error) {
+      console.error('❌ Failed to submit contact form:', error);
+      alert('Sorry, there was an error sending your message. Please try again.');
+    } finally {
+      setContactFormSubmitting(false);
     }
   };
 
@@ -9660,7 +9730,7 @@ const fetchFooterData = async () => {
 
               <Pressable
                 style={{
-                  backgroundColor: '#008000',
+                  backgroundColor: contactFormSubmitting ? '#666' : '#008000',
                   paddingVertical: isPhoneScreen ? 12 : 14,
                   paddingHorizontal: 32,
                   borderRadius: 8,
@@ -9671,12 +9741,12 @@ const fetchFooterData = async () => {
                   maxWidth: isPhoneScreen ? '100%' : 280,
                   alignSelf: isPhoneScreen ? 'stretch' : 'center',
                 }}
-                onPress={() => {
-                  alert('Thank you for your message! We will get back to you soon.');
-                  setContactForm({ name: '', email: '', phone: '', message: '' });
-                }}
+                onPress={handleContactFormSubmit}
+                disabled={contactFormSubmitting}
               >
-                <Text style={{ color: '#fff', fontSize: isPhoneScreen ? 15 : 16, fontWeight: '600' }}>Submit</Text>
+                <Text style={{ color: '#fff', fontSize: isPhoneScreen ? 15 : 16, fontWeight: '600' }}>
+                  {contactFormSubmitting ? 'Submitting...' : 'Submit'}
+                </Text>
               </Pressable>
 
             </View>

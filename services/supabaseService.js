@@ -736,21 +736,33 @@ export const milestoneService = {
 // ============================================
 
 export const contactInfoService = {
-  async get() {
+  async getAll() {
     const { data, error } = await supabase
       .from('contact_info')
       .select('*')
+      .order('display_order', { ascending: true });
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async getByType(sectionType) {
+    const { data, error } = await supabase
+      .from('contact_info')
+      .select('*')
+      .eq('section_type', sectionType)
+      .eq('is_active', true)
       .single();
     
     if (error) throw error;
     return data;
   },
 
-  async update(updates) {
+  async update(id, updates) {
     const { data, error } = await supabase
       .from('contact_info')
       .update(updates)
-      .eq('id', updates.id)
+      .eq('id', id)
       .select()
       .single();
     
@@ -937,4 +949,72 @@ export default {
   footer: footerService,
   sliderConfig: sliderConfigService,
   profiles: profileService
+};
+// ============================================
+// CONSULTATION
+// ============================================
+
+export const consultationWidgetService = {
+  async getSettings() {
+    const { data, error } = await supabase
+      .from('consultation_widget_settings')
+      .select('*')
+      .eq('id', 1)
+      .eq('is_active', true)
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async updateSettings(updates) {
+    const { data, error } = await supabase
+      .from('consultation_widget_settings')
+      .update(updates)
+      .eq('id', 1)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  }
+};
+
+export const consultationSubmissionService = {
+  async submit(formData) {
+    const { data, error } = await supabase
+      .from('consultation_submissions')
+      .insert({
+        full_name: formData.fullName,
+        whatsapp_number: formData.whatsappNumber,
+        medical_concern: formData.medicalConcern
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async getAll() {
+    const { data, error } = await supabase
+      .from('consultation_submissions')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async updateStatus(id, status) {
+    const { data, error } = await supabase
+      .from('consultation_submissions')
+      .update({ status })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  }
 };

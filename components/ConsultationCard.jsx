@@ -9,8 +9,10 @@ import {
   ScrollView,
   useWindowDimensions,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { consultationWidgetService, consultationSubmissionService } from '../services/supabaseService';
 
 /**
  * ConsultationCard - Free consultation form widget for Homepage only
@@ -18,12 +20,17 @@ import { BlurView } from 'expo-blur';
  * NOT related to Shop Hero Slider or any other page
  * On mobile: modal with open/close animation
  * On desktop/tablet: always visible, sticky
+ * Wired to Supabase for both content and form submissions
  */
 export default function ConsultationCard({ isPhone = false, visible = true, onClose }) {
   const [fullName, setFullName] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [medicalConcern, setMedicalConcern] = useState('');
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [settings, setSettings] = useState(null);
+  const [loadingSettings, setLoadingSettings] = useState(true);
   
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isMobile = windowWidth <= 480;
@@ -32,6 +39,34 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
   const scaleAnim = useRef(new Animated.Value(isMobile ? 0.9 : 1)).current;
   const opacityAnim = useRef(new Animated.Value(isMobile ? 0 : 1)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
+
+  // Load settings from Supabase on mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        console.log('🔄 Loading consultation widget settings from Supabase...');
+        const data = await consultationWidgetService.getSettings();
+        setSettings(data);
+        console.log('✅ Loaded consultation widget settings:', data);
+      } catch (error) {
+        console.error('❌ Failed to load consultation widget settings:', error);
+        // Use default settings if Supabase fails
+        setSettings({
+          heading: 'Get Free Consultation',
+          subheading: 'Our care team replies within minutes',
+          name_placeholder: 'Full Name',
+          whatsapp_placeholder: 'WhatsApp Number',
+          concern_placeholder: 'Describe your medical concern...',
+          button_text: 'Get Free Consultation →',
+          trust_line: 'Your information stays confidential'
+        });
+      } finally {
+        setLoadingSettings(false);
+      }
+    };
+
+    loadSettings();
+  }, []);
 
   // Animate in/out on visibility change (mobile only)
   useEffect(() => {
@@ -83,6 +118,18 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
     return null;
   }
 
+  // Show loading state while fetching settings
+  if (loadingSettings) {
+    return (
+      <View style={[
+        isMobile ? styles.container : styles.containerDesktop,
+        { justifyContent: 'center', alignItems: 'center' }
+      ]}>
+        <ActivityIndicator size="small" color="#2e7d32" />
+      </View>
+    );
+  }
+
   const validateForm = () => {
     const newErrors = {};
     
@@ -104,23 +151,43 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    if (validateForm()) {
-      console.log('📋 Consultation Form Submitted:', {
-        fullName,
-        whatsappNumber,
-        medicalConcern,
-        timestamp: new Date().toISOString(),
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    setSubmitting(true);
+    setErrors({});
+
+    try {
+      console.log('📋 Submitting consultation form to Supabase...');
+      const submission = await consultationSubmissionService.submit({
+        fullName: fullName.trim(),
+        whatsappNumber: whatsappNumber.trim(),
+        medicalConcern: medicalConcern.trim(),
       });
       
-      // TODO: Connect to backend/WhatsApp API
-      alert('Form submitted! Check console for details.');
+      console.log('✅ Consultation form submitted successfully:', submission);
       
-      // Reset form
+      // Clear form and show success
       setFullName('');
       setWhatsappNumber('');
       setMedicalConcern('');
-      setErrors({});
+      setShowSuccess(true);
+      
+      // Hide success message and close modal after delay
+      setTimeout(() => {
+        setShowSuccess(false);
+        if (isMobile && onClose) {
+          setTimeout(onClose, 500); // Close modal after success message fades
+        }
+      }, 2500);
+      
+    } catch (error) {
+      console.error('❌ Failed to submit consultation form:', error);
+      setErrors({
+        submit: 'Failed to submit form. Please try again.'
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -137,112 +204,142 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
         </Pressable>
       )}
       
-      {/* Heading */}
-      <Text style={[styles.heading, isMobile && styles.headingMobile]}>
-        Get Free Consultation
-      </Text>
+      {showSuccess ? (
+        // Success state
+        <View style={styles.successContainer}>
+          <Text style={styles.successIcon}>✅</Text>
+          <Text style={[styles.heading, isMobile && styles.headingMobile]}>
+            Thanks! We'll be in touch shortly.
+          </Text>
+          <Text style={[styles.subheading, isMobile && styles.subheadingMobile]}>
+            Our care team will contact you via WhatsApp soon.
+          </Text>
+        </View>
+      ) : (
+        // Form state
+        <>
+          {/* Heading */}
+          <Text style={[styles.heading, isMobile && styles.headingMobile]}>
+            {settings?.heading || 'Get Free Consultation'}
+          </Text>
 
-      {/* Subheading */}
-      <Text style={[styles.subheading, isMobile && styles.subheadingMobile]}>
-        Our care team replies within minutes
-      </Text>
+          {/* Subheading */}
+          <Text style={[styles.subheading, isMobile && styles.subheadingMobile]}>
+            {settings?.subheading || 'Our care team replies within minutes'}
+          </Text>
 
-      {/* Full Name Input */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={[
-            styles.input,
-            isPhone && styles.inputPhone,
-            errors.fullName && styles.inputError,
-          ]}
-          placeholder="Full Name"
-          placeholderTextColor="#999"
-          value={fullName}
-          onChangeText={(text) => {
-            setFullName(text);
-            if (errors.fullName) {
-              setErrors({ ...errors, fullName: null });
-            }
-          }}
-        />
-        {errors.fullName && (
-          <Text style={styles.errorText}>{errors.fullName}</Text>
-        )}
-      </View>
+          {/* Submit Error */}
+          {errors.submit && (
+            <Text style={styles.submitError}>{errors.submit}</Text>
+          )}
 
-      {/* WhatsApp Number Input */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={[
-            styles.input,
-            isPhone && styles.inputPhone,
-            errors.whatsappNumber && styles.inputError,
-          ]}
-          placeholder="WhatsApp Number"
-          placeholderTextColor="#999"
-          keyboardType="phone-pad"
-          value={whatsappNumber}
-          onChangeText={(text) => {
-            setWhatsappNumber(text);
-            if (errors.whatsappNumber) {
-              setErrors({ ...errors, whatsappNumber: null });
-            }
-          }}
-        />
-        {errors.whatsappNumber && (
-          <Text style={styles.errorText}>{errors.whatsappNumber}</Text>
-        )}
-      </View>
+          {/* Full Name Input */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={[
+                styles.input,
+                isPhone && styles.inputPhone,
+                errors.fullName && styles.inputError,
+              ]}
+              placeholder={settings?.name_placeholder || 'Full Name'}
+              placeholderTextColor="#999"
+              value={fullName}
+              onChangeText={(text) => {
+                setFullName(text);
+                if (errors.fullName) {
+                  setErrors({ ...errors, fullName: null });
+                }
+              }}
+              editable={!submitting}
+            />
+            {errors.fullName && (
+              <Text style={styles.errorText}>{errors.fullName}</Text>
+            )}
+          </View>
 
-      {/* Medical Concern Textarea */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={[
-            styles.textarea,
-            isPhone && styles.textareaPhone,
-            errors.medicalConcern && styles.inputError,
-          ]}
-          placeholder="Describe your medical concern..."
-          placeholderTextColor="#999"
-          multiline
-          numberOfLines={4}
-          textAlignVertical="top"
-          value={medicalConcern}
-          onChangeText={(text) => {
-            setMedicalConcern(text);
-            if (errors.medicalConcern) {
-              setErrors({ ...errors, medicalConcern: null });
-            }
-          }}
-        />
-        {errors.medicalConcern && (
-          <Text style={styles.errorText}>{errors.medicalConcern}</Text>
-        )}
-      </View>
+          {/* WhatsApp Number Input */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={[
+                styles.input,
+                isPhone && styles.inputPhone,
+                errors.whatsappNumber && styles.inputError,
+              ]}
+              placeholder={settings?.whatsapp_placeholder || 'WhatsApp Number'}
+              placeholderTextColor="#999"
+              keyboardType="phone-pad"
+              value={whatsappNumber}
+              onChangeText={(text) => {
+                setWhatsappNumber(text);
+                if (errors.whatsappNumber) {
+                  setErrors({ ...errors, whatsappNumber: null });
+                }
+              }}
+              editable={!submitting}
+            />
+            {errors.whatsappNumber && (
+              <Text style={styles.errorText}>{errors.whatsappNumber}</Text>
+            )}
+          </View>
 
-      {/* Submit Button with Glassmorphism */}
-      <Pressable
-        style={({ pressed }) => [
-          styles.submitButton,
-          isPhone && styles.submitButtonPhone,
-          pressed && styles.submitButtonPressed,
-          // Apply backdrop-filter as inline style for RN Web compatibility
-          Platform.OS === 'web' && {
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-          },
-        ]}
-        onPress={handleSubmit}
-      >
-        <Text style={[styles.submitButtonText, isPhone && styles.submitButtonTextPhone]}>
-          Get Free Consultation →
-        </Text>
-      </Pressable>
+          {/* Medical Concern Textarea */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={[
+                styles.textarea,
+                isPhone && styles.textareaPhone,
+                errors.medicalConcern && styles.inputError,
+              ]}
+              placeholder={settings?.concern_placeholder || 'Describe your medical concern...'}
+              placeholderTextColor="#999"
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              value={medicalConcern}
+              onChangeText={(text) => {
+                setMedicalConcern(text);
+                if (errors.medicalConcern) {
+                  setErrors({ ...errors, medicalConcern: null });
+                }
+              }}
+              editable={!submitting}
+            />
+            {errors.medicalConcern && (
+              <Text style={styles.errorText}>{errors.medicalConcern}</Text>
+            )}
+          </View>
 
-      {/* Trust Line */}
-      <Text style={[styles.trustLine, isPhone && styles.trustLinePhone]}>
-        🔒 Your information stays confidential
-      </Text>
+          {/* Submit Button with Glassmorphism */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.submitButton,
+              isPhone && styles.submitButtonPhone,
+              (pressed || submitting) && styles.submitButtonPressed,
+              submitting && styles.submitButtonDisabled,
+              // Apply backdrop-filter as inline style for RN Web compatibility
+              Platform.OS === 'web' && {
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+              },
+            ]}
+            onPress={handleSubmit}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={[styles.submitButtonText, isPhone && styles.submitButtonTextPhone]}>
+                {settings?.button_text || 'Get Free Consultation →'}
+              </Text>
+            )}
+          </Pressable>
+
+          {/* Trust Line */}
+          <Text style={[styles.trustLine, isPhone && styles.trustLinePhone]}>
+            🔒 {settings?.trust_line || 'Your information stays confidential'}
+          </Text>
+        </>
+      )}
     </View>
   );
 
@@ -447,6 +544,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginBottom: 16,
   },
+  successContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  successIcon: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  submitError: {
+    color: '#dc2626',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 12,
+    backgroundColor: '#fee2e2',
+    padding: 8,
+    borderRadius: 6,
+  },
   inputContainer: {
     marginBottom: 14,
   },
@@ -525,6 +639,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(46, 125, 50, 0.75)',
     borderColor: 'rgba(255, 255, 255, 0.4)',
     transform: [{ scale: 0.98 }],
+  },
+  submitButtonDisabled: {
+    backgroundColor: 'rgba(46, 125, 50, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   submitButtonText: {
     color: '#fff',
@@ -621,7 +739,7 @@ const styles = StyleSheet.create({
   closeButtonText: {
     fontSize: 28,
     lineHeight: 28,
-    color: '#18477a', // Brand blue (same as CLINIC in logo)
+    color: '#1565C0', // Blue color as requested
     fontWeight: '300',
   },
 });

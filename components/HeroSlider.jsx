@@ -400,11 +400,12 @@ export default function HeroSlider({ isPhone = false }) {
 const styles = StyleSheet.create({
   container: {
     position: 'relative',
-    width: '100%',
-    margin: 16,
+    width: Platform.OS === 'web' ? '100vw' : '100%', // Use viewport width on web to account for scrollbar
+    marginLeft: Platform.OS === 'web' ? 'calc(-50vw + 50%)' : 0, // Center full-bleed breakout on web
+    marginVertical: 16, // Only vertical margin - no horizontal margin for full bleed
     backgroundColor: '#1b1b1b',
     overflow: 'hidden',
-    borderRadius: 8,
+    borderRadius: 0, // Remove border radius for true full-bleed on Shop pages
   },
   slideContainer: {
     position: 'absolute',
