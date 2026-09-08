@@ -9094,7 +9094,7 @@ const fetchFooterData = async () => {
 
               <View style={{
                 paddingHorizontal: isPhoneScreen ? 20 : 40,
-                paddingTop: isPhoneScreen ? 20 : 40,
+                paddingTop: isPhoneScreen ? 12 : 40,
                 paddingBottom: 64,
                 width: '100%',
                 maxWidth: 1180,
@@ -9520,7 +9520,7 @@ const fetchFooterData = async () => {
 
               <View style={{
                 paddingHorizontal: isPhoneScreen ? 20 : 40,
-                paddingTop: isPhoneScreen ? 20 : 40,
+                paddingTop: isPhoneScreen ? 12 : 40,
                 paddingBottom: 64,
                 width: '100%',
                 maxWidth: 1180,
