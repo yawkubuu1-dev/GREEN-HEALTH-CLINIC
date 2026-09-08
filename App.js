@@ -2397,6 +2397,11 @@ export default function App() {
 
   const [adminDrawerOpen, setAdminDrawerOpen] = useState(false);
 
+  // Sticky ConsultationCard refs and state
+  const heroRef = useRef(null);
+  const glassPanelRef = useRef(null);
+  const [stickyWrapperHeight, setStickyWrapperHeight] = useState(0);
+
   const drawerAnim = useRef(new Animated.Value(-260)).current;
 
 
@@ -4886,6 +4891,54 @@ const fetchFooterData = async () => {
   const isCompactAdmin = width < 760;
 
   const isPhoneScreen = width < 600;
+
+  // Measure distance from hero top to glass panel top for sticky behavior
+  const measureStickyHeight = () => {
+    if (Platform.OS === 'web' && !isPhoneScreen) {
+      const heroEl = heroRef.current?._node;
+      
+      if (heroEl) {
+        const heroRect = heroEl.getBoundingClientRect();
+        const heroHeight = heroRect.height;
+        const blurBandHeight = 220; // Desktop BLUR_BAND_HEIGHT from HomeHero
+        // Glass panel is at bottom of hero, so its top edge is at heroHeight - blurBandHeight
+        const distance = heroHeight - blurBandHeight;
+        setStickyWrapperHeight(distance);
+      }
+    }
+  };
+
+  // Handle hero layout callback
+  const handleHeroLayout = (layout) => {
+    if (layout) {
+      const heroWidth = layout.width;
+      const heroHeight = layout.height;
+      const blurBandHeight = 220; // Desktop BLUR_BAND_HEIGHT from HomeHero
+      // Glass panel is at bottom of hero, so its top edge is at heroHeight - blurBandHeight
+      const distance = heroHeight - blurBandHeight;
+      setStickyWrapperHeight(distance);
+    }
+  };
+
+  // Measure on mount and on window resize
+  useEffect(() => {
+    if (Platform.OS === 'web' && !isPhoneScreen) {
+      // Delay measurement to ensure hero has rendered
+      const timeoutId = setTimeout(() => {
+        measureStickyHeight();
+      }, 100);
+      
+      const handleResize = () => {
+        setTimeout(measureStickyHeight, 100);
+      };
+      
+      window.addEventListener('resize', handleResize);
+      return () => {
+        clearTimeout(timeoutId);
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+  }, [isPhoneScreen]);
 
   const isTabletScreen = width >= 600 && width < 980;
 
@@ -8696,6 +8749,9 @@ const fetchFooterData = async () => {
             scrollEnabled={true} // Explicitly enable scrolling
           >
             <HomeHero 
+              ref={heroRef}
+              glassPanelRef={glassPanelRef}
+              onHeroLayout={handleHeroLayout}
               isPhone={isPhoneScreen} 
               onNavigate={setCurrentPage}
               onOpenConsultation={() => setConsultationCardVisible(true)}
@@ -8707,12 +8763,38 @@ const fetchFooterData = async () => {
             <Footer onNavigate={setCurrentPage} />
           </ScrollView>
           
-          {/* Fixed consultation card - outside ScrollView for true fixed positioning */}
-          <ConsultationCard 
-            isPhone={isPhoneScreen}
-            visible={isPhoneScreen ? consultationCardVisible : true}
-            onClose={() => setConsultationCardVisible(false)}
-          />
+          {/* Sticky wrapper for consultation card - desktop only - positioned absolutely outside ScrollView */}
+          {Platform.OS === 'web' && !isPhoneScreen ? (
+            <View 
+              style={{ 
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: stickyWrapperHeight || 0,
+                pointerEvents: 'none',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+              }}
+            >
+              <ConsultationCard 
+                isPhone={false}
+                visible={true}
+                onClose={() => setConsultationCardVisible(false)}
+                useSticky={true}
+                stickyTop={76} // header height (60px) + 16px offset
+              />
+            </View>
+          ) : null}
+          
+          {/* Mobile: keep existing modal behavior */}
+          {Platform.OS !== 'web' || isPhoneScreen ? (
+            <ConsultationCard 
+              isPhone={true}
+              visible={consultationCardVisible}
+              onClose={() => setConsultationCardVisible(false)}
+            />
+          ) : null}
         </View>
 
       ) : isServicesPage ? (
@@ -8737,7 +8819,7 @@ const fetchFooterData = async () => {
                 borderBottomColor: isUserDarkMode ? '#333' : '#d4e2cf',
                 flexShrink: 0,
               }}
-              contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 10, gap: 8, flexDirection: 'row', alignItems: 'center' }}
+              contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 6, gap: 8, flexDirection: 'row', alignItems: 'center' }}
             >
               {[
                 { key: 'functional-medicine', label: 'Functional Medicine' },
@@ -8773,7 +8855,7 @@ const fetchFooterData = async () => {
                   }}
                   style={{
                     paddingHorizontal: 14,
-                    paddingVertical: 8,
+                    paddingVertical: 6,
                     borderRadius: 20,
                     backgroundColor: activeServiceSection === item.key
                       ? (isUserDarkMode ? '#008000' : '#296416')
@@ -9190,7 +9272,7 @@ const fetchFooterData = async () => {
                 borderBottomColor: isUserDarkMode ? '#333' : '#d4e2cf',
                 flexShrink: 0,
               }}
-              contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 10, gap: 8, flexDirection: 'row', alignItems: 'center' }}
+              contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 6, gap: 8, flexDirection: 'row', alignItems: 'center' }}
             >
               {[
                 { key: 'our-story',       label: 'Our Story' },
@@ -9225,7 +9307,7 @@ const fetchFooterData = async () => {
                   }}
                   style={{
                     paddingHorizontal: 14,
-                    paddingVertical: 8,
+                    paddingVertical: 6,
                     borderRadius: 20,
                     backgroundColor: activeAboutSection === item.key
                       ? (isUserDarkMode ? '#008000' : '#296416')

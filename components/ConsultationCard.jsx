@@ -22,7 +22,7 @@ import { consultationWidgetService, consultationSubmissionService } from '../ser
  * On desktop/tablet: always visible, sticky
  * Wired to Supabase for both content and form submissions
  */
-export default function ConsultationCard({ isPhone = false, visible = true, onClose }) {
+export default function ConsultationCard({ isPhone = false, visible = true, onClose, productId, useSticky = false, stickyTop = 76 }) {
   const [fullName, setFullName] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [medicalConcern, setMedicalConcern] = useState('');
@@ -364,7 +364,8 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
       {Platform.OS === 'web' ? (
         <Animated.View
           style={[
-            isMobile ? styles.container : styles.containerDesktop,
+            isMobile ? styles.container : (useSticky ? styles.containerDesktopSticky : styles.containerDesktop),
+            useSticky && { top: stickyTop }, // Apply custom sticky top if provided
             {
               opacity: isMobile ? opacityAnim : 1, // Only animate opacity on mobile
               pointerEvents: visible ? 'auto' : 'none', // Always prevent blocking when hidden
@@ -470,6 +471,15 @@ const styles = StyleSheet.create({
     transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
     width: 380,
     zIndex: 1000, // Lower z-index for desktop
+  },
+  containerDesktopSticky: {
+    // Desktop: Sticky positioning within wrapper
+    position: 'sticky',
+    top: 76, // Default sticky top, can be overridden via prop
+    alignSelf: 'center',
+    width: 380,
+    maxWidth: '100%',
+    pointerEvents: 'auto',
   },
   // React Native: Full-screen flexbox centering
   containerNative: {
