@@ -8819,7 +8819,7 @@ const fetchFooterData = async () => {
                 borderBottomColor: isUserDarkMode ? '#333' : '#d4e2cf',
                 flexShrink: 0,
               }}
-              contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 6, gap: 8, flexDirection: 'row', alignItems: 'center' }}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8, flexDirection: 'row', alignItems: 'center' }}
             >
               {[
                 { key: 'functional-medicine', label: 'Functional Medicine' },
@@ -9094,7 +9094,7 @@ const fetchFooterData = async () => {
 
               <View style={{
                 paddingHorizontal: isPhoneScreen ? 20 : 40,
-                paddingTop: isPhoneScreen ? 12 : 40,
+                paddingTop: isPhoneScreen ? 16 : 40,
                 paddingBottom: 64,
                 width: '100%',
                 maxWidth: 1180,
@@ -9272,7 +9272,7 @@ const fetchFooterData = async () => {
                 borderBottomColor: isUserDarkMode ? '#333' : '#d4e2cf',
                 flexShrink: 0,
               }}
-              contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 6, gap: 8, flexDirection: 'row', alignItems: 'center' }}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8, flexDirection: 'row', alignItems: 'center' }}
             >
               {[
                 { key: 'our-story',       label: 'Our Story' },
@@ -9520,7 +9520,7 @@ const fetchFooterData = async () => {
 
               <View style={{
                 paddingHorizontal: isPhoneScreen ? 20 : 40,
-                paddingTop: isPhoneScreen ? 12 : 40,
+                paddingTop: isPhoneScreen ? 16 : 40,
                 paddingBottom: 64,
                 width: '100%',
                 maxWidth: 1180,
