@@ -8819,7 +8819,7 @@ const fetchFooterData = async () => {
                 borderBottomColor: isUserDarkMode ? '#333' : '#d4e2cf',
                 flexShrink: 0,
               }}
-              contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 8, gap: 6, flexDirection: 'row', alignItems: 'center' }}
+              contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 4, gap: 6, flexDirection: 'row', alignItems: 'center' }}
             >
               {[
                 { key: 'functional-medicine', label: 'Functional Medicine' },
@@ -8855,7 +8855,7 @@ const fetchFooterData = async () => {
                   }}
                   style={{
                     paddingHorizontal: 14,
-                    paddingVertical: 6,
+                    paddingVertical: 4,
                     borderRadius: 20,
                     backgroundColor: activeServiceSection === item.key
                       ? (isUserDarkMode ? '#008000' : '#296416')
@@ -9094,7 +9094,7 @@ const fetchFooterData = async () => {
 
               <View style={{
                 paddingHorizontal: isPhoneScreen ? 20 : 40,
-                paddingTop: isPhoneScreen ? 12 : 40,
+                paddingTop: isPhoneScreen ? 8 : 40,
                 paddingBottom: 64,
                 width: '100%',
                 maxWidth: 1180,
@@ -9272,7 +9272,7 @@ const fetchFooterData = async () => {
                 borderBottomColor: isUserDarkMode ? '#333' : '#d4e2cf',
                 flexShrink: 0,
               }}
-              contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 8, gap: 6, flexDirection: 'row', alignItems: 'center' }}
+              contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 4, gap: 6, flexDirection: 'row', alignItems: 'center' }}
             >
               {[
                 { key: 'our-story',       label: 'Our Story' },
@@ -9307,7 +9307,7 @@ const fetchFooterData = async () => {
                   }}
                   style={{
                     paddingHorizontal: 14,
-                    paddingVertical: 6,
+                    paddingVertical: 4,
                     borderRadius: 20,
                     backgroundColor: activeAboutSection === item.key
                       ? (isUserDarkMode ? '#008000' : '#296416')
@@ -9520,7 +9520,7 @@ const fetchFooterData = async () => {
 
               <View style={{
                 paddingHorizontal: isPhoneScreen ? 20 : 40,
-                paddingTop: isPhoneScreen ? 12 : 40,
+                paddingTop: isPhoneScreen ? 8 : 40,
                 paddingBottom: 64,
                 width: '100%',
                 maxWidth: 1180,
