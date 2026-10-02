@@ -8799,7 +8799,7 @@ const fetchFooterData = async () => {
 
       ) : isServicesPage ? (
 
-        <View style={{ flex: 1, flexDirection: isPhoneScreen ? 'column' : 'row' }}>
+        <View style={{ flex: 1, flexDirection: isPhoneScreen ? 'column' : 'row', minHeight: 0 }}>
 
           {/* ── Sidebar (desktop) / Horizontal tab strip (mobile) ── */}
           {isPhoneScreen ? (
@@ -8818,8 +8818,9 @@ const fetchFooterData = async () => {
                 borderBottomWidth: 1,
                 borderBottomColor: isUserDarkMode ? '#333' : '#d4e2cf',
                 flexShrink: 0,
+                height: 'auto',
               }}
-              contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 4, gap: 6, flexDirection: 'row', alignItems: 'center' }}
+              contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 4, gap: 6, flexDirection: 'row', alignItems: 'center', height: 'auto' }}
             >
               {[
                 { key: 'functional-medicine', label: 'Functional Medicine' },
@@ -9252,7 +9253,7 @@ const fetchFooterData = async () => {
 
       ) : isAboutPage ? (
 
-        <View style={{ flex: 1, flexDirection: isPhoneScreen ? 'column' : 'row' }}>
+        <View style={{ flex: 1, flexDirection: isPhoneScreen ? 'column' : 'row', minHeight: 0 }}>
 
           {/* ── Sidebar (desktop) / Horizontal chip strip (mobile) ── */}
           {isPhoneScreen ? (
@@ -9271,8 +9272,9 @@ const fetchFooterData = async () => {
                 borderBottomWidth: 1,
                 borderBottomColor: isUserDarkMode ? '#333' : '#d4e2cf',
                 flexShrink: 0,
+                height: 'auto',
               }}
-              contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 4, gap: 6, flexDirection: 'row', alignItems: 'center' }}
+              contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 4, gap: 6, flexDirection: 'row', alignItems: 'center', height: 'auto' }}
             >
               {[
                 { key: 'our-story',       label: 'Our Story' },
