@@ -2084,7 +2084,7 @@ export default function App() {
 
   // Current Page Route
 
-  const [currentPage, setCurrentPage] = useState('home');
+  const [currentPage, setCurrentPageState] = useState('home');
 
   const [currency, setCurrency] = useState('GHC');
   
@@ -2157,7 +2157,15 @@ export default function App() {
   const aboutChipBarHeight = useRef(44); // Will be measured dynamically
   const aboutSectionOffsets = useRef({ 'our-story': 0, 'our-team': 0, 'patient-stories': 0, 'blog-news': 0, 'vision-mission': 0 });
 
-  useEffect(() => {
+  const resetSectionNavigation = () => {
+    sectionRefs.current = {
+      'functional-medicine': null,
+      'metabolic-health': null,
+      'chronic-disease': null,
+      'nutrition': null,
+      'diagnostics': null,
+      'pharmacy': null,
+    };
     sectionOffsets.current = {
       'functional-medicine': 0,
       'metabolic-health': 0,
@@ -2180,7 +2188,33 @@ export default function App() {
     aboutChipBarHeight.current = 0;
     isAboutScrollingProgrammatically.current = false;
     setActiveAboutSection('our-story');
-  }, [currentPage]);
+  };
+
+  const setCurrentPage = (nextPage) => {
+    if (nextPage !== currentPage) {
+      resetSectionNavigation();
+    }
+    setCurrentPageState(nextPage);
+  };
+
+  const getCurrentSectionOffset = (sectionKey, cachedOffset) => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const sectionNode = document.getElementById(sectionKey);
+      if (sectionNode) {
+        let scrollNode = sectionNode.parentElement;
+        while (scrollNode && scrollNode !== document.body) {
+          const overflowY = window.getComputedStyle(scrollNode).overflowY;
+          if ((overflowY === 'auto' || overflowY === 'scroll') && scrollNode.scrollHeight > scrollNode.clientHeight) {
+            const sectionRect = sectionNode.getBoundingClientRect();
+            const scrollRect = scrollNode.getBoundingClientRect();
+            return sectionRect.top - scrollRect.top + scrollNode.scrollTop;
+          }
+          scrollNode = scrollNode.parentElement;
+        }
+      }
+    }
+    return cachedOffset;
+  };
 
   const dropdownAnim = useRef(new Animated.Value(0)).current;
 
@@ -8824,7 +8858,7 @@ const fetchFooterData = async () => {
 
       ) : isServicesPage ? (
 
-        <View style={{ flex: 1, flexDirection: isPhoneScreen ? 'column' : 'row', minHeight: 0 }}>
+        <View key="services-page" style={{ flex: 1, flexDirection: isPhoneScreen ? 'column' : 'row', minHeight: 0 }}>
 
           {/* ── Sidebar (desktop) / Horizontal tab strip (mobile) ── */}
           {isPhoneScreen ? (
@@ -8865,7 +8899,7 @@ const fetchFooterData = async () => {
 
                     // Use dynamically measured chip bar height
                     const STICKY_HEIGHT = servicesChipBarHeight.current;
-                    const raw = sectionOffsets.current[item.key] ?? 0;
+                    const raw = getCurrentSectionOffset(item.key, sectionOffsets.current[item.key] ?? 0);
                     const targetY = Math.max(0, raw - STICKY_HEIGHT);
                     console.log(`[SERVICES] Scrolling to ${item.key}: raw=${raw}, stickyHeight=${STICKY_HEIGHT}, target=${targetY}`);
 
@@ -9128,7 +9162,7 @@ const fetchFooterData = async () => {
                 alignSelf: 'center',
               }}>
 
-                <View ref={r => sectionRefs.current['functional-medicine'] = r} style={{ marginBottom: 60 }} onLayout={e => {
+                <View nativeID="functional-medicine" ref={r => sectionRefs.current['functional-medicine'] = r} style={{ marginBottom: 60 }} onLayout={e => {
                   const newY = e.nativeEvent.layout.y;
                   const oldY = sectionOffsets.current['functional-medicine'];
                   if (oldY !== newY) {
@@ -9151,7 +9185,7 @@ const fetchFooterData = async () => {
                   </Text>
                 </View>
 
-                <View ref={r => sectionRefs.current['metabolic-health'] = r} style={{ marginBottom: 60 }} onLayout={e => {
+                <View nativeID="metabolic-health" ref={r => sectionRefs.current['metabolic-health'] = r} style={{ marginBottom: 60 }} onLayout={e => {
                   const newY = e.nativeEvent.layout.y;
                   const oldY = sectionOffsets.current['metabolic-health'];
                   if (oldY !== newY) {
@@ -9174,7 +9208,7 @@ const fetchFooterData = async () => {
                   </Text>
                 </View>
 
-                <View ref={r => sectionRefs.current['chronic-disease'] = r} style={{ marginBottom: 60 }} onLayout={e => {
+                <View nativeID="chronic-disease" ref={r => sectionRefs.current['chronic-disease'] = r} style={{ marginBottom: 60 }} onLayout={e => {
                   const newY = e.nativeEvent.layout.y;
                   const oldY = sectionOffsets.current['chronic-disease'];
                   if (oldY !== newY) {
@@ -9197,7 +9231,7 @@ const fetchFooterData = async () => {
                   </Text>
                 </View>
 
-                <View ref={r => sectionRefs.current['nutrition'] = r} style={{ marginBottom: 60 }} onLayout={e => {
+                <View nativeID="nutrition" ref={r => sectionRefs.current['nutrition'] = r} style={{ marginBottom: 60 }} onLayout={e => {
                   const newY = e.nativeEvent.layout.y;
                   const oldY = sectionOffsets.current['nutrition'];
                   if (oldY !== newY) {
@@ -9220,7 +9254,7 @@ const fetchFooterData = async () => {
                   </Text>
                 </View>
 
-                <View ref={r => sectionRefs.current['diagnostics'] = r} style={{ marginBottom: 60 }} onLayout={e => {
+                <View nativeID="diagnostics" ref={r => sectionRefs.current['diagnostics'] = r} style={{ marginBottom: 60 }} onLayout={e => {
                   const newY = e.nativeEvent.layout.y;
                   const oldY = sectionOffsets.current['diagnostics'];
                   if (oldY !== newY) {
@@ -9243,7 +9277,7 @@ const fetchFooterData = async () => {
                   </Text>
                 </View>
 
-                <View ref={r => sectionRefs.current['pharmacy'] = r} style={{ marginBottom: 60 }} onLayout={e => {
+                <View nativeID="pharmacy" ref={r => sectionRefs.current['pharmacy'] = r} style={{ marginBottom: 60 }} onLayout={e => {
                   const newY = e.nativeEvent.layout.y;
                   const oldY = sectionOffsets.current['pharmacy'];
                   if (oldY !== newY) {
@@ -9279,7 +9313,7 @@ const fetchFooterData = async () => {
 
       ) : isAboutPage ? (
 
-        <View style={{ flex: 1, flexDirection: isPhoneScreen ? 'column' : 'row', minHeight: 0 }}>
+        <View key="about-page" style={{ flex: 1, flexDirection: isPhoneScreen ? 'column' : 'row', minHeight: 0 }}>
 
           {/* ── Sidebar (desktop) / Horizontal chip strip (mobile) ── */}
           {isPhoneScreen ? (
@@ -9319,7 +9353,7 @@ const fetchFooterData = async () => {
 
                     // Use dynamically measured chip bar height
                     const STICKY_HEIGHT = aboutChipBarHeight.current;
-                    const raw = aboutSectionOffsets.current[item.key] ?? 0;
+                    const raw = getCurrentSectionOffset(item.key, aboutSectionOffsets.current[item.key] ?? 0);
                     const targetY = Math.max(0, raw - STICKY_HEIGHT);
                     console.log(`[ABOUT] Scrolling to ${item.key}: raw=${raw}, stickyHeight=${STICKY_HEIGHT}, target=${targetY}`);
 
@@ -9573,7 +9607,11 @@ const fetchFooterData = async () => {
                   </View>
                 ) : aboutSectionsData && aboutSectionsData.length > 0 ? (
                   aboutSectionsData.map((section, index) => (
-                    <View key={section.id || index} style={{ marginBottom: 60 }} onLayout={e => {
+                    <View
+                      key={section.id || index}
+                      nativeID={section.slug || section.title?.toLowerCase().replace(/\s+/g, '-') || `section-${index}`}
+                      style={{ marginBottom: 60 }}
+                      onLayout={e => {
                       const newY = e.nativeEvent.layout.y;
                       const sectionKey = section.slug || section.title?.toLowerCase().replace(/\s+/g, '-') || `section-${index}`;
                       const oldY = aboutSectionOffsets.current[sectionKey];
@@ -9600,7 +9638,7 @@ const fetchFooterData = async () => {
                 ) : (
                   // Fallback to hardcoded content if no Supabase data
                   <>
-                    <View style={{ marginBottom: 60 }} onLayout={e => {
+                    <View nativeID="our-story" style={{ marginBottom: 60 }} onLayout={e => {
                       const newY = e.nativeEvent.layout.y;
                       const oldY = aboutSectionOffsets.current['our-story'];
                       if (oldY !== newY) {
@@ -9623,7 +9661,7 @@ const fetchFooterData = async () => {
                       </Text>
                     </View>
 
-                    <View style={{ marginBottom: 60 }} onLayout={e => {
+                    <View nativeID="our-team" style={{ marginBottom: 60 }} onLayout={e => {
                       const newY = e.nativeEvent.layout.y;
                       const oldY = aboutSectionOffsets.current['our-team'];
                       if (oldY !== newY) {
@@ -9646,7 +9684,7 @@ const fetchFooterData = async () => {
                       </Text>
                     </View>
 
-                    <View style={{ marginBottom: 60 }} onLayout={e => {
+                    <View nativeID="patient-stories" style={{ marginBottom: 60 }} onLayout={e => {
                       const newY = e.nativeEvent.layout.y;
                       const oldY = aboutSectionOffsets.current['patient-stories'];
                       if (oldY !== newY) {
@@ -9669,7 +9707,7 @@ const fetchFooterData = async () => {
                       </Text>
                     </View>
 
-                    <View style={{ marginBottom: 60 }} onLayout={e => {
+                    <View nativeID="blog-news" style={{ marginBottom: 60 }} onLayout={e => {
                       const newY = e.nativeEvent.layout.y;
                       const oldY = aboutSectionOffsets.current['blog-news'];
                       if (oldY !== newY) {
@@ -9692,7 +9730,7 @@ const fetchFooterData = async () => {
                       </Text>
                     </View>
 
-                    <View style={{ marginBottom: 60 }} onLayout={e => {
+                    <View nativeID="vision-mission" style={{ marginBottom: 60 }} onLayout={e => {
                       const newY = e.nativeEvent.layout.y;
                       const oldY = aboutSectionOffsets.current['vision-mission'];
                       if (oldY !== newY) {
