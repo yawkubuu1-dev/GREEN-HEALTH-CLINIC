@@ -4949,7 +4949,8 @@ const fetchFooterData = async () => {
 
   const isCompactAdmin = width < 760;
 
-  const isPhoneScreen = width < 600;
+  const shorterSide = Math.min(width, windowHeight);
+  const isPhoneScreen = shorterSide < 600;
 
   // Measure distance from hero top to glass panel top for sticky behavior
   const measureStickyHeight = () => {

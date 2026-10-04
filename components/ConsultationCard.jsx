@@ -33,7 +33,9 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
   const [loadingSettings, setLoadingSettings] = useState(true);
   
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const isMobile = windowWidth <= 480;
+  const shorterSide = Math.min(windowWidth, windowHeight);
+  const isMobile = shorterSide < 600;
+  const cardMaxHeight = Math.max(0, Math.min(windowHeight * 0.9, windowHeight - 84));
   
   // Animation values for modal
   const scaleAnim = useRef(new Animated.Value(isMobile ? 0.9 : 1)).current;
@@ -191,153 +193,156 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
     }
   };
 
-  const cardContent = (
-    <View style={styles.cardInner}>
-      {/* Close button (mobile only) */}
-      {isMobile && onClose && (
-        <Pressable 
-          style={styles.closeButton}
-          onPress={onClose}
-          hitSlop={8}
-        >
+  const formFields = (
+    <>
+      {errors.submit && <Text style={styles.submitError}>{errors.submit}</Text>}
+      <View style={[styles.inputContainer, isMobile && styles.inputContainerMobile]}>
+        <TextInput
+          style={[
+            styles.input,
+            isMobile && styles.inputPhone,
+            isMobile && styles.inputMobile,
+            errors.fullName && styles.inputError,
+          ]}
+          placeholder={settings?.name_placeholder || 'Full Name'}
+          placeholderTextColor="#999"
+          value={fullName}
+          onChangeText={(text) => {
+            setFullName(text);
+            if (errors.fullName) setErrors({ ...errors, fullName: null });
+          }}
+          editable={!submitting}
+        />
+        {errors.fullName && <Text style={styles.errorText}>{errors.fullName}</Text>}
+      </View>
+      <View style={[styles.inputContainer, isMobile && styles.inputContainerMobile]}>
+        <TextInput
+          style={[
+            styles.input,
+            isMobile && styles.inputPhone,
+            isMobile && styles.inputMobile,
+            errors.whatsappNumber && styles.inputError,
+          ]}
+          placeholder={settings?.whatsapp_placeholder || 'WhatsApp Number'}
+          placeholderTextColor="#999"
+          keyboardType="phone-pad"
+          value={whatsappNumber}
+          onChangeText={(text) => {
+            setWhatsappNumber(text);
+            if (errors.whatsappNumber) setErrors({ ...errors, whatsappNumber: null });
+          }}
+          editable={!submitting}
+        />
+        {errors.whatsappNumber && <Text style={styles.errorText}>{errors.whatsappNumber}</Text>}
+      </View>
+      <View style={[styles.inputContainer, isMobile && styles.inputContainerMobile]}>
+        <TextInput
+          style={[
+            styles.textarea,
+            isMobile && styles.textareaPhone,
+            isMobile && styles.textareaMobile,
+            errors.medicalConcern && styles.inputError,
+          ]}
+          placeholder={settings?.concern_placeholder || 'Describe your medical concern...'}
+          placeholderTextColor="#999"
+          multiline
+          numberOfLines={4}
+          textAlignVertical="top"
+          value={medicalConcern}
+          onChangeText={(text) => {
+            setMedicalConcern(text);
+            if (errors.medicalConcern) setErrors({ ...errors, medicalConcern: null });
+          }}
+          editable={!submitting}
+        />
+        {errors.medicalConcern && <Text style={styles.errorText}>{errors.medicalConcern}</Text>}
+      </View>
+      <Pressable
+        style={({ pressed }) => [
+          styles.submitButton,
+          isMobile && styles.submitButtonPhone,
+          isMobile && styles.submitButtonMobile,
+          (pressed || submitting) && styles.submitButtonPressed,
+          submitting && styles.submitButtonDisabled,
+          Platform.OS === 'web' && {
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+          },
+        ]}
+        onPress={handleSubmit}
+        disabled={submitting}
+      >
+        {submitting ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={[
+            styles.submitButtonText,
+            isMobile && styles.submitButtonTextPhone,
+            isMobile && styles.submitButtonTextMobile,
+          ]}>
+            {settings?.button_text || 'Get Free Consultation →'}
+          </Text>
+        )}
+      </Pressable>
+      <Text style={[
+        styles.trustLine,
+        isMobile && styles.trustLinePhone,
+        isMobile && styles.trustLineMobile,
+      ]}>
+        🔒 {settings?.trust_line || 'Your information stays confidential'}
+      </Text>
+    </>
+  );
+
+  const mobileHeader = (
+    <View style={styles.mobileHeader}>
+      {onClose && (
+        <Pressable style={styles.closeButton} onPress={onClose} hitSlop={8}>
           <Text style={styles.closeButtonText}>×</Text>
         </Pressable>
       )}
-      
+      <Text style={[styles.heading, styles.headingMobile]}>
+        {showSuccess ? "Thanks! We'll be in touch shortly." : settings?.heading || 'Get Free Consultation'}
+      </Text>
+      <Text style={[styles.subheading, styles.subheadingMobile]}>
+        {showSuccess
+          ? 'Our care team will contact you via WhatsApp soon.'
+          : settings?.subheading || 'Our care team replies within minutes'}
+      </Text>
+    </View>
+  );
+
+  const mobileScrollableContent = (
+    <View style={[styles.cardInner, styles.mobileCardInner, { maxHeight: cardMaxHeight }]}>
+      {mobileHeader}
+      <ScrollView
+        style={{ flexShrink: 1, maxHeight: Math.max(0, cardMaxHeight - 80) }}
+        contentContainerStyle={{ paddingBottom: 16 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator
+      >
+        {showSuccess ? (
+          <View style={styles.successContainer}>
+            <Text style={styles.successIcon}>✅</Text>
+          </View>
+        ) : formFields}
+      </ScrollView>
+    </View>
+  );
+
+  const cardContent = (
+    <View style={styles.cardInner}>
       {showSuccess ? (
-        // Success state
         <View style={styles.successContainer}>
           <Text style={styles.successIcon}>✅</Text>
-          <Text style={[styles.heading, isMobile && styles.headingMobile]}>
-            Thanks! We'll be in touch shortly.
-          </Text>
-          <Text style={[styles.subheading, isMobile && styles.subheadingMobile]}>
-            Our care team will contact you via WhatsApp soon.
-          </Text>
+          <Text style={styles.heading}>Thanks! We'll be in touch shortly.</Text>
+          <Text style={styles.subheading}>Our care team will contact you via WhatsApp soon.</Text>
         </View>
       ) : (
-        // Form state
         <>
-          {/* Heading */}
-          <Text style={[styles.heading, isMobile && styles.headingMobile]}>
-            {settings?.heading || 'Get Free Consultation'}
-          </Text>
-
-          {/* Subheading */}
-          <Text style={[styles.subheading, isMobile && styles.subheadingMobile]}>
-            {settings?.subheading || 'Our care team replies within minutes'}
-          </Text>
-
-          {/* Submit Error */}
-          {errors.submit && (
-            <Text style={styles.submitError}>{errors.submit}</Text>
-          )}
-
-          {/* Full Name Input */}
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={[
-                styles.input,
-                isPhone && styles.inputPhone,
-                errors.fullName && styles.inputError,
-              ]}
-              placeholder={settings?.name_placeholder || 'Full Name'}
-              placeholderTextColor="#999"
-              value={fullName}
-              onChangeText={(text) => {
-                setFullName(text);
-                if (errors.fullName) {
-                  setErrors({ ...errors, fullName: null });
-                }
-              }}
-              editable={!submitting}
-            />
-            {errors.fullName && (
-              <Text style={styles.errorText}>{errors.fullName}</Text>
-            )}
-          </View>
-
-          {/* WhatsApp Number Input */}
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={[
-                styles.input,
-                isPhone && styles.inputPhone,
-                errors.whatsappNumber && styles.inputError,
-              ]}
-              placeholder={settings?.whatsapp_placeholder || 'WhatsApp Number'}
-              placeholderTextColor="#999"
-              keyboardType="phone-pad"
-              value={whatsappNumber}
-              onChangeText={(text) => {
-                setWhatsappNumber(text);
-                if (errors.whatsappNumber) {
-                  setErrors({ ...errors, whatsappNumber: null });
-                }
-              }}
-              editable={!submitting}
-            />
-            {errors.whatsappNumber && (
-              <Text style={styles.errorText}>{errors.whatsappNumber}</Text>
-            )}
-          </View>
-
-          {/* Medical Concern Textarea */}
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={[
-                styles.textarea,
-                isPhone && styles.textareaPhone,
-                errors.medicalConcern && styles.inputError,
-              ]}
-              placeholder={settings?.concern_placeholder || 'Describe your medical concern...'}
-              placeholderTextColor="#999"
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-              value={medicalConcern}
-              onChangeText={(text) => {
-                setMedicalConcern(text);
-                if (errors.medicalConcern) {
-                  setErrors({ ...errors, medicalConcern: null });
-                }
-              }}
-              editable={!submitting}
-            />
-            {errors.medicalConcern && (
-              <Text style={styles.errorText}>{errors.medicalConcern}</Text>
-            )}
-          </View>
-
-          {/* Submit Button with Glassmorphism */}
-          <Pressable
-            style={({ pressed }) => [
-              styles.submitButton,
-              isPhone && styles.submitButtonPhone,
-              (pressed || submitting) && styles.submitButtonPressed,
-              submitting && styles.submitButtonDisabled,
-              // Apply backdrop-filter as inline style for RN Web compatibility
-              Platform.OS === 'web' && {
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-              },
-            ]}
-            onPress={handleSubmit}
-            disabled={submitting}
-          >
-            {submitting ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={[styles.submitButtonText, isPhone && styles.submitButtonTextPhone]}>
-                {settings?.button_text || 'Get Free Consultation →'}
-              </Text>
-            )}
-          </Pressable>
-
-          {/* Trust Line */}
-          <Text style={[styles.trustLine, isPhone && styles.trustLinePhone]}>
-            🔒 {settings?.trust_line || 'Your information stays confidential'}
-          </Text>
+          <Text style={styles.heading}>{settings?.heading || 'Get Free Consultation'}</Text>
+          <Text style={styles.subheading}>{settings?.subheading || 'Our care team replies within minutes'}</Text>
+          {formFields}
         </>
       )}
     </View>
@@ -377,6 +382,7 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
               style={[
                 styles.cardContainerWeb,
                 isMobile && styles.cardContainerWebMobile,
+                isMobile && { maxHeight: cardMaxHeight },
                 isMobile && {
                   transform: [{ scale: scaleAnim }],
                 },
@@ -386,6 +392,7 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
                 style={[
                   styles.cardWeb,
                   isMobile && styles.cardWebMobile,
+                  isMobile && { maxHeight: cardMaxHeight, boxSizing: 'border-box' },
                   // Inline style override for backdrop-filter (RN Web compatibility)
                   Platform.OS === 'web' && {
                     backdropFilter: 'blur(16px)',
@@ -393,7 +400,7 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
                   },
                 ]}
               >
-                {cardContent}
+                {mobileScrollableContent}
               </View>
             </Animated.View>
           ) : (
@@ -440,9 +447,10 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
               style={[
                 styles.cardNative,
                 isMobile && styles.cardNativeMobile,
+                isMobile && { maxHeight: cardMaxHeight },
               ]}
             >
-              {cardContent}
+              {isMobile ? mobileScrollableContent : cardContent}
             </BlurView>
           </Animated.View>
         </Animated.View>
@@ -499,6 +507,7 @@ const styles = StyleSheet.create({
   cardContainerWebMobile: {
     width: '90%',
     maxWidth: 320,
+    maxHeight: '90%',
   },
   cardContainerNative: {
     width: '85%',
@@ -507,6 +516,7 @@ const styles = StyleSheet.create({
   cardContainerNativeMobile: {
     width: '90%', 
     maxWidth: 320,
+    maxHeight: '90%',
   },
   cardWeb: {
     backgroundColor: 'rgba(255, 255, 255, 0.35)',
@@ -533,6 +543,13 @@ const styles = StyleSheet.create({
   },
   cardInner: {
     width: '100%',
+  },
+  mobileCardInner: {
+    flexShrink: 1,
+  },
+  mobileHeader: {
+    flexShrink: 0,
+    paddingRight: 28,
   },
   heading: {
     fontSize: 24,
@@ -676,10 +693,7 @@ const styles = StyleSheet.create({
     padding: 12,
     paddingTop: 10,
     paddingBottom: 10,
-    ...(Platform.OS === 'web' && {
-      maxHeight: '70vh',
-      overflowY: 'auto',
-    }),
+    boxSizing: 'border-box',
   },
   cardNativeMobile: {
     padding: 12,
