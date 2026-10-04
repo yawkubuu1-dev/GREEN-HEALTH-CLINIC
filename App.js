@@ -2157,6 +2157,31 @@ export default function App() {
   const aboutChipBarHeight = useRef(44); // Will be measured dynamically
   const aboutSectionOffsets = useRef({ 'our-story': 0, 'our-team': 0, 'patient-stories': 0, 'blog-news': 0, 'vision-mission': 0 });
 
+  useEffect(() => {
+    sectionOffsets.current = {
+      'functional-medicine': 0,
+      'metabolic-health': 0,
+      'chronic-disease': 0,
+      nutrition: 0,
+      diagnostics: 0,
+      pharmacy: 0,
+    };
+    servicesChipBarHeight.current = 0;
+    isServicesScrollingProgrammatically.current = false;
+    setActiveServiceSection('functional-medicine');
+
+    aboutSectionOffsets.current = {
+      'our-story': 0,
+      'our-team': 0,
+      'patient-stories': 0,
+      'blog-news': 0,
+      'vision-mission': 0,
+    };
+    aboutChipBarHeight.current = 0;
+    isAboutScrollingProgrammatically.current = false;
+    setActiveAboutSection('our-story');
+  }, [currentPage]);
+
   const dropdownAnim = useRef(new Animated.Value(0)).current;
 
   const arrowRotation = useRef(new Animated.Value(0)).current;
