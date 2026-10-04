@@ -2139,7 +2139,7 @@ export default function App() {
 
   const servicesScrollViewRef = useRef(null);
   const isServicesScrollingProgrammatically = useRef(false);
-  const servicesChipBarHeight = useRef(116); // Will be measured dynamically
+  const servicesChipBarHeight = useRef(44); // Will be measured dynamically
   const sectionOffsets = useRef({ 'functional-medicine': 0, 'metabolic-health': 0, 'chronic-disease': 0, 'nutrition': 0, 'diagnostics': 0, 'pharmacy': 0 });
   const sectionRefs = useRef({
     'functional-medicine': null,
@@ -2154,7 +2154,7 @@ export default function App() {
 
   const aboutScrollViewRef = useRef(null);
   const isAboutScrollingProgrammatically = useRef(false);
-  const aboutChipBarHeight = useRef(116); // Will be measured dynamically
+  const aboutChipBarHeight = useRef(44); // Will be measured dynamically
   const aboutSectionOffsets = useRef({ 'our-story': 0, 'our-team': 0, 'patient-stories': 0, 'blog-news': 0, 'vision-mission': 0 });
 
   const dropdownAnim = useRef(new Animated.Value(0)).current;
@@ -8818,9 +8818,10 @@ const fetchFooterData = async () => {
                 borderBottomWidth: 1,
                 borderBottomColor: isUserDarkMode ? '#333' : '#d4e2cf',
                 flexShrink: 0,
-                height: 'auto',
+                flexGrow: 0,
+                height: 44,
               }}
-              contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 4, gap: 6, flexDirection: 'row', alignItems: 'center', height: 'auto' }}
+              contentContainerStyle={{ paddingHorizontal: 12, gap: 6, flexDirection: 'row', alignItems: 'center', height: 44 }}
             >
               {[
                 { key: 'functional-medicine', label: 'Functional Medicine' },
@@ -8855,8 +8856,8 @@ const fetchFooterData = async () => {
                     }, 500);
                   }}
                   style={{
-                    paddingHorizontal: 14,
-                    paddingVertical: 4,
+                    paddingHorizontal: 12,
+                    paddingVertical: 3,
                     borderRadius: 20,
                     backgroundColor: activeServiceSection === item.key
                       ? (isUserDarkMode ? '#008000' : '#296416')
@@ -8868,7 +8869,7 @@ const fetchFooterData = async () => {
                   }}
                 >
                   <Text style={{
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: activeServiceSection === item.key ? '700' : '500',
                     color: activeServiceSection === item.key
                       ? '#fff'
@@ -9272,9 +9273,10 @@ const fetchFooterData = async () => {
                 borderBottomWidth: 1,
                 borderBottomColor: isUserDarkMode ? '#333' : '#d4e2cf',
                 flexShrink: 0,
-                height: 'auto',
+                flexGrow: 0,
+                height: 44,
               }}
-              contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 4, gap: 6, flexDirection: 'row', alignItems: 'center', height: 'auto' }}
+              contentContainerStyle={{ paddingHorizontal: 12, gap: 6, flexDirection: 'row', alignItems: 'center', height: 44 }}
             >
               {[
                 { key: 'our-story',       label: 'Our Story' },
@@ -9308,8 +9310,8 @@ const fetchFooterData = async () => {
                     }, 500);
                   }}
                   style={{
-                    paddingHorizontal: 14,
-                    paddingVertical: 4,
+                    paddingHorizontal: 12,
+                    paddingVertical: 3,
                     borderRadius: 20,
                     backgroundColor: activeAboutSection === item.key
                       ? (isUserDarkMode ? '#008000' : '#296416')
@@ -9321,7 +9323,7 @@ const fetchFooterData = async () => {
                   }}
                 >
                   <Text style={{
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: activeAboutSection === item.key ? '700' : '500',
                     color: activeAboutSection === item.key
                       ? '#fff'
@@ -16299,4 +16301,3 @@ const styles = StyleSheet.create({
   },
 
 });
-
