@@ -294,7 +294,7 @@ const HomeHero = ({
             )}
 
             {/* CTA Buttons inside blur band */}
-            <View style={styles.buttonsContainer}>
+            <View style={[styles.buttonsContainer, !isPhone && styles.buttonsContainerDesktop]}>
               {content.primary_button_text && (
                 <Pressable
                   style={({ pressed }) => [
@@ -384,7 +384,7 @@ const HomeHero = ({
             )}
 
             {/* CTA Buttons inside blur band */}
-            <View style={styles.buttonsContainer}>
+            <View style={[styles.buttonsContainer, !isPhone && styles.buttonsContainerDesktop]}>
               {content.primary_button_text && (
                 <Pressable
                   style={({ pressed }) => [
@@ -531,6 +531,9 @@ const styles = StyleSheet.create({
     gap: 12,
     width: '100%',
     justifyContent: 'space-between',
+  },
+  buttonsContainerDesktop: {
+    justifyContent: 'flex-end',
   },
   primaryButton: {
     backgroundColor: '#296416',
