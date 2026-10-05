@@ -9998,6 +9998,11 @@ const fetchFooterData = async () => {
 
 
 
+        <View style={{
+          width: width >= 980 ? desktopProductGridWidth : '100%',
+          alignSelf: 'center',
+        }}>
+
         {(() => {
 
           const chips = categoryChips.map((cat) => {
@@ -10056,7 +10061,7 @@ const fetchFooterData = async () => {
 
             return (
 
-              <View style={[styles.chipsScrollContent, { flexWrap: 'wrap', paddingBottom: 12, marginTop: 8, width: '100%', justifyContent: 'flex-start' }]}>
+              <View style={[styles.chipsScrollContent, { flexWrap: 'wrap', paddingHorizontal: PADDING, paddingBottom: 12, marginTop: 8, width: '100%', justifyContent: 'flex-start' }]}>
 
                 {chips}
 
@@ -10076,7 +10081,7 @@ const fetchFooterData = async () => {
 
               showsHorizontalScrollIndicator={false}
 
-              contentContainerStyle={styles.chipsScrollContent}
+              contentContainerStyle={[styles.chipsScrollContent, { paddingHorizontal: PADDING }]}
 
               style={styles.chipsScrollView}
 
@@ -10093,15 +10098,15 @@ const fetchFooterData = async () => {
 
 
         <View style={[styles.searchWrap, {
-          width: width >= 980 ? desktopProductGridWidth : '100%',
-          alignSelf: width >= 980 ? 'center' : 'stretch',
+          width: '100%',
           paddingHorizontal: width >= 980 ? PADDING : 16,
+          transform: width < 980 ? [{ translateX: PADDING - 16 }] : undefined,
           backgroundColor: isUserDarkMode ? darkPalette.surface : undefined,
           borderColor: isUserDarkMode ? '#333' : undefined
         }]}>
           <View style={[
             { flexDirection: 'row', alignItems: 'center', gap: 8 },
-            width >= 980 && { width: 480 - (PADDING * 2) },
+            width >= 980 && { width: Math.min(480, desktopProductGridWidth - (PADDING * 2)) },
           ]}>
 
             <TextInput
@@ -10161,8 +10166,7 @@ const fetchFooterData = async () => {
 
 
         <View style={[styles.productGrid, {
-          width: width >= 980 ? desktopProductGridWidth : '100%',
-          alignSelf: 'center',
+          width: '100%',
           justifyContent: 'center',
           paddingHorizontal: PADDING,
           rowGap: GAP,
@@ -10215,6 +10219,8 @@ const fetchFooterData = async () => {
             </View>
 
           ) : null}
+
+        </View>
 
         </View>
 
