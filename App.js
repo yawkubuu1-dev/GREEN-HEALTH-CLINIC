@@ -11843,7 +11843,7 @@ const fetchFooterData = async () => {
 
               <Text style={{ fontFamily: 'Georgia', fontSize: 32, fontWeight: '700', color: palette.oxblood, marginLeft: 36, lineHeight: 34 }}>
 
-                Prolyn Wear
+                Green Health Herbal Clinic
 
               </Text>
 
