@@ -2182,6 +2182,43 @@ export default function App() {
 
   const [cartItems, setCartItems] = useState([]);
 
+  const homeScrollYRef = useRef(0);
+  const consultationStickyMetricsRef = useRef({
+    heroTopY: null,
+    glassTopY: null,
+    cardHeight: null,
+  });
+  const [consultationStickyReleased, setConsultationStickyReleased] = useState(false);
+
+  const updateConsultationStickyPosition = (scrollY = homeScrollYRef.current) => {
+    const { heroTopY, glassTopY, cardHeight } = consultationStickyMetricsRef.current;
+    if (heroTopY === null || glassTopY === null || cardHeight === null) return;
+
+    const glassSectionTopY = heroTopY + glassTopY;
+    const released = scrollY + 76 + cardHeight >= glassSectionTopY;
+    setConsultationStickyReleased((current) => current === released ? current : released);
+  };
+
+  const handleHomeScroll = (event) => {
+    homeScrollYRef.current = event.nativeEvent.contentOffset.y;
+    updateConsultationStickyPosition(homeScrollYRef.current);
+  };
+
+  const handleHeroLayout = (heroTopY) => {
+    consultationStickyMetricsRef.current.heroTopY = heroTopY;
+    updateConsultationStickyPosition();
+  };
+
+  const handleGlassmorphismLayout = (glassTopY) => {
+    consultationStickyMetricsRef.current.glassTopY = glassTopY;
+    updateConsultationStickyPosition();
+  };
+
+  const handleConsultationCardLayout = (cardHeight) => {
+    consultationStickyMetricsRef.current.cardHeight = cardHeight;
+    updateConsultationStickyPosition();
+  };
+
   // Cart Bottom Sheet State & Animation
 
   const [cartModalVisible, setCartModalVisible] = useState(false);
@@ -2363,6 +2400,15 @@ export default function App() {
   const setCurrentPage = (nextPage) => {
     if (nextPage !== currentPage) {
       resetSectionNavigation();
+    }
+    if (nextPage === 'home' && currentPage !== 'home') {
+      homeScrollYRef.current = 0;
+      consultationStickyMetricsRef.current = {
+        heroTopY: null,
+        glassTopY: null,
+        cardHeight: null,
+      };
+      setConsultationStickyReleased(false);
     }
     setCurrentPageState(nextPage);
   };
@@ -8834,23 +8880,37 @@ const fetchFooterData = async () => {
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={true} // Show scrollbars on all platforms
             style={Platform.OS === 'web' ? styles.webScrollView : undefined}
+            onScroll={handleHomeScroll}
+            scrollEventThrottle={16}
             bounces={true} // Enable bounces for natural mobile feel
             scrollEnabled={true} // Explicitly enable scrolling
           >
-            <HomeHero 
-              isPhone={isPhoneScreen} 
-              onNavigate={setCurrentPage}
-              onOpenConsultation={() => setConsultationCardVisible(true)}
-              stickyOverlay={
+            <View style={{ position: 'relative' }}>
+              <HomeHero
+                isPhone={isPhoneScreen}
+                onNavigate={setCurrentPage}
+                onOpenConsultation={() => setConsultationCardVisible(true)}
+                onHeroLayout={handleHeroLayout}
+                onGlassmorphismLayout={handleGlassmorphismLayout}
+              />
+              {Platform.OS === 'web' && !isPhoneScreen && (
                 <ConsultationCard
                   isPhone={false}
                   visible={true}
-                  onClose={() => setConsultationCardVisible(false)}
                   useSticky={true}
                   stickyTop={76}
+                  stickyReleased={consultationStickyReleased}
+                  stickyBoundaryTop={
+                    consultationStickyMetricsRef.current.glassTopY !== null &&
+                    consultationStickyMetricsRef.current.cardHeight !== null
+                      ? consultationStickyMetricsRef.current.glassTopY -
+                        consultationStickyMetricsRef.current.cardHeight
+                      : 0
+                  }
+                  onStickyCardLayout={handleConsultationCardLayout}
                 />
-              }
-            />
+              )}
+            </View>
             
             <HealthPrioritySection />
             

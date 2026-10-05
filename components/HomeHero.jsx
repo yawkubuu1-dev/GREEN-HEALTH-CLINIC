@@ -17,13 +17,18 @@ import { supabase } from '../lib/supabase';
  * Fetches content from home_hero table (NOT hero_slides/hero_settings)
  * Single image only - no rotation, no videos, no cycles
  */
-const HomeHero = ({ isPhone = false, onNavigate, onOpenConsultation, stickyOverlay = null }) => {
+const HomeHero = ({
+  isPhone = false,
+  onNavigate,
+  onOpenConsultation,
+  onHeroLayout,
+  onGlassmorphismLayout,
+}) => {
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [imageError, setImageError] = useState(false);
   const [aspectRatio, setAspectRatio] = useState(21 / 9); // Default wide banner
-  const [glassmorphismSectionTopY, setGlassmorphismSectionTopY] = useState(null);
 
   // Entrance animations
   const imageOpacity = useRef(new Animated.Value(0)).current;
@@ -143,7 +148,10 @@ const HomeHero = ({ isPhone = false, onNavigate, onOpenConsultation, stickyOverl
   // Loading state
   if (loading) {
     return (
-      <View style={[styles.heroFallback, { aspectRatio: DEFAULT_ASPECT_RATIO }]}>
+      <View
+        style={[styles.heroFallback, { aspectRatio: DEFAULT_ASPECT_RATIO }]}
+        onLayout={(event) => onHeroLayout?.(event.nativeEvent.layout.y)}
+      >
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
@@ -154,7 +162,10 @@ const HomeHero = ({ isPhone = false, onNavigate, onOpenConsultation, stickyOverl
   // Error state
   if (loadError) {
     return (
-      <View style={[styles.heroFallback, { aspectRatio: DEFAULT_ASPECT_RATIO }]}>
+      <View
+        style={[styles.heroFallback, { aspectRatio: DEFAULT_ASPECT_RATIO }]}
+        onLayout={(event) => onHeroLayout?.(event.nativeEvent.layout.y)}
+      >
         <View style={styles.errorContainer}>
           <Text style={styles.errorTitle}>Failed to load homepage hero</Text>
           <Text style={styles.errorMessage}>{loadError}</Text>
@@ -166,7 +177,10 @@ const HomeHero = ({ isPhone = false, onNavigate, onOpenConsultation, stickyOverl
   // No content state
   if (!content) {
     return (
-      <View style={[styles.heroFallback, { aspectRatio: DEFAULT_ASPECT_RATIO }]}>
+      <View
+        style={[styles.heroFallback, { aspectRatio: DEFAULT_ASPECT_RATIO }]}
+        onLayout={(event) => onHeroLayout?.(event.nativeEvent.layout.y)}
+      >
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>No hero content</Text>
         </View>
@@ -177,6 +191,7 @@ const HomeHero = ({ isPhone = false, onNavigate, onOpenConsultation, stickyOverl
   return (
     <View 
       style={[styles.heroFrame, { aspectRatio }]}
+      onLayout={(event) => onHeroLayout?.(event.nativeEvent.layout.y)}
     >
       <View style={styles.container}>
       {/* Background Image */}
@@ -251,10 +266,7 @@ const HomeHero = ({ isPhone = false, onNavigate, onOpenConsultation, stickyOverl
             },
           ]}
           onLayout={(event) => {
-            const topY = event.nativeEvent.layout.y;
-            setGlassmorphismSectionTopY((currentTopY) => (
-              currentTopY === topY ? currentTopY : topY
-            ));
+            onGlassmorphismLayout?.(event.nativeEvent.layout.y);
           }}
         >
           <View style={styles.blurBandWeb}>
@@ -423,17 +435,6 @@ const HomeHero = ({ isPhone = false, onNavigate, onOpenConsultation, stickyOverl
         </Animated.View>
       )}
       </View>
-      {Platform.OS === 'web' && !isPhone && stickyOverlay && glassmorphismSectionTopY !== null ? (
-        <View
-          pointerEvents="box-none"
-          style={[
-            styles.stickyOverlayBoundary,
-            { height: glassmorphismSectionTopY },
-          ]}
-        >
-          {stickyOverlay}
-        </View>
-      ) : null}
     </View>
   );
 };
@@ -457,15 +458,6 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#1b1b1b',
     overflow: 'hidden',
-  },
-  stickyOverlayBoundary: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    overflow: 'visible',
-    alignItems: 'center',
-    zIndex: 3,
   },
   image: {
     ...StyleSheet.absoluteFillObject,

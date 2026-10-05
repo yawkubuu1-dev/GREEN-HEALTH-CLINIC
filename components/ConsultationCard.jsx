@@ -25,7 +25,17 @@ import { consultationWidgetService, consultationSubmissionService, socialLinksSe
  * On desktop/tablet: always visible, sticky
  * Wired to Supabase for both content and form submissions
  */
-export default function ConsultationCard({ isPhone = false, visible = true, onClose, productId, useSticky = false, stickyTop = 76 }) {
+export default function ConsultationCard({
+  isPhone = false,
+  visible = true,
+  onClose,
+  productId,
+  useSticky = false,
+  stickyTop = 76,
+  stickyReleased = false,
+  stickyBoundaryTop = 0,
+  onStickyCardLayout,
+}) {
   const [fullName, setFullName] = useState('');
   const [medicalConcern, setMedicalConcern] = useState('');
   const [errors, setErrors] = useState({});
@@ -379,13 +389,20 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
       {Platform.OS === 'web' ? (
         <Animated.View
           style={[
-            isMobile ? styles.container : (useSticky ? styles.containerDesktopSticky : styles.containerDesktop),
-            useSticky && { top: stickyTop }, // Apply custom sticky top if provided
+            isMobile
+              ? styles.container
+              : useSticky
+                ? (stickyReleased ? styles.containerDesktopBoundary : styles.containerDesktopFixed)
+                : styles.containerDesktop,
+            useSticky && {
+              top: stickyReleased ? stickyBoundaryTop : stickyTop,
+            },
             {
               opacity: isMobile ? opacityAnim : 1, // Only animate opacity on mobile
               pointerEvents: visible ? 'auto' : 'none', // Always prevent blocking when hidden
             },
           ]}
+          onLayout={useSticky ? (event) => onStickyCardLayout?.(event.nativeEvent.layout.height) : undefined}
         >
           {isMobile ? (
             <Animated.View
@@ -490,11 +507,20 @@ const styles = StyleSheet.create({
     width: 380,
     zIndex: 1000, // Lower z-index for desktop
   },
-  containerDesktopSticky: {
-    // Desktop: Sticky positioning within wrapper
-    position: 'sticky',
-    top: 76, // Default sticky top, can be overridden via prop
-    alignSelf: 'center',
+  containerDesktopFixed: {
+    position: 'fixed',
+    left: '50%',
+    transform: [{ translateX: '-50%' }],
+    zIndex: 1000,
+    width: 380,
+    maxWidth: '100%',
+    pointerEvents: 'auto',
+  },
+  containerDesktopBoundary: {
+    position: 'absolute',
+    left: '50%',
+    transform: [{ translateX: '-50%' }],
+    zIndex: 3,
     width: 380,
     maxWidth: '100%',
     pointerEvents: 'auto',
