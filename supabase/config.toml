@@ -1,0 +1,2 @@
+[functions.gemini-consultation-faq-test]
+verify_jwt = false
