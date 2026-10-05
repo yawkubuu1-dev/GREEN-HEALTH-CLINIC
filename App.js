@@ -11842,9 +11842,7 @@ const fetchFooterData = async () => {
               </Pressable>
 
               <Text style={{ fontFamily: 'Georgia', fontSize: 32, fontWeight: '700', color: palette.oxblood, marginLeft: 36, lineHeight: 34 }}>
-
-                Green Health Herbal Clinic
-
+                Green Health <Text style={{ color: '#18477a' }}>Clinic</Text>
               </Text>
 
             </View>
