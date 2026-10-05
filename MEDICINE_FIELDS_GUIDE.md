@@ -34,6 +34,12 @@ The `form` field accepts only these values:
 
 ## UI Display Rules
 
+### Admin Product Form
+- Product pricing is entered as one **price per pack**, not clothing-size prices.
+- Medicine form is selected from the supported `form` values listed above.
+- Available pack sizes are comma-separated in the admin form and saved to `pack_sizes`.
+- The form also captures dosage strength, category, stock, prescription status, active ingredient, manufacturer, expiry date, storage instructions, side effects, contraindications, featured status, description, and image URL.
+
 ### Product Card
 - **Displays:** dosage_strength, form, requires_prescription (badge)
 - **Example:** "500mg • Tablet" with yellow ℞ badge if prescription required

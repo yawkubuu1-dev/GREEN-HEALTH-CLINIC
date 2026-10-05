@@ -93,6 +93,8 @@ const palette = {
 
 const DEFAULT_ADMIN_AVATAR = require('./assets/medical_team_neat_hair.png');
 
+const MEDICINE_FORMS = ['tablet', 'capsule', 'sachet', 'syrup', 'injection', 'cream', 'drops', 'inhaler', 'powder', 'other'];
+
 
 
 const darkPalette = {
@@ -358,6 +360,7 @@ const mapProductRowToCard = (row, catNameToImageMap = {}, catIdToNameMap = {}) =
     hasWeights: hasSizes, // Keep for backward compatibility
 
     price: basePrice,
+    price_per_pack: Number(row.price_per_pack ?? basePrice),
 
     tag: row.promo_label ?? row.tag ?? row.category_name ?? row.metadata?.tag ?? row.metadata?.promo_label ?? null,
 
@@ -2533,22 +2536,19 @@ export default function App() {
 
     name: '',
 
-    price_s: '',
-
-    price_m: '',
-
-    price_l: '',
-
-    price_xl: '',
-
-    price_xxl: '',
-
     price: '',
 
-    has_sizes: true,
-
-    has_weights: true, // Keep for backward compatibility
-
+    form: 'tablet',
+    dosage_strength: '',
+    pack_sizes: '',
+    requires_prescription: false,
+    active_ingredient: '',
+    manufacturer: '',
+    storage_info: '',
+    side_effects: '',
+    contraindications: '',
+    expiry_date: '',
+    is_featured: false,
     tag: '',
 
     category_name: '',
@@ -4361,7 +4361,7 @@ const fetchFooterData = async () => {
 
   const adminAddProduct = async () => {
 
-    if (!newProduct.name) {
+    if (!newProduct.name.trim()) {
 
       alert('Please enter a product name.');
 
@@ -4369,60 +4369,19 @@ const fetchFooterData = async () => {
 
     }
 
-
-
-    let pS = null, pM = null, pL = null, pXL = null, pXXL = null, pUnit = null;
-
-
-
-    if (newProduct.has_sizes) {
-
-      if (!newProduct.price_s || !newProduct.price_m || !newProduct.price_l || !newProduct.price_xl || !newProduct.price_xxl) {
-
-        alert('Please enter prices for all size variants (S, M, L, XL, XXL).');
-
-        return;
-
-      }
-
-      pS = parseFloat(newProduct.price_s);
-
-      pM = parseFloat(newProduct.price_m);
-
-      pL = parseFloat(newProduct.price_l);
-
-      pXL = parseFloat(newProduct.price_xl);
-
-      pXXL = parseFloat(newProduct.price_xxl);
-
-      if (isNaN(pS) || isNaN(pM) || isNaN(pL) || isNaN(pXL) || isNaN(pXXL)) {
-
-        alert('All prices must be valid numbers.');
-
-        return;
-
-      }
-
-    } else {
-
-      if (!newProduct.price) {
-
-        alert('Please enter a unit price.');
-
-        return;
-
-      }
-
-      pUnit = parseFloat(newProduct.price);
-
-      if (isNaN(pUnit)) {
-
-        alert('Price must be a valid number.');
-
-        return;
-
-      }
-
+    const price = Number(newProduct.price);
+    const stockQuantity = Number(newProduct.stock_quantity || 0);
+    if (!newProduct.price.trim() || !Number.isFinite(price) || price <= 0) {
+      alert('Enter a valid price per pack.');
+      return;
+    }
+    if (!Number.isInteger(stockQuantity) || stockQuantity < 0) {
+      alert('Enter a valid whole-number stock quantity.');
+      return;
+    }
+    if (newProduct.expiry_date && !/^\d{4}-\d{2}-\d{2}$/.test(newProduct.expiry_date.trim())) {
+      alert('Enter the expiry date as YYYY-MM-DD.');
+      return;
     }
 
 
@@ -4430,8 +4389,11 @@ const fetchFooterData = async () => {
     // Find category ID from name
 
     const catNameInput = newProduct.category_name.trim();
-
-    const resolvedCategoryId = catNameToIdMap[catNameInput.toLowerCase()] || catNameInput || null;
+    const resolvedCategoryId = catNameToIdMap[catNameInput.toLowerCase()];
+    if (!resolvedCategoryId) {
+      alert('Select a medicine category already available on the storefront.');
+      return;
+    }
 
 
 
@@ -4439,21 +4401,19 @@ const fetchFooterData = async () => {
 
       name: newProduct.name.trim(),
 
-      price_s: pS,
-
-      price_m: pM,
-
-      price_l: pL,
-
-      price_xl: pXL,
-
-      price_xxl: pXXL,
-
-      price: pUnit,
-
-      has_sizes: newProduct.has_sizes,
-
-      has_weights: newProduct.has_sizes, // Keep for backward compatibility
+      price,
+      price_per_pack: price,
+      form: newProduct.form,
+      dosage_strength: newProduct.dosage_strength.trim() || null,
+      pack_sizes: newProduct.pack_sizes.split(',').map((size) => size.trim()).filter(Boolean),
+      requires_prescription: newProduct.requires_prescription,
+      active_ingredient: newProduct.active_ingredient.trim() || null,
+      manufacturer: newProduct.manufacturer.trim() || null,
+      storage_info: newProduct.storage_info.trim() || null,
+      side_effects: newProduct.side_effects.trim() || null,
+      contraindications: newProduct.contraindications.trim() || null,
+      expiry_date: newProduct.expiry_date.trim() || null,
+      is_featured: newProduct.is_featured,
 
       tag: newProduct.tag.trim() || null,
 
@@ -4461,9 +4421,9 @@ const fetchFooterData = async () => {
 
       description: newProduct.description.trim() || '',
 
-      url: newProduct.image_url.trim() || null,
+      image_url: newProduct.image_url.trim() || null,
 
-      stock_quantity: parseInt(newProduct.stock_quantity) || 0,
+      stock_quantity: stockQuantity,
 
     };
 
@@ -4479,7 +4439,7 @@ const fetchFooterData = async () => {
 
       setAddProductModalVisible(false);
 
-      setNewProduct({ name: '', price_s: '', price_m: '', price_l: '', price_xl: '', price_xxl: '', price: '', has_sizes: true, has_weights: true, tag: '', category_name: '', description: '', image_url: '', stock_quantity: '' });
+      setNewProduct({ name: '', price: '', form: 'tablet', dosage_strength: '', pack_sizes: '', requires_prescription: false, active_ingredient: '', manufacturer: '', storage_info: '', side_effects: '', contraindications: '', expiry_date: '', is_featured: false, tag: '', category_name: '', description: '', image_url: '', stock_quantity: '' });
 
       loadSupabaseData();
 
@@ -4495,21 +4455,20 @@ const fetchFooterData = async () => {
 
         name: productRow.name,
 
-        price_s: productRow.price_s,
-
-        price_m: productRow.price_m,
-
-        price_l: productRow.price_l,
-
-        price_xl: productRow.price_xl,
-
-        price_xxl: productRow.price_xxl,
-
         price: productRow.price,
 
-        hasSizes: productRow.has_sizes,
-
-        hasWeights: productRow.has_sizes,
+        price_per_pack: productRow.price_per_pack,
+        form: productRow.form,
+        dosage_strength: productRow.dosage_strength,
+        pack_sizes: productRow.pack_sizes,
+        requires_prescription: productRow.requires_prescription,
+        active_ingredient: productRow.active_ingredient,
+        manufacturer: productRow.manufacturer,
+        storage_info: productRow.storage_info,
+        side_effects: productRow.side_effects,
+        contraindications: productRow.contraindications,
+        expiry_date: productRow.expiry_date,
+        is_featured: productRow.is_featured,
 
         tag: productRow.tag,
 
@@ -4518,6 +4477,7 @@ const fetchFooterData = async () => {
         description: productRow.description,
 
         image: productRow.image_url || DEFAULT_CATEGORY_IMAGE,
+        stock_quantity: productRow.stock_quantity,
 
         position: 0,
 
@@ -4529,7 +4489,7 @@ const fetchFooterData = async () => {
 
       setAddProductModalVisible(false);
 
-      setNewProduct({ name: '', price_s: '', price_m: '', price_l: '', price_xl: '', price_xxl: '', price: '', has_sizes: true, has_weights: true, tag: '', category_name: '', description: '', image_url: '', stock_quantity: '' });
+      setNewProduct({ name: '', price: '', form: 'tablet', dosage_strength: '', pack_sizes: '', requires_prescription: false, active_ingredient: '', manufacturer: '', storage_info: '', side_effects: '', contraindications: '', expiry_date: '', is_featured: false, tag: '', category_name: '', description: '', image_url: '', stock_quantity: '' });
 
     }
 
@@ -4573,7 +4533,7 @@ const fetchFooterData = async () => {
 
   const adminEditProduct = async () => {
 
-    if (!editingProduct.name) {
+    if (!editingProduct.name?.trim()) {
 
       alert('Please enter a product name.');
 
@@ -4581,61 +4541,23 @@ const fetchFooterData = async () => {
 
     }
 
-
-
-    let pS = null, pM = null, pL = null, pXL = null, pXXL = null, pUnit = null;
-
-
-
-    if (editingProduct.hasSizes || editingProduct.hasWeights) {
-
-      if (!editingProduct.price_s || !editingProduct.price_m || !editingProduct.price_l || !editingProduct.price_xl || !editingProduct.price_xxl) {
-
-        alert('Please enter prices for all size variants (S, M, L, XL, XXL).');
-
-        return;
-
-      }
-
-      pS = parseFloat(editingProduct.price_s);
-
-      pM = parseFloat(editingProduct.price_m);
-
-      pL = parseFloat(editingProduct.price_l);
-
-      pXL = parseFloat(editingProduct.price_xl);
-
-      pXXL = parseFloat(editingProduct.price_xxl);
-
-      if (isNaN(pS) || isNaN(pM) || isNaN(pL) || isNaN(pXL) || isNaN(pXXL)) {
-
-        alert('All prices must be valid numbers.');
-
-        return;
-
-      }
-
-    } else {
-
-      if (!editingProduct.price) {
-
-        alert('Please enter a unit price.');
-
-        return;
-
-      }
-
-      pUnit = parseFloat(editingProduct.price);
-
-      if (isNaN(pUnit)) {
-
-        alert('Price must be a valid number.');
-
-        return;
-
-      }
-
+    const price = Number(editingProduct.price);
+    const stockQuantity = Number(editingProduct.stock_quantity || 0);
+    if (!String(editingProduct.price ?? '').trim() || !Number.isFinite(price) || price <= 0) {
+      alert('Enter a valid price per pack.');
+      return;
     }
+    if (!Number.isInteger(stockQuantity) || stockQuantity < 0) {
+      alert('Enter a valid whole-number stock quantity.');
+      return;
+    }
+    if (editingProduct.expiry_date && !/^\d{4}-\d{2}-\d{2}$/.test(editingProduct.expiry_date.trim())) {
+      alert('Enter the expiry date as YYYY-MM-DD.');
+      return;
+    }
+    const packSizes = Array.isArray(editingProduct.pack_sizes)
+      ? editingProduct.pack_sizes
+      : String(editingProduct.pack_sizes || '').split(',').map((size) => size.trim()).filter(Boolean);
 
 
 
@@ -4649,21 +4571,11 @@ const fetchFooterData = async () => {
 
           ...editingProduct, 
 
-          price_s: pS, 
-
-          price_m: pM, 
-
-          price_l: pL,
-
-          price_xl: pXL,
-
-          price_xxl: pXXL,
-
-          price: pUnit,
-
-          hasSizes: editingProduct.hasSizes || editingProduct.hasWeights,
-
-          hasWeights: editingProduct.hasSizes || editingProduct.hasWeights
+          price,
+          price_per_pack: price,
+          pack_sizes: packSizes,
+          stock_quantity: stockQuantity,
+          image: editingProduct.image?.trim() || editingProduct.image,
 
         } : p))
 
@@ -4681,9 +4593,12 @@ const fetchFooterData = async () => {
 
     // Find category ID from name
 
-    const catNameInput = (editingProduct.categoryLabel?.trim() || editingProduct.tag?.trim() || '');
-
-    const resolvedCategoryId = catNameToIdMap[catNameInput.toLowerCase()] || catNameInput || null;
+    const catNameInput = editingProduct.categoryLabel?.trim() || '';
+    const resolvedCategoryId = catNameToIdMap[catNameInput.toLowerCase()];
+    if (!resolvedCategoryId) {
+      alert('Select a medicine category already available on the storefront.');
+      return;
+    }
 
 
 
@@ -4691,21 +4606,19 @@ const fetchFooterData = async () => {
 
       name: editingProduct.name.trim(),
 
-      price_s: pS,
-
-      price_m: pM,
-
-      price_l: pL,
-
-      price_xl: pXL,
-
-      price_xxl: pXXL,
-
-      price: pUnit,
-
-      has_sizes: editingProduct.hasSizes || editingProduct.hasWeights,
-
-      has_weights: editingProduct.hasSizes || editingProduct.hasWeights,
+      price,
+      price_per_pack: price,
+      form: editingProduct.form || 'tablet',
+      dosage_strength: editingProduct.dosage_strength?.trim() || null,
+      pack_sizes: packSizes,
+      requires_prescription: !!editingProduct.requires_prescription,
+      active_ingredient: editingProduct.active_ingredient?.trim() || null,
+      manufacturer: editingProduct.manufacturer?.trim() || null,
+      storage_info: editingProduct.storage_info?.trim() || null,
+      side_effects: editingProduct.side_effects?.trim() || null,
+      contraindications: editingProduct.contraindications?.trim() || null,
+      expiry_date: editingProduct.expiry_date?.trim() || null,
+      is_featured: !!editingProduct.is_featured,
 
       tag: editingProduct.tag?.trim() || null,
 
@@ -4713,9 +4626,9 @@ const fetchFooterData = async () => {
 
       description: editingProduct.description?.trim() || '',
 
-      url: editingProduct.image?.trim() || null,
+      image_url: editingProduct.image?.trim() || null,
 
-      stock_quantity: parseInt(editingProduct.stock_quantity) || 0,
+      stock_quantity: stockQuantity,
 
     };
 
@@ -4729,29 +4642,16 @@ const fetchFooterData = async () => {
 
       name: editingProduct.name.trim(),
 
-      price_s: pS ?? editingProduct.price_s,
-
-      price_m: pM ?? editingProduct.price_m,
-
-      price_l: pL ?? editingProduct.price_l,
-
-      price_xl: pXL ?? editingProduct.price_xl,
-
-      price_xxl: pXXL ?? editingProduct.price_xxl,
-
-      price: pUnit ?? editingProduct.price,
-
-      hasSizes: editingProduct.hasSizes || editingProduct.hasWeights,
-
-      hasWeights: editingProduct.hasSizes || editingProduct.hasWeights,
+      price,
+      price_per_pack: price,
+      pack_sizes: packSizes,
+      stock_quantity: stockQuantity,
 
       tag: editingProduct.tag?.trim() || null,
 
       description: editingProduct.description?.trim() || '',
 
       image:      editingProduct.image?.trim() || editingProduct.image,
-
-      stock_quantity: parseInt(editingProduct.stock_quantity) || 0,
 
     };
 
@@ -6929,7 +6829,7 @@ const fetchFooterData = async () => {
 
                   <Text style={[styles.adminNewTableCol, {flex: 3}]}>PRODUCT</Text>
 
-                  <Text style={[styles.adminNewTableCol, {flex: 1}]}>CURRENT STOCK</Text>
+                  <Text style={[styles.adminNewTableCol, {flex: 1}]}>PACKS / UNITS IN STOCK</Text>
 
                   <Text style={[styles.adminNewTableCol, {flex: 1}]}>STATUS</Text>
 
@@ -6965,7 +6865,7 @@ const fetchFooterData = async () => {
 
                           <View style={{flex: 1, justifyContent: 'center'}}>
 
-                            <Text style={[styles.adminNewTableText, { color: adm.sub }]}>{stockValue}kg</Text>
+                            <Text style={[styles.adminNewTableText, { color: adm.sub }]}>{stockValue}</Text>
 
                           </View>
 
@@ -6996,25 +6896,19 @@ const fetchFooterData = async () => {
                           setEditingProduct({
 
                             id: product.id,
-
                             name: product.name,
-
-                            price_s: String(product.price_s ?? '0'),
-
-                            price_m: String(product.price_m ?? '0'),
-
-                            price_l: String(product.price_l ?? '0'),
-
-                            price_xl: String(product.price_xl ?? '0'),
-
-                            price_xxl: String(product.price_xxl ?? '0'),
-
-                            price: String(product.price ?? ''),
-
-                            hasSizes: product.hasSizes ?? product.hasWeights ?? true,
-
-                            hasWeights: product.hasSizes ?? product.hasWeights ?? true,
-
+                            price: String(product.price_per_pack ?? product.price ?? ''),
+                            form: product.form || 'tablet',
+                            dosage_strength: product.dosage_strength || '',
+                            pack_sizes: Array.isArray(product.pack_sizes) ? product.pack_sizes.join(', ') : '',
+                            requires_prescription: !!product.requires_prescription,
+                            active_ingredient: product.active_ingredient || '',
+                            manufacturer: product.manufacturer || '',
+                            storage_info: product.storage_info || '',
+                            side_effects: product.side_effects || '',
+                            contraindications: product.contraindications || '',
+                            expiry_date: product.expiry_date || '',
+                            is_featured: !!product.is_featured,
                             tag: product.tag || '',
 
                             categoryLabel: product.categoryLabel || '',
@@ -11130,23 +11024,25 @@ const fetchFooterData = async () => {
 
       <Modal visible={addProductModalVisible} animationType="fade" transparent={true} onRequestClose={() => setAddProductModalVisible(false)}>
 
-        <View style={{ flex: 1, backgroundColor: 'rgba(27,28,28,0.6)', justifyContent: 'center', padding: 16 }}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(27,28,28,0.58)', justifyContent: 'center', alignItems: 'center', padding: 16 }}>
 
           <View style={{ 
 
-            backgroundColor: palette.background, 
+            backgroundColor: palette.surface,
 
-            borderWidth: 1, 
+            borderWidth: 1,
 
-            borderColor: palette.oxblood, 
-
-            padding: 20,
+            borderColor: palette.border,
 
             width: '100%',
 
-            maxWidth: 580,
+            maxWidth: 620,
 
+            maxHeight: '90%',
             alignSelf: 'center',
+
+            borderRadius: 4,
+            overflow: 'hidden',
 
             shadowColor: '#000',
 
@@ -11159,14 +11055,30 @@ const fetchFooterData = async () => {
             elevation: 8
 
           }}>
+            <View style={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: palette.border, backgroundColor: palette.surface }}>
 
-            <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ gap: 14 }}>
+              <Text style={{ color: palette.secondary, fontSize: 10, letterSpacing: 1.6, fontWeight: '700' }}>CATALOG MANAGER</Text>
 
-              <Text style={{ color: palette.oxbloodSoft, fontSize: 11, letterSpacing: 1.8, fontWeight: '700' }}>CATALOG MANAGER</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
 
-              <Text style={{ fontFamily: 'Georgia', fontSize: 26, fontWeight: '700', color: palette.oxblood, marginTop: 4 }}>Add New Product</Text>
+                <Text style={{ fontFamily: 'Georgia', fontSize: 25, fontWeight: '700', color: palette.charcoal }}>Add New Product</Text>
 
-              
+                <Pressable onPress={() => setAddProductModalVisible(false)} accessibilityLabel="Close add product form" style={{ padding: 8 }}>
+                  <FontAwesome name="times" size={18} color={palette.secondary} />
+                </Pressable>
+
+              </View>
+
+              <Text style={{ fontSize: 13, color: palette.secondary, marginTop: 2 }}>Add an item to your product catalogue.</Text>
+
+            </View>
+
+            <ScrollView
+              style={{ flexShrink: 1 }}
+              showsVerticalScrollIndicator={true}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{ gap: 14, padding: 20, paddingTop: 16 }}
+            >
 
               <View style={{ gap: 4 }}>
 
@@ -11178,7 +11090,7 @@ const fetchFooterData = async () => {
 
                   onChangeText={(txt) => setNewProduct({ ...newProduct, name: txt })}
 
-                  placeholder="e.g. Ribeye Steak A5"
+                  placeholder="e.g. Paracetamol 500mg Tablets"
 
                   placeholderTextColor="#89726F"
 
@@ -11191,240 +11103,76 @@ const fetchFooterData = async () => {
 
 
               <View style={{ gap: 4 }}>
-
-                <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>PRICING TYPE *</Text>
-
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-
-                  <Pressable
-
-                    onPress={() => setNewProduct({ ...newProduct, has_weights: true })}
-
-                    style={{
-
-                      flex: 1,
-
-                      borderWidth: 1,
-
-                      borderColor: newProduct.has_weights ? palette.oxblood : 'rgba(27,28,28,0.2)',
-
-                      backgroundColor: newProduct.has_weights ? 'rgba(74,4,4,0.05)' : '#fff',
-
-                      paddingVertical: 10,
-
-                      alignItems: 'center',
-
-                    }}
-
-                  >
-
-                    <Text style={{ fontSize: 12, fontWeight: '700', color: newProduct.has_sizes ? palette.oxblood : palette.secondary }}>SIZE-BASED</Text>
-
-                  </Pressable>
-
-                  <Pressable
-
-                    onPress={() => setNewProduct({ ...newProduct, has_sizes: false, has_weights: false })}
-
-                    style={{
-
-                      flex: 1,
-
-                      borderWidth: 1,
-
-                      borderColor: !newProduct.has_sizes ? palette.oxblood : 'rgba(27,28,28,0.2)',
-
-                      backgroundColor: !newProduct.has_sizes ? 'rgba(74,4,4,0.05)' : '#fff',
-
-                      paddingVertical: 10,
-
-                      alignItems: 'center',
-
-                    }}
-
-                  >
-
-                    <Text style={{ fontSize: 12, fontWeight: '700', color: !newProduct.has_sizes ? palette.oxblood : palette.secondary }}>UNIT-BASED</Text>
-
-                  </Pressable>
-
+                <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>MEDICINE FORM *</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {MEDICINE_FORMS.map((form) => {
+                    const active = newProduct.form === form;
+                    return (
+                      <Pressable
+                        key={form}
+                        onPress={() => setNewProduct({ ...newProduct, form })}
+                        style={{ borderWidth: 1, borderColor: active ? palette.oxblood : palette.border, backgroundColor: active ? palette.secondaryBackground : palette.surface, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 3 }}
+                      >
+                        <Text style={{ color: active ? palette.oxblood : palette.secondary, fontSize: 12, fontWeight: '700', textTransform: 'capitalize' }}>{form}</Text>
+                      </Pressable>
+                    );
+                  })}
                 </View>
+              </View>
 
+              <View style={{ gap: 4 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>DOSAGE / STRENGTH</Text>
+                <TextInput value={newProduct.dosage_strength} onChangeText={(txt) => setNewProduct({ ...newProduct, dosage_strength: txt })} placeholder="e.g. 500mg, 100ml bottle" placeholderTextColor={palette.secondary} style={styles.adminLoginInput} />
+              </View>
+
+              <View style={{ gap: 4 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>PACK SIZES</Text>
+                <TextInput value={newProduct.pack_sizes} onChangeText={(txt) => setNewProduct({ ...newProduct, pack_sizes: txt })} placeholder="e.g. 24 tablets, 48 tablets" placeholderTextColor={palette.secondary} style={styles.adminLoginInput} />
+                <Text style={{ fontSize: 11, color: palette.secondary }}>Separate available pack sizes with commas.</Text>
+              </View>
+
+              <View style={{ gap: 4 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>PRICE PER PACK *</Text>
+                <TextInput value={newProduct.price} onChangeText={(txt) => setNewProduct({ ...newProduct, price: txt })} keyboardType="decimal-pad" placeholder="e.g. 25.00" placeholderTextColor={palette.secondary} style={styles.adminLoginInput} />
               </View>
 
 
 
-              {newProduct.has_sizes ? (
-
-                <>
-
-                  <View style={{ gap: 4 }}>
-
-                    <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>PRICE FOR S *</Text>
-
-                    <TextInput
-
-                      value={newProduct.price_s}
-
-                      onChangeText={(txt) => setNewProduct({ ...newProduct, price_s: txt })}
-
-                      keyboardType="numeric"
-
-                      placeholder="e.g. 25.00"
-
-                      placeholderTextColor="#89726F"
-
-                      style={styles.adminLoginInput}
-
-                    />
-
-                  </View>
-
-
-
-                  <View style={{ gap: 4 }}>
-
-                    <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>PRICE FOR M *</Text>
-
-                    <TextInput
-
-                      value={newProduct.price_m}
-
-                      onChangeText={(txt) => setNewProduct({ ...newProduct, price_m: txt })}
-
-                      keyboardType="numeric"
-
-                      placeholder="e.g. 28.00"
-
-                      placeholderTextColor="#89726F"
-
-                      style={styles.adminLoginInput}
-
-                    />
-
-                  </View>
-
-
-
-                  <View style={{ gap: 4 }}>
-
-                    <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>PRICE FOR L *</Text>
-
-                    <TextInput
-
-                      value={newProduct.price_l}
-
-                      onChangeText={(txt) => setNewProduct({ ...newProduct, price_l: txt })}
-
-                      keyboardType="numeric"
-
-                      placeholder="e.g. 30.00"
-
-                      placeholderTextColor="#89726F"
-
-                      style={styles.adminLoginInput}
-
-                    />
-
-                  </View>
-
-
-
-                  <View style={{ gap: 4 }}>
-
-                    <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>PRICE FOR XL *</Text>
-
-                    <TextInput
-
-                      value={newProduct.price_xl}
-
-                      onChangeText={(txt) => setNewProduct({ ...newProduct, price_xl: txt })}
-
-                      keyboardType="numeric"
-
-                      placeholder="e.g. 32.00"
-
-                      placeholderTextColor="#89726F"
-
-                      style={styles.adminLoginInput}
-
-                    />
-
-                  </View>
-
-
-
-                  <View style={{ gap: 4 }}>
-
-                    <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>PRICE FOR XXL *</Text>
-
-                    <TextInput
-
-                      value={newProduct.price_xxl}
-
-                      onChangeText={(txt) => setNewProduct({ ...newProduct, price_xxl: txt })}
-
-                      keyboardType="numeric"
-
-                      placeholder="e.g. 35.00"
-
-                      placeholderTextColor="#89726F"
-
-                      style={styles.adminLoginInput}
-
-                    />
-
-                  </View>
-
-                </>
-
-              ) : (
-
-                <View style={{ gap: 4 }}>
-
-                  <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>UNIT PRICE *</Text>
-
-                  <TextInput
-
-                    value={newProduct.price}
-
-                    onChangeText={(txt) => setNewProduct({ ...newProduct, price: txt })}
-
-                    keyboardType="numeric"
-
-                    placeholder="e.g. 35.00"
-
-                    placeholderTextColor="#89726F"
-
-                    style={styles.adminLoginInput}
-
-                  />
-
+              <View style={{ gap: 8 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>MEDICINE CATEGORY *</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {categoryChips.filter((category) => category !== 'All').map((category) => {
+                    const active = newProduct.category_name === category;
+                    return (
+                      <Pressable key={category} onPress={() => setNewProduct({ ...newProduct, category_name: category })} style={{ borderWidth: 1, borderColor: active ? palette.oxblood : palette.border, backgroundColor: active ? palette.secondaryBackground : palette.surface, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 3 }}>
+                        <Text style={{ color: active ? palette.oxblood : palette.secondary, fontSize: 12, fontWeight: '700' }}>{category}</Text>
+                      </Pressable>
+                    );
+                  })}
                 </View>
-
-              )}
+              </View>
 
 
 
               <View style={{ gap: 4 }}>
-
-                <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>CATEGORY / CHIP (E.g. Chicken, Beef, Pork) *</Text>
-
-                <TextInput
-
-                  value={newProduct.category_name}
-
-                  onChangeText={(txt) => setNewProduct({ ...newProduct, category_name: txt, tag: txt })}
-
-                  placeholder="e.g. Cow And Beef"
-
-                  placeholderTextColor="#89726F"
-
-                  style={styles.adminLoginInput}
-
-                />
-
+                <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>ACTIVE INGREDIENT</Text>
+                <TextInput value={newProduct.active_ingredient} onChangeText={(txt) => setNewProduct({ ...newProduct, active_ingredient: txt })} placeholder="e.g. Paracetamol" placeholderTextColor={palette.secondary} style={styles.adminLoginInput} />
               </View>
+
+              <View style={{ gap: 4 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>MANUFACTURER</Text>
+                <TextInput value={newProduct.manufacturer} onChangeText={(txt) => setNewProduct({ ...newProduct, manufacturer: txt })} placeholder="e.g. Manufacturer or supplier" placeholderTextColor={palette.secondary} style={styles.adminLoginInput} />
+              </View>
+
+              <Pressable
+                onPress={() => setNewProduct({ ...newProduct, requires_prescription: !newProduct.requires_prescription })}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 }}
+              >
+                <View style={{ width: 20, height: 20, borderWidth: 1, borderColor: newProduct.requires_prescription ? palette.oxblood : palette.border, backgroundColor: newProduct.requires_prescription ? palette.oxblood : palette.surface, alignItems: 'center', justifyContent: 'center', borderRadius: 2 }}>
+                  {newProduct.requires_prescription && <FontAwesome name="check" size={12} color="#fff" />}
+                </View>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: palette.charcoal }}>Prescription required</Text>
+              </Pressable>
 
 
 
@@ -11452,7 +11200,7 @@ const fetchFooterData = async () => {
 
               <View style={{ gap: 4 }}>
 
-                <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>DESCRIPTION *</Text>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>MEDICINE DESCRIPTION *</Text>
 
                 <TextInput
 
@@ -11464,7 +11212,7 @@ const fetchFooterData = async () => {
 
                   numberOfLines={2}
 
-                  placeholder="Describe cuts, grade, source..."
+                  placeholder="Medicine use, directions, and relevant details..."
 
                   placeholderTextColor="#89726F"
 
@@ -11499,8 +11247,40 @@ const fetchFooterData = async () => {
 
 
               <View style={{ gap: 4 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>STORAGE INSTRUCTIONS</Text>
+                <TextInput value={newProduct.storage_info} onChangeText={(txt) => setNewProduct({ ...newProduct, storage_info: txt })} placeholder="e.g. Store below 30°C in a dry place" placeholderTextColor={palette.secondary} style={styles.adminLoginInput} />
+              </View>
 
-                <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>CURRENT STOCK ({newProduct.has_weights ? 'KG' : 'UNITS'})</Text>
+              <View style={{ gap: 4 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>SIDE EFFECTS</Text>
+                <TextInput value={newProduct.side_effects} onChangeText={(txt) => setNewProduct({ ...newProduct, side_effects: txt })} placeholder="Optional medicine information" placeholderTextColor={palette.secondary} style={styles.adminLoginInput} />
+              </View>
+
+              <View style={{ gap: 4 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>CONTRAINDICATIONS</Text>
+                <TextInput value={newProduct.contraindications} onChangeText={(txt) => setNewProduct({ ...newProduct, contraindications: txt })} placeholder="When the medicine should not be used" placeholderTextColor={palette.secondary} style={styles.adminLoginInput} />
+              </View>
+
+              <View style={{ gap: 4 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>EXPIRY DATE</Text>
+                <TextInput value={newProduct.expiry_date} onChangeText={(txt) => setNewProduct({ ...newProduct, expiry_date: txt })} placeholder="YYYY-MM-DD" placeholderTextColor={palette.secondary} style={styles.adminLoginInput} />
+              </View>
+
+              <Pressable
+                onPress={() => setNewProduct({ ...newProduct, is_featured: !newProduct.is_featured })}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 }}
+              >
+                <View style={{ width: 20, height: 20, borderWidth: 1, borderColor: newProduct.is_featured ? palette.oxblood : palette.border, backgroundColor: newProduct.is_featured ? palette.oxblood : palette.surface, alignItems: 'center', justifyContent: 'center', borderRadius: 2 }}>
+                  {newProduct.is_featured && <FontAwesome name="check" size={12} color="#fff" />}
+                </View>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: palette.charcoal }}>Feature this medicine</Text>
+              </Pressable>
+
+
+
+              <View style={{ gap: 4 }}>
+
+                <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>AVAILABLE STOCK (PACKS / UNITS)</Text>
 
                 <TextInput
 
@@ -11522,37 +11302,35 @@ const fetchFooterData = async () => {
 
 
 
-              <View style={{ borderTopWidth: 1, borderTopColor: 'rgba(27,28,28,0.1)', paddingTop: 14, marginTop: 8, flexDirection: 'row', gap: 10 }}>
-
-                <Pressable 
-
-                  onPress={() => setAddProductModalVisible(false)}
-
-                  style={{ flex: 1, borderWidth: 1, borderColor: palette.oxblood, paddingVertical: 12, alignItems: 'center', backgroundColor: '#fff' }}
-
-                >
-
-                  <Text style={{ color: palette.oxblood, fontWeight: '700', fontSize: 12, letterSpacing: 1 }}>CANCEL</Text>
-
-                </Pressable>
-
-                
-
-                <Pressable 
-
-                  onPress={adminAddProduct}
-
-                  style={{ flex: 1, backgroundColor: palette.oxblood, paddingVertical: 12, alignItems: 'center' }}
-
-                >
-
-                  <Text style={{ color: '#fff', fontWeight: '700', fontSize: 12, letterSpacing: 1 }}>SAVE PRODUCT</Text>
-
-                </Pressable>
-
-              </View>
-
             </ScrollView>
+
+            <View style={{ borderTopWidth: 1, borderTopColor: palette.border, paddingHorizontal: 20, paddingVertical: 14, flexDirection: 'row', gap: 10, backgroundColor: palette.surface }}>
+
+              <Pressable
+
+                onPress={() => setAddProductModalVisible(false)}
+
+                style={{ flex: 1, borderWidth: 1, borderColor: palette.border, paddingVertical: 12, alignItems: 'center', backgroundColor: palette.surface, borderRadius: 3 }}
+
+              >
+
+                <Text style={{ color: palette.secondary, fontWeight: '700', fontSize: 12, letterSpacing: 1 }}>CANCEL</Text>
+
+              </Pressable>
+
+              <Pressable
+
+                onPress={adminAddProduct}
+
+                style={{ flex: 1, backgroundColor: palette.oxblood, paddingVertical: 12, alignItems: 'center', borderRadius: 3 }}
+
+              >
+
+                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 12, letterSpacing: 1 }}>SAVE PRODUCT</Text>
+
+              </Pressable>
+
+            </View>
 
           </View>
 
@@ -11629,240 +11407,69 @@ const fetchFooterData = async () => {
 
 
                 <View style={{ gap: 4 }}>
-
-                  <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>PRICING TYPE *</Text>
-
-                  <View style={{ flexDirection: 'row', gap: 10 }}>
-
-                    <Pressable
-
-                      onPress={() => setEditingProduct({ ...editingProduct, hasWeights: true })}
-
-                      style={{
-
-                        flex: 1,
-
-                        borderWidth: 1,
-
-                        borderColor: (editingProduct.hasSizes || editingProduct.hasWeights) ? palette.oxblood : 'rgba(27,28,28,0.2)',
-
-                        backgroundColor: (editingProduct.hasSizes || editingProduct.hasWeights) ? 'rgba(74,4,4,0.05)' : '#fff',
-
-                        paddingVertical: 10,
-
-                        alignItems: 'center',
-
-                      }}
-
-                    >
-
-                      <Text style={{ fontSize: 12, fontWeight: '700', color: (editingProduct.hasSizes || editingProduct.hasWeights) ? palette.oxblood : palette.secondary }}>SIZE-BASED</Text>
-
-                    </Pressable>
-
-                    <Pressable
-
-                      onPress={() => setEditingProduct({ ...editingProduct, hasSizes: false, hasWeights: false })}
-
-                      style={{
-
-                        flex: 1,
-
-                        borderWidth: 1,
-
-                        borderColor: !(editingProduct.hasSizes || editingProduct.hasWeights) ? palette.oxblood : 'rgba(27,28,28,0.2)',
-
-                        backgroundColor: !(editingProduct.hasSizes || editingProduct.hasWeights) ? 'rgba(74,4,4,0.05)' : '#fff',
-
-                        paddingVertical: 10,
-
-                        alignItems: 'center',
-
-                      }}
-
-                    >
-
-                      <Text style={{ fontSize: 12, fontWeight: '700', color: !(editingProduct.hasSizes || editingProduct.hasWeights) ? palette.oxblood : palette.secondary }}>UNIT-BASED</Text>
-
-                    </Pressable>
-
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>MEDICINE FORM *</Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                    {MEDICINE_FORMS.map((form) => {
+                      const active = (editingProduct.form || 'tablet') === form;
+                      return (
+                        <Pressable key={form} onPress={() => setEditingProduct({ ...editingProduct, form })} style={{ borderWidth: 1, borderColor: active ? palette.oxblood : palette.border, backgroundColor: active ? palette.secondaryBackground : palette.surface, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 3 }}>
+                          <Text style={{ color: active ? palette.oxblood : palette.secondary, fontSize: 12, fontWeight: '700', textTransform: 'capitalize' }}>{form}</Text>
+                        </Pressable>
+                      );
+                    })}
                   </View>
+                </View>
 
+                <View style={{ gap: 4 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>DOSAGE / STRENGTH</Text>
+                  <TextInput value={editingProduct.dosage_strength || ''} onChangeText={(txt) => setEditingProduct({ ...editingProduct, dosage_strength: txt })} placeholder="e.g. 500mg, 100ml bottle" placeholderTextColor={palette.secondary} style={styles.adminLoginInput} />
+                </View>
+
+                <View style={{ gap: 4 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>PACK SIZES</Text>
+                  <TextInput value={Array.isArray(editingProduct.pack_sizes) ? editingProduct.pack_sizes.join(', ') : editingProduct.pack_sizes || ''} onChangeText={(txt) => setEditingProduct({ ...editingProduct, pack_sizes: txt })} placeholder="e.g. 24 tablets, 48 tablets" placeholderTextColor={palette.secondary} style={styles.adminLoginInput} />
+                  <Text style={{ fontSize: 11, color: palette.secondary }}>Separate available pack sizes with commas.</Text>
+                </View>
+
+                <View style={{ gap: 4 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>PRICE PER PACK *</Text>
+                  <TextInput value={editingProduct.price !== undefined && editingProduct.price !== null ? String(editingProduct.price) : ''} onChangeText={(txt) => setEditingProduct({ ...editingProduct, price: txt })} keyboardType="decimal-pad" placeholder="e.g. 25.00" placeholderTextColor={palette.secondary} style={styles.adminLoginInput} />
                 </View>
 
 
 
-                {(editingProduct.hasSizes || editingProduct.hasWeights) ? (
-
-                  <>
-
-                    <View style={{ gap: 4 }}>
-
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>PRICE FOR S *</Text>
-
-                      <TextInput
-
-                        value={editingProduct.price_s !== undefined && editingProduct.price_s !== null ? String(editingProduct.price_s) : ''}
-
-                        onChangeText={(txt) => setEditingProduct({ ...editingProduct, price_s: txt })}
-
-                        keyboardType="numeric"
-
-                        placeholder="e.g. 25.00"
-
-                        placeholderTextColor="#89726F"
-
-                        style={styles.adminLoginInput}
-
-                      />
-
-                    </View>
-
-
-
-                    <View style={{ gap: 4 }}>
-
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>PRICE FOR M *</Text>
-
-                      <TextInput
-
-                        value={editingProduct.price_m !== undefined && editingProduct.price_m !== null ? String(editingProduct.price_m) : ''}
-
-                        onChangeText={(txt) => setEditingProduct({ ...editingProduct, price_m: txt })}
-
-                        keyboardType="numeric"
-
-                        placeholder="e.g. 28.00"
-
-                        placeholderTextColor="#89726F"
-
-                        style={styles.adminLoginInput}
-
-                      />
-
-                    </View>
-
-
-
-                    <View style={{ gap: 4 }}>
-
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>PRICE FOR L *</Text>
-
-                      <TextInput
-
-                        value={editingProduct.price_l !== undefined && editingProduct.price_l !== null ? String(editingProduct.price_l) : ''}
-
-                        onChangeText={(txt) => setEditingProduct({ ...editingProduct, price_l: txt })}
-
-                        keyboardType="numeric"
-
-                        placeholder="e.g. 30.00"
-
-                        placeholderTextColor="#89726F"
-
-                        style={styles.adminLoginInput}
-
-                      />
-
-                    </View>
-
-
-
-                    <View style={{ gap: 4 }}>
-
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>PRICE FOR XL *</Text>
-
-                      <TextInput
-
-                        value={editingProduct.price_xl !== undefined && editingProduct.price_xl !== null ? String(editingProduct.price_xl) : ''}
-
-                        onChangeText={(txt) => setEditingProduct({ ...editingProduct, price_xl: txt })}
-
-                        keyboardType="numeric"
-
-                        placeholder="e.g. 32.00"
-
-                        placeholderTextColor="#89726F"
-
-                        style={styles.adminLoginInput}
-
-                      />
-
-                    </View>
-
-
-
-                    <View style={{ gap: 4 }}>
-
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>PRICE FOR XXL *</Text>
-
-                      <TextInput
-
-                        value={editingProduct.price_xxl !== undefined && editingProduct.price_xxl !== null ? String(editingProduct.price_xxl) : ''}
-
-                        onChangeText={(txt) => setEditingProduct({ ...editingProduct, price_xxl: txt })}
-
-                        keyboardType="numeric"
-
-                        placeholder="e.g. 35.00"
-
-                        placeholderTextColor="#89726F"
-
-                        style={styles.adminLoginInput}
-
-                      />
-
-                    </View>
-
-                  </>
-
-                ) : (
-
-                  <View style={{ gap: 4 }}>
-
-                    <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>UNIT PRICE *</Text>
-
-                    <TextInput
-
-                      value={editingProduct.price !== undefined && editingProduct.price !== null ? String(editingProduct.price) : ''}
-
-                      onChangeText={(txt) => setEditingProduct({ ...editingProduct, price: txt })}
-
-                      keyboardType="numeric"
-
-                      placeholder="e.g. 35.00"
-
-                      placeholderTextColor="#89726F"
-
-                      style={styles.adminLoginInput}
-
-                    />
-
+                <View style={{ gap: 8 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>MEDICINE CATEGORY *</Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                    {categoryChips.filter((category) => category !== 'All').map((category) => {
+                      const active = editingProduct.categoryLabel === category;
+                      return (
+                        <Pressable key={category} onPress={() => setEditingProduct({ ...editingProduct, categoryLabel: category })} style={{ borderWidth: 1, borderColor: active ? palette.oxblood : palette.border, backgroundColor: active ? palette.secondaryBackground : palette.surface, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 3 }}>
+                          <Text style={{ color: active ? palette.oxblood : palette.secondary, fontSize: 12, fontWeight: '700' }}>{category}</Text>
+                        </Pressable>
+                      );
+                    })}
                   </View>
-
-                )}
+                </View>
 
 
 
                 <View style={{ gap: 4 }}>
-
-                  <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>CATEGORY / CHIP *</Text>
-
-                  <TextInput
-
-                    value={editingProduct.categoryLabel}
-
-                    onChangeText={(txt) => setEditingProduct({ ...editingProduct, categoryLabel: txt, tag: txt })}
-
-                    placeholder="e.g. Cow And Beef"
-
-                    placeholderTextColor="#89726F"
-
-                    style={styles.adminLoginInput}
-
-                  />
-
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>ACTIVE INGREDIENT</Text>
+                  <TextInput value={editingProduct.active_ingredient || ''} onChangeText={(txt) => setEditingProduct({ ...editingProduct, active_ingredient: txt })} placeholder="e.g. Paracetamol" placeholderTextColor={palette.secondary} style={styles.adminLoginInput} />
                 </View>
+
+                <View style={{ gap: 4 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>MANUFACTURER</Text>
+                  <TextInput value={editingProduct.manufacturer || ''} onChangeText={(txt) => setEditingProduct({ ...editingProduct, manufacturer: txt })} placeholder="e.g. Manufacturer or supplier" placeholderTextColor={palette.secondary} style={styles.adminLoginInput} />
+                </View>
+
+                <Pressable onPress={() => setEditingProduct({ ...editingProduct, requires_prescription: !editingProduct.requires_prescription })} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 }}>
+                  <View style={{ width: 20, height: 20, borderWidth: 1, borderColor: editingProduct.requires_prescription ? palette.oxblood : palette.border, backgroundColor: editingProduct.requires_prescription ? palette.oxblood : palette.surface, alignItems: 'center', justifyContent: 'center', borderRadius: 2 }}>
+                    {editingProduct.requires_prescription && <FontAwesome name="check" size={12} color="#fff" />}
+                  </View>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: palette.charcoal }}>Prescription required</Text>
+                </Pressable>
 
 
 
@@ -11890,7 +11497,7 @@ const fetchFooterData = async () => {
 
                 <View style={{ gap: 4 }}>
 
-                  <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>DESCRIPTION *</Text>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>MEDICINE DESCRIPTION *</Text>
 
                   <TextInput
 
@@ -11902,7 +11509,7 @@ const fetchFooterData = async () => {
 
                     numberOfLines={2}
 
-                    placeholder="Describe product..."
+                    placeholder="Medicine use, directions, and relevant details..."
 
                     placeholderTextColor="#89726F"
 
@@ -11937,8 +11544,37 @@ const fetchFooterData = async () => {
 
 
                 <View style={{ gap: 4 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>STORAGE INSTRUCTIONS</Text>
+                  <TextInput value={editingProduct.storage_info || ''} onChangeText={(txt) => setEditingProduct({ ...editingProduct, storage_info: txt })} placeholder="e.g. Store below 30°C in a dry place" placeholderTextColor={palette.secondary} style={styles.adminLoginInput} />
+                </View>
 
-                  <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>CURRENT STOCK ({editingProduct.hasWeights ? 'KG' : 'UNITS'})</Text>
+                <View style={{ gap: 4 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>SIDE EFFECTS</Text>
+                  <TextInput value={editingProduct.side_effects || ''} onChangeText={(txt) => setEditingProduct({ ...editingProduct, side_effects: txt })} placeholder="Optional medicine information" placeholderTextColor={palette.secondary} style={styles.adminLoginInput} />
+                </View>
+
+                <View style={{ gap: 4 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>CONTRAINDICATIONS</Text>
+                  <TextInput value={editingProduct.contraindications || ''} onChangeText={(txt) => setEditingProduct({ ...editingProduct, contraindications: txt })} placeholder="When the medicine should not be used" placeholderTextColor={palette.secondary} style={styles.adminLoginInput} />
+                </View>
+
+                <View style={{ gap: 4 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>EXPIRY DATE</Text>
+                  <TextInput value={editingProduct.expiry_date || ''} onChangeText={(txt) => setEditingProduct({ ...editingProduct, expiry_date: txt })} placeholder="YYYY-MM-DD" placeholderTextColor={palette.secondary} style={styles.adminLoginInput} />
+                </View>
+
+                <Pressable onPress={() => setEditingProduct({ ...editingProduct, is_featured: !editingProduct.is_featured })} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 }}>
+                  <View style={{ width: 20, height: 20, borderWidth: 1, borderColor: editingProduct.is_featured ? palette.oxblood : palette.border, backgroundColor: editingProduct.is_featured ? palette.oxblood : palette.surface, alignItems: 'center', justifyContent: 'center', borderRadius: 2 }}>
+                    {editingProduct.is_featured && <FontAwesome name="check" size={12} color="#fff" />}
+                  </View>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: palette.charcoal }}>Feature this medicine</Text>
+                </Pressable>
+
+
+
+                <View style={{ gap: 4 }}>
+
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.8 }}>AVAILABLE STOCK (PACKS / UNITS)</Text>
 
                   <TextInput
 
@@ -14206,9 +13842,9 @@ const styles = StyleSheet.create({
 
     borderWidth: 1,
 
-    borderColor: 'rgba(27,28,28,0.18)',
+    borderColor: palette.border,
 
-    backgroundColor: '#FFF',
+    backgroundColor: palette.surface,
 
     paddingHorizontal: 14,
 

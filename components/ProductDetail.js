@@ -59,6 +59,13 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
 
   // Set default selected pack size to first available
   const defaultSelectedSize = packSizeOptions.length > 0 ? packSizeOptions[0].label : 'Standard Pack';
+  const isPackProduct = Boolean(product?.form || product?.pack_sizes?.length);
+  const selectedCartOption = isPackProduct
+    ? selectedWeight
+    : (product?.hasWeights || product?.hasSizes ? selectedWeight : 'unit');
+  const selectedStock = isPackProduct
+    ? Number(product?.stock_quantity) || 0
+    : Number(product?.[`stock_${selectedWeight.toLowerCase()}`]) || 0;
 
   // Reset state when product changes or modal opens/closes
   useEffect(() => {
@@ -66,7 +73,7 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
     if (visible && product) {
       // Check if this product (with selected pack size) is already in cart
       const cartItem = cartItems.find(
-        (item) => item.id === product.id && item.selectedWeight === selectedWeight
+        (item) => item.id === product.id && item.selectedWeight === selectedCartOption
       );
 
       console.log('Cart item check', { cartItem: !!cartItem, productName: product.name });
@@ -91,7 +98,7 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
   useEffect(() => {
     if (visible && product) {
       const cartItem = cartItems.find(
-        (item) => item.id === product.id && item.selectedWeight === selectedWeight
+        (item) => item.id === product.id && item.selectedWeight === selectedCartOption
       );
       
       if (cartItem) {
@@ -458,24 +465,17 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
                     style={[
                       styles.initialAddToCartButton,
                       (() => {
-                        const stockKey = `stock_${selectedWeight.toLowerCase()}`;
-                        const stockForSize = product?.[stockKey] || 0;
-                        return stockForSize === 0 && styles.initialAddToCartButtonDisabled;
+                        return selectedStock === 0 && styles.initialAddToCartButtonDisabled;
                       })(),
                       { backgroundColor: isUserDarkMode ? darkPalette.oxblood : palette.oxblood }
                     ]}
                     onPress={handleAddToCartClick}
-                    disabled={() => {
-                      const stockKey = `stock_${selectedWeight.toLowerCase()}`;
-                      return (product?.[stockKey] || 0) === 0;
-                    }}
+                    disabled={selectedStock === 0}
                   >
                     <FontAwesome name="shopping-cart" size={18} color="#FFF" />
                     <Text style={styles.initialAddToCartText}>
                       {(() => {
-                        const stockKey = `stock_${selectedWeight.toLowerCase()}`;
-                        const stockForSize = product?.[stockKey] || 0;
-                        return stockForSize === 0 ? 'Out of Stock' : 'Add to Cart';
+                        return selectedStock === 0 ? 'Out of Stock' : 'Add to Cart';
                       })()}
                     </Text>
                   </Pressable>
@@ -555,28 +555,24 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
               style={[
                 styles.addToCartButton,
                 (() => {
-                  const stockKey = `stock_${selectedWeight.toLowerCase()}`;
-                  const stockForSize = product?.[stockKey] || 0;
-                  return (!showQuantityControls || stockForSize === 0) && styles.addToCartButtonDisabled;
+                  return (!showQuantityControls || selectedStock === 0) && styles.addToCartButtonDisabled;
                 })(),
                 { backgroundColor: isUserDarkMode ? darkPalette.oxblood : palette.oxblood }
               ]}
               onPress={() => {
-                const stockKey = `stock_${selectedWeight.toLowerCase()}`;
-                const stockForSize = product?.[stockKey] || 0;
-                console.log('Footer Add to Cart pressed', { showQuantityControls, size: selectedWeight, stock: stockForSize });
+                console.log('Footer Add to Cart pressed', { showQuantityControls, pack: selectedWeight, stock: selectedStock });
                 if (!showQuantityControls) {
                   Alert.alert('Select Quantity', 'Please click "Add to Cart" button first to select quantity');
                   return;
                 }
-                if (stockForSize === 0) {
-                  Alert.alert('Out of Stock', `Size ${selectedWeight} is currently unavailable`);
+                if (selectedStock === 0) {
+                  Alert.alert('Out of Stock', isPackProduct ? `${product.name} is currently unavailable` : `Size ${selectedWeight} is currently unavailable`);
                   return;
                 }
 
                 // Check if item is already in cart (for display message only)
                 const existingCartItem = cartItems.find(
-                  (item) => item.id === product.id && item.selectedWeight === (product.hasSizes ? selectedWeight : 'unit')
+                  (item) => item.id === product.id && item.selectedWeight === selectedCartOption
                 );
 
                 // Ensure product has image field (might be in product_images array)
@@ -594,7 +590,7 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
 
                 // ALWAYS use setCartQuantity - SET the quantity to what's displayed
                 // Never add to existing - always replace with the displayed quantity
-                onSetCartQuantity?.(productWithImage, product.hasWeights ? selectedWeight : 'unit', currentPrice, quantity);
+                onSetCartQuantity?.(productWithImage, selectedCartOption, currentPrice, quantity);
 
                 // Show success feedback
                 Alert.alert(
@@ -607,20 +603,15 @@ export default function ProductDetail({ product, visible, onClose, onAddToCart, 
 
                 onClose(); // useEffect will reset state when modal closes
               }}
-              disabled={() => {
-                const stockKey = `stock_${selectedWeight.toLowerCase()}`;
-                return !showQuantityControls || (product?.[stockKey] || 0) === 0;
-              }}
+              disabled={!showQuantityControls || selectedStock === 0}
             >
               <FontAwesome name="shopping-cart" size={20} color="#FFF" />
               <Text style={styles.addToCartText}>
                 {(() => {
-                  const stockKey = `stock_${selectedWeight.toLowerCase()}`;
-                  const stockForSize = product?.[stockKey] || 0;
-                  if (stockForSize === 0) return 'Out of Stock';
+                  if (selectedStock === 0) return 'Out of Stock';
                   if (!showQuantityControls) return 'Select Quantity First';
                   const existingCartItem = cartItems.find(
-                    (item) => item.id === product.id && item.selectedWeight === (product.hasSizes ? selectedWeight : 'unit')
+                    (item) => item.id === product.id && item.selectedWeight === selectedCartOption
                   );
                   return existingCartItem
                     ? `Update Cart (${quantity}) • GHC ${totalPrice.toFixed(2)}`
