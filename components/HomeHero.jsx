@@ -21,8 +21,6 @@ const HomeHero = ({
   isPhone = false,
   onNavigate,
   onOpenConsultation,
-  onHeroLayout,
-  onGlassmorphismLayout,
 }) => {
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -150,7 +148,6 @@ const HomeHero = ({
     return (
       <View
         style={[styles.heroFallback, { aspectRatio: DEFAULT_ASPECT_RATIO }]}
-        onLayout={(event) => onHeroLayout?.(event.nativeEvent.layout.y)}
       >
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading...</Text>
@@ -164,7 +161,6 @@ const HomeHero = ({
     return (
       <View
         style={[styles.heroFallback, { aspectRatio: DEFAULT_ASPECT_RATIO }]}
-        onLayout={(event) => onHeroLayout?.(event.nativeEvent.layout.y)}
       >
         <View style={styles.errorContainer}>
           <Text style={styles.errorTitle}>Failed to load homepage hero</Text>
@@ -179,7 +175,6 @@ const HomeHero = ({
     return (
       <View
         style={[styles.heroFallback, { aspectRatio: DEFAULT_ASPECT_RATIO }]}
-        onLayout={(event) => onHeroLayout?.(event.nativeEvent.layout.y)}
       >
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>No hero content</Text>
@@ -191,7 +186,6 @@ const HomeHero = ({
   return (
     <View 
       style={[styles.heroFrame, { aspectRatio }]}
-      onLayout={(event) => onHeroLayout?.(event.nativeEvent.layout.y)}
     >
       <View style={styles.container}>
       {/* Background Image */}
@@ -265,9 +259,6 @@ const HomeHero = ({
               opacity: textOpacity,
             },
           ]}
-          onLayout={(event) => {
-            onGlassmorphismLayout?.(event.nativeEvent.layout.y);
-          }}
         >
           <View style={styles.blurBandWeb}>
             {content.title && (

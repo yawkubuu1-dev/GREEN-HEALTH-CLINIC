@@ -32,9 +32,6 @@ export default function ConsultationCard({
   productId,
   useSticky = false,
   stickyTop = 76,
-  stickyReleased = false,
-  stickyBoundaryTop = 0,
-  onStickyCardLayout,
 }) {
   const [fullName, setFullName] = useState('');
   const [medicalConcern, setMedicalConcern] = useState('');
@@ -391,18 +388,13 @@ export default function ConsultationCard({
           style={[
             isMobile
               ? styles.container
-              : useSticky
-                ? (stickyReleased ? styles.containerDesktopBoundary : styles.containerDesktopFixed)
-                : styles.containerDesktop,
-            useSticky && {
-              top: stickyReleased ? stickyBoundaryTop : stickyTop,
-            },
+              : useSticky ? styles.containerDesktopSticky : styles.containerDesktop,
+            useSticky && { top: stickyTop },
             {
               opacity: isMobile ? opacityAnim : 1, // Only animate opacity on mobile
               pointerEvents: visible ? 'auto' : 'none', // Always prevent blocking when hidden
             },
           ]}
-          onLayout={useSticky ? (event) => onStickyCardLayout?.(event.nativeEvent.layout.height) : undefined}
         >
           {isMobile ? (
             <Animated.View
@@ -507,20 +499,9 @@ const styles = StyleSheet.create({
     width: 380,
     zIndex: 1000, // Lower z-index for desktop
   },
-  containerDesktopFixed: {
-    position: 'fixed',
-    left: '50%',
-    transform: [{ translateX: '-50%' }],
-    zIndex: 1000,
-    width: 380,
-    maxWidth: '100%',
-    pointerEvents: 'auto',
-  },
-  containerDesktopBoundary: {
-    position: 'absolute',
-    left: '50%',
-    transform: [{ translateX: '-50%' }],
-    zIndex: 3,
+  containerDesktopSticky: {
+    position: 'sticky',
+    alignSelf: 'center',
     width: 380,
     maxWidth: '100%',
     pointerEvents: 'auto',
