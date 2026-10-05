@@ -17,28 +17,13 @@ import { supabase } from '../lib/supabase';
  * Fetches content from home_hero table (NOT hero_slides/hero_settings)
  * Single image only - no rotation, no videos, no cycles
  */
-const HomeHero = React.forwardRef(({ isPhone = false, onNavigate, onOpenConsultation, glassPanelRef, onHeroLayout }, ref) => {
+const HomeHero = ({ isPhone = false, onNavigate, onOpenConsultation, stickyOverlay = null }) => {
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [imageError, setImageError] = useState(false);
   const [aspectRatio, setAspectRatio] = useState(21 / 9); // Default wide banner
-
-  // Notify parent when hero has loaded and laid out
-  useEffect(() => {
-    if (onHeroLayout && !loading && content && aspectRatio) {
-      // Use setTimeout to ensure DOM is fully rendered
-      setTimeout(() => {
-        const heroEl = ref.current;
-        if (heroEl) {
-          // Try to use React Native Web's measure method
-          heroEl.measure((x, y, width, height, pageX, pageY) => {
-            onHeroLayout({ width, height, x: pageX, y: pageY });
-          });
-        }
-      }, 200);
-    }
-  }, [loading, content, aspectRatio, onHeroLayout, ref]);
+  const [glassmorphismSectionTopY, setGlassmorphismSectionTopY] = useState(null);
 
   // Entrance animations
   const imageOpacity = useRef(new Animated.Value(0)).current;
@@ -158,7 +143,7 @@ const HomeHero = React.forwardRef(({ isPhone = false, onNavigate, onOpenConsulta
   // Loading state
   if (loading) {
     return (
-      <View style={[styles.container, { aspectRatio: DEFAULT_ASPECT_RATIO }]}>
+      <View style={[styles.heroFallback, { aspectRatio: DEFAULT_ASPECT_RATIO }]}>
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
@@ -169,7 +154,7 @@ const HomeHero = React.forwardRef(({ isPhone = false, onNavigate, onOpenConsulta
   // Error state
   if (loadError) {
     return (
-      <View style={[styles.container, { aspectRatio: DEFAULT_ASPECT_RATIO }]}>
+      <View style={[styles.heroFallback, { aspectRatio: DEFAULT_ASPECT_RATIO }]}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorTitle}>Failed to load homepage hero</Text>
           <Text style={styles.errorMessage}>{loadError}</Text>
@@ -181,7 +166,7 @@ const HomeHero = React.forwardRef(({ isPhone = false, onNavigate, onOpenConsulta
   // No content state
   if (!content) {
     return (
-      <View style={[styles.container, { aspectRatio: DEFAULT_ASPECT_RATIO }]}>
+      <View style={[styles.heroFallback, { aspectRatio: DEFAULT_ASPECT_RATIO }]}>
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>No hero content</Text>
         </View>
@@ -191,15 +176,9 @@ const HomeHero = React.forwardRef(({ isPhone = false, onNavigate, onOpenConsulta
 
   return (
     <View 
-      ref={ref}
-      style={[styles.container, { aspectRatio }]}
-      onLayout={(e) => {
-        console.log('[HomeHero] onLayout fired:', e.nativeEvent.layout);
-        if (onHeroLayout) {
-          onHeroLayout(e.nativeEvent.layout);
-        }
-      }}
+      style={[styles.heroFrame, { aspectRatio }]}
     >
+      <View style={styles.container}>
       {/* Background Image */}
       {imageError ? (
         <View style={styles.imageErrorContainer}>
@@ -263,7 +242,6 @@ const HomeHero = React.forwardRef(({ isPhone = false, onNavigate, onOpenConsulta
       {Platform.OS === 'web' ? (
         // Web: CSS backdrop-filter
         <Animated.View
-          ref={glassPanelRef}
           style={[
             styles.blurBand,
             {
@@ -272,6 +250,12 @@ const HomeHero = React.forwardRef(({ isPhone = false, onNavigate, onOpenConsulta
               opacity: textOpacity,
             },
           ]}
+          onLayout={(event) => {
+            const topY = event.nativeEvent.layout.y;
+            setGlassmorphismSectionTopY((currentTopY) => (
+              currentTopY === topY ? currentTopY : topY
+            ));
+          }}
         >
           <View style={styles.blurBandWeb}>
             {content.title && (
@@ -438,20 +422,50 @@ const HomeHero = React.forwardRef(({ isPhone = false, onNavigate, onOpenConsulta
           </BlurView>
         </Animated.View>
       )}
+      </View>
+      {Platform.OS === 'web' && !isPhone && stickyOverlay && glassmorphismSectionTopY !== null ? (
+        <View
+          pointerEvents="box-none"
+          style={[
+            styles.stickyOverlayBoundary,
+            { height: glassmorphismSectionTopY },
+          ]}
+        >
+          {stickyOverlay}
+        </View>
+      ) : null}
     </View>
   );
-});
-
-HomeHero.displayName = 'HomeHero';
+};
 
 export default HomeHero;
 
 const styles = StyleSheet.create({
-  container: {
+  heroFrame: {
+    position: 'relative',
+    width: '100%',
+    overflow: 'visible',
+  },
+  heroFallback: {
     position: 'relative',
     width: '100%',
     backgroundColor: '#1b1b1b',
     overflow: 'hidden',
+  },
+  container: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    backgroundColor: '#1b1b1b',
+    overflow: 'hidden',
+  },
+  stickyOverlayBoundary: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    overflow: 'visible',
+    alignItems: 'center',
+    zIndex: 3,
   },
   image: {
     ...StyleSheet.absoluteFillObject,

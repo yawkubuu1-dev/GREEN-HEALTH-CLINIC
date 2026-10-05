@@ -2461,11 +2461,6 @@ export default function App() {
 
   const [adminDrawerOpen, setAdminDrawerOpen] = useState(false);
 
-  // Sticky ConsultationCard refs and state
-  const heroRef = useRef(null);
-  const glassPanelRef = useRef(null);
-  const [stickyWrapperHeight, setStickyWrapperHeight] = useState(0);
-
   const drawerAnim = useRef(new Animated.Value(-260)).current;
 
 
@@ -4853,54 +4848,6 @@ const fetchFooterData = async () => {
 
   const shorterSide = Math.min(width, windowHeight);
   const isPhoneScreen = shorterSide < 600;
-
-  // Measure distance from hero top to glass panel top for sticky behavior
-  const measureStickyHeight = () => {
-    if (Platform.OS === 'web' && !isPhoneScreen) {
-      const heroEl = heroRef.current?._node;
-      
-      if (heroEl) {
-        const heroRect = heroEl.getBoundingClientRect();
-        const heroHeight = heroRect.height;
-        const blurBandHeight = 220; // Desktop BLUR_BAND_HEIGHT from HomeHero
-        // Glass panel is at bottom of hero, so its top edge is at heroHeight - blurBandHeight
-        const distance = heroHeight - blurBandHeight;
-        setStickyWrapperHeight(distance);
-      }
-    }
-  };
-
-  // Handle hero layout callback
-  const handleHeroLayout = (layout) => {
-    if (layout) {
-      const heroWidth = layout.width;
-      const heroHeight = layout.height;
-      const blurBandHeight = 220; // Desktop BLUR_BAND_HEIGHT from HomeHero
-      // Glass panel is at bottom of hero, so its top edge is at heroHeight - blurBandHeight
-      const distance = heroHeight - blurBandHeight;
-      setStickyWrapperHeight(distance);
-    }
-  };
-
-  // Measure on mount and on window resize
-  useEffect(() => {
-    if (Platform.OS === 'web' && !isPhoneScreen) {
-      // Delay measurement to ensure hero has rendered
-      const timeoutId = setTimeout(() => {
-        measureStickyHeight();
-      }, 100);
-      
-      const handleResize = () => {
-        setTimeout(measureStickyHeight, 100);
-      };
-      
-      window.addEventListener('resize', handleResize);
-      return () => {
-        clearTimeout(timeoutId);
-        window.removeEventListener('resize', handleResize);
-      };
-    }
-  }, [isPhoneScreen]);
 
   const isTabletScreen = width >= 600 && width < 980;
 
@@ -8687,12 +8634,18 @@ const fetchFooterData = async () => {
             scrollEnabled={true} // Explicitly enable scrolling
           >
             <HomeHero 
-              ref={heroRef}
-              glassPanelRef={glassPanelRef}
-              onHeroLayout={handleHeroLayout}
               isPhone={isPhoneScreen} 
               onNavigate={setCurrentPage}
               onOpenConsultation={() => setConsultationCardVisible(true)}
+              stickyOverlay={
+                <ConsultationCard
+                  isPhone={false}
+                  visible={true}
+                  onClose={() => setConsultationCardVisible(false)}
+                  useSticky={true}
+                  stickyTop={76}
+                />
+              }
             />
             
             <HealthPrioritySection />
@@ -8700,30 +8653,6 @@ const fetchFooterData = async () => {
             {/* Footer - only on Homepage */}
             <Footer onNavigate={setCurrentPage} />
           </ScrollView>
-          
-          {/* Sticky wrapper for consultation card - desktop only - positioned absolutely outside ScrollView */}
-          {Platform.OS === 'web' && !isPhoneScreen ? (
-            <View 
-              style={{ 
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: stickyWrapperHeight || 0,
-                pointerEvents: 'none',
-                alignItems: 'center',
-                justifyContent: 'flex-start',
-              }}
-            >
-              <ConsultationCard 
-                isPhone={false}
-                visible={true}
-                onClose={() => setConsultationCardVisible(false)}
-                useSticky={true}
-                stickyTop={76} // header height (60px) + 16px offset
-              />
-            </View>
-          ) : null}
           
           {/* Mobile: keep existing modal behavior */}
           {Platform.OS !== 'web' || isPhoneScreen ? (
