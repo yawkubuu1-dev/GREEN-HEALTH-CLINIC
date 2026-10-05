@@ -1361,7 +1361,7 @@ const PATIENT_STORIES = [
 const BLOG_PAGE_SIZE = 6;
 
 // ─── Blog Page Component ──────────────────────────────────────────────────────
-function BlogPage({ isUserDarkMode, isPhoneScreen, isTabletScreen, footer = null }) {
+function BlogPage({ isUserDarkMode, isPhoneScreen, isTabletScreen, onRevealAdminLogin, footer = null }) {
   const bg        = isUserDarkMode ? darkPalette.background   : palette.background;
   const surface   = isUserDarkMode ? darkPalette.surface      : palette.surface;
   const charcoal  = isUserDarkMode ? darkPalette.charcoal     : palette.charcoal;
@@ -1375,6 +1375,26 @@ function BlogPage({ isUserDarkMode, isPhoneScreen, isTabletScreen, footer = null
   const [activeVideo, setActiveVideo]         = useState(null); // post object or null
   const [blogPosts, setBlogPosts]             = useState([]);
   const [loading, setLoading]                 = useState(true);
+
+  const handleBlogSearchSubmit = async () => {
+    const searchValue = blogSearch.trim();
+    if (!searchValue || (!searchValue.includes('@') && searchValue.length <= 32)) return;
+
+    try {
+      const { data, error } = await supabase.rpc('check_admin_trigger', { input: searchValue });
+      if (error) {
+        console.error('Unable to validate hidden admin trigger; continuing blog search:', error);
+        return;
+      }
+
+      if (data === true) {
+        setBlogSearch('');
+        onRevealAdminLogin?.();
+      }
+    } catch (error) {
+      console.error('Unable to validate hidden admin trigger; continuing blog search:', error);
+    }
+  };
 
   // Fetch blog posts from Supabase
   useEffect(() => {
@@ -1450,6 +1470,8 @@ function BlogPage({ isUserDarkMode, isPhoneScreen, isTabletScreen, footer = null
           <TextInput
             value={blogSearch}
             onChangeText={setBlogSearch}
+            onSubmitEditing={handleBlogSearchSubmit}
+            returnKeyType="search"
             placeholder="Search videos by title…"
             placeholderTextColor={isUserDarkMode ? '#666' : '#aaa'}
             style={{
@@ -1466,6 +1488,20 @@ function BlogPage({ isUserDarkMode, isPhoneScreen, isTabletScreen, footer = null
               <FontAwesome name="times-circle" size={16} color={greenSoft} />
             </Pressable>
           )}
+          <Pressable
+            onPress={handleBlogSearchSubmit}
+            accessibilityRole="button"
+            accessibilityLabel="Submit blog search"
+            style={{
+              marginLeft: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 7,
+              backgroundColor: green,
+            }}
+          >
+            <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>Search</Text>
+          </Pressable>
         </View>
       </View>
 
@@ -5251,6 +5287,12 @@ const fetchFooterData = async () => {
 
   };
 
+  const revealAdminLoginFromBlogSearch = () => {
+    setAuthEmail('');
+    setAuthPassword('');
+    setCurrentPage('adminLogin');
+  };
+
 
 
   const handleLogin = async () => {
@@ -6316,14 +6358,6 @@ const fetchFooterData = async () => {
                 <Text style={[styles.mobileMenuItemText, { color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal }]}>Contact</Text>
 
               </Pressable>
-
-              <Pressable style={styles.mobileMenuItem} onPress={() => { setMobileMenuVisible(false); openAdmin(); }}>
-
-                <Text style={[styles.mobileMenuItemText, { color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal }]}>Admin Login</Text>
-
-              </Pressable>
-
-
 
               <View style={[styles.mobileSocialIcons, { flexWrap: 'wrap', gap: 14 }]}>
 
@@ -8670,11 +8704,8 @@ const fetchFooterData = async () => {
                     {[
 
                       { label: '✅ Order Ready', msg: `Hi ${customerMsgModal?.name || 'there'}, your order from Prolyn Wear is ready and will be delivered soon! 🛍️` },
-
                       { label: '🚚 Out for Delivery', msg: `Hi ${customerMsgModal?.name || 'there'}, great news! Your Prolyn Wear order is on its way. Our rider will be with you shortly. 🏍️` },
-
                       { label: '✅ Delivered', msg: `Hi ${customerMsgModal?.name || 'there'}, your Prolyn Wear order has been delivered. Thank you for shopping with us! 🙏` },
-
                       { label: '💬 Follow Up', msg: `Hi ${customerMsgModal?.name || 'there'}, this is Prolyn Wear. How was your experience with us? We'd love to hear your feedback! 😊` },
 
                     ].map(({ label, msg }) => (
@@ -9929,6 +9960,7 @@ const fetchFooterData = async () => {
             isUserDarkMode={isUserDarkMode}
             isPhoneScreen={isPhoneScreen}
             isTabletScreen={isTabletScreen}
+            onRevealAdminLogin={revealAdminLoginFromBlogSearch}
             footer={<Footer onNavigate={setCurrentPage} />}
           />
         </View>
