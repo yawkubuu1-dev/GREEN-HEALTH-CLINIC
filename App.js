@@ -10156,7 +10156,17 @@ const fetchFooterData = async () => {
 
 
 
-        <View style={[styles.productGrid, { paddingHorizontal: PADDING, rowGap: GAP, columnGap: GAP, paddingBottom: 200 }]}>
+        <View style={[styles.productGrid, {
+          width: width >= 980
+            ? (cardWidth * 3) + (GAP * 2) + (PADDING * 2)
+            : '100%',
+          alignSelf: 'center',
+          justifyContent: 'center',
+          paddingHorizontal: PADDING,
+          rowGap: GAP,
+          columnGap: GAP,
+          paddingBottom: 200,
+        }]}>
 
           {filteredCategories.map((category) => (
 
