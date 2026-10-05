@@ -10106,7 +10106,10 @@ const fetchFooterData = async () => {
         }]}>
           <View style={[
             { flexDirection: 'row', alignItems: 'center', gap: 8 },
-            width >= 980 && { width: Math.min(480, desktopProductGridWidth - (PADDING * 2)) },
+            width >= 980 && {
+              width: Math.min(480, desktopProductGridWidth - (PADDING * 2)),
+              alignSelf: 'center',
+            },
           ]}>
 
             <TextInput
