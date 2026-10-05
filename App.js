@@ -877,7 +877,7 @@ function AnimatedSocialIcon({ onPress, image }) {
 }
 
 // Animated Social Icon Badge Component for Share Menu
-function AnimatedSocialIconBadge({ onPress, backgroundColor, iconName, iconSize = 16, iconColor = '#fff', size = 36, style }) {
+function AnimatedSocialIconBadge({ onPress, backgroundColor, iconName, iconSize = 16, iconColor = '#fff', size = 36, style, accessibilityLabel }) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const scaleTo = (toValue) => {
@@ -898,6 +898,8 @@ function AnimatedSocialIconBadge({ onPress, backgroundColor, iconName, iconSize 
       onMouseLeave={() => scaleTo(1)}
       onPressIn={() => scaleTo(1.2)}
       onPressOut={() => scaleTo(1)}
+      accessibilityRole={accessibilityLabel ? 'link' : undefined}
+      accessibilityLabel={accessibilityLabel}
     >
       <Animated.View
         style={[
@@ -931,6 +933,17 @@ const SOCIAL_BADGES = [
   { iconName: 'telegram', backgroundColor: '#0088cc', url: 'https://t.me/share/url?url=', sharesUrl: true },
 ];
 
+const DEFAULT_FLOATING_SOCIAL_LINKS = [
+  { platform: 'facebook', url: 'https://www.facebook.com', iconName: 'facebook', backgroundColor: '#1877F2' },
+  { platform: 'instagram', url: 'https://www.instagram.com', iconName: 'instagram', backgroundColor: '#E4405F' },
+  { platform: 'twitter', url: 'https://www.x.com', iconName: 'twitter', backgroundColor: '#000000' },
+  { platform: 'linkedin', url: 'https://www.linkedin.com', iconName: 'linkedin', backgroundColor: '#0077B5' },
+  { platform: 'youtube', url: 'https://www.youtube.com', iconName: 'youtube', backgroundColor: '#FF0000' },
+  { platform: 'tiktok', url: 'https://www.tiktok.com', iconName: 'music', backgroundColor: '#000000' },
+  { platform: 'whatsapp', url: 'https://www.whatsapp.com', iconName: 'whatsapp', backgroundColor: '#25D366' },
+  { platform: 'telegram', url: 'https://telegram.org', iconName: 'telegram', backgroundColor: '#0088CC' },
+];
+
 // Helper function to get the current page URL and create share message
 function getShareUrl(badge) {
   // If badge doesn't share URL (Instagram, YouTube, TikTok), just return the direct link
@@ -953,6 +966,27 @@ function getShareUrl(badge) {
     // Facebook, Twitter, LinkedIn
     return badge.url + encodeURIComponent(currentUrl);
   }
+}
+
+function openWhatsAppChat(phone, message) {
+  let normalizedPhone = String(phone || '').replace(/\D/g, '');
+  if (normalizedPhone.startsWith('00')) normalizedPhone = normalizedPhone.slice(2);
+  if (normalizedPhone.startsWith('0') && normalizedPhone.length === 10) {
+    normalizedPhone = `233${normalizedPhone.slice(1)}`;
+  }
+  if (!/^\d{10,15}$/.test(normalizedPhone)) {
+    throw new Error('A valid WhatsApp phone number is required.');
+  }
+
+  const url = `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(message)}`;
+  if (Platform.OS === 'web') {
+    const newWindow = window.open(url, '_blank');
+    if (!newWindow) throw new Error('The WhatsApp window was blocked by the browser.');
+    newWindow.opener = null;
+    return;
+  }
+
+  return Linking.openURL(url);
 }
 
 // Social Media Icon Row Component
@@ -987,20 +1021,104 @@ function SocialMediaIconRow() {
 
 // Floating Social Column — fixed to right edge on desktop/tablet, hidden on mobile
 function FloatingSocialColumn() {
-  // Only render on web; on native there is no concept of a fixed sidebar
-  if (Platform.OS !== 'web') return null;
+  const [socialLinks, setSocialLinks] = useState(DEFAULT_FLOATING_SOCIAL_LINKS);
 
-  // One animated value per icon: drives both translateX and opacity
-  const anims = useRef(
-    SOCIAL_BADGES.map(() => ({
-      translateX: new Animated.Value(-80),
-      opacity: new Animated.Value(0),
-    }))
-  ).current;
+  const iconMap = useMemo(() => ({
+    facebook: { iconName: 'facebook', backgroundColor: '#1877F2' },
+    instagram: { iconName: 'instagram', backgroundColor: '#E4405F' },
+    twitter: { iconName: 'twitter', backgroundColor: '#000000' },
+    linkedin: { iconName: 'linkedin', backgroundColor: '#0077B5' },
+    youtube: { iconName: 'youtube', backgroundColor: '#FF0000' },
+    tiktok: { iconName: 'music', backgroundColor: '#000000' },
+    whatsapp: { iconName: 'whatsapp', backgroundColor: '#25D366' },
+    telegram: { iconName: 'telegram', backgroundColor: '#0088CC' },
+  }), []);
 
   useEffect(() => {
-    const animations = anims.map((anim) =>
-      Animated.parallel([
+    let isCurrent = true;
+
+    const fetchSocialLinks = async () => {
+      if (Platform.OS !== 'web') return;
+
+      const { data, error } = await supabase
+        .from('social_links')
+        .select('id, platform, url, icon_name, sort_order')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) {
+        console.error('Failed to load social links; using default links:', error);
+        return;
+      }
+
+      const fetchedLinks = (data || [])
+        .map((row) => {
+          const platform = row.platform?.trim().toLowerCase();
+          const iconName = row.icon_name?.trim().toLowerCase();
+          const platformIcon = iconMap[platform] || Object.values(iconMap).find((icon) => icon.iconName === iconName);
+          if (!platformIcon || typeof row.url !== 'string') return null;
+
+          let url = row.url.trim();
+          if (platform === 'whatsapp' && url && !/^https?:\/\//i.test(url)) {
+            let phoneNumber = url.replace(/\D/g, '');
+            if (phoneNumber.startsWith('0') && phoneNumber.length === 10) {
+              phoneNumber = `233${phoneNumber.slice(1)}`;
+            }
+            if (/^\d{10,15}$/.test(phoneNumber)) {
+              url = `https://wa.me/${phoneNumber}`;
+            }
+          }
+
+          if (
+            !/^https?:\/\//i.test(url) ||
+            /your[_\s-]*(page|handle|company|channel|username|number)/i.test(url)
+          ) return null;
+
+          return {
+            id: row.id,
+            platform,
+            url,
+            iconName: platformIcon.iconName,
+            backgroundColor: platformIcon.backgroundColor,
+          };
+        })
+        .filter(Boolean);
+
+      const fetchedPlatforms = new Set(fetchedLinks.map((link) => link.platform));
+      const missingDefaultLinks = DEFAULT_FLOATING_SOCIAL_LINKS.filter(
+        (defaultLink) => !fetchedPlatforms.has(defaultLink.platform)
+      );
+
+      if (isCurrent) setSocialLinks([...fetchedLinks, ...missingDefaultLinks]);
+    };
+
+    fetchSocialLinks().catch((error) => {
+      console.error('Failed to load social links; using default links:', error);
+    });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
+
+  // Keep animation state keyed by platform so database row counts can vary.
+  const anims = useRef(new Map()).current;
+  const getAnimation = (platform) => {
+    if (!anims.has(platform)) {
+      anims.set(platform, {
+        translateX: new Animated.Value(-80),
+        opacity: new Animated.Value(0),
+      });
+    }
+    return anims.get(platform);
+  };
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    const animations = socialLinks.map((link) => {
+      const anim = getAnimation(link.platform);
+      return Animated.parallel([
         Animated.spring(anim.translateX, {
           toValue: 0,
           useNativeDriver: true,
@@ -1012,11 +1130,13 @@ function FloatingSocialColumn() {
           duration: 320,
           useNativeDriver: true,
         }),
-      ])
-    );
+      ]);
+    });
     // Fire each icon's animation 60 ms after the previous one starts
     Animated.stagger(60, animations).start();
-  }, []);
+  }, [socialLinks, iconMap]);
+
+  if (Platform.OS !== 'web') return null;
 
   return (
     <View
@@ -1042,24 +1162,33 @@ function FloatingSocialColumn() {
       accessibilityRole="navigation"
       accessibilityLabel="Social media links"
     >
-      {SOCIAL_BADGES.map((badge, i) => {
-        const shareUrl = getShareUrl(badge);
-        
+      {socialLinks.map((link) => {
+        const animation = getAnimation(link.platform);
         return (
           <Animated.View
-            key={badge.iconName + badge.url}
+            key={link.id || link.platform}
             style={{
-              opacity: anims[i].opacity,
-              transform: [{ translateX: anims[i].translateX }],
+              opacity: animation.opacity,
+              transform: [{ translateX: animation.translateX }],
             }}
           >
             <AnimatedSocialIconBadge
-              onPress={() => Linking.openURL(shareUrl)}
-              backgroundColor={badge.backgroundColor}
-              iconName={badge.iconName}
+              onPress={() => {
+                if (Platform.OS === 'web') {
+                  window.open(link.url, '_blank', 'noopener,noreferrer');
+                  return;
+                }
+
+                Linking.openURL(link.url).catch((error) => {
+                  console.error(`Failed to open ${link.platform} link:`, error);
+                });
+              }}
+              backgroundColor={link.backgroundColor}
+              iconName={link.iconName}
               iconSize={18}
               size={40}
               style={{ marginRight: 0 }}
+              accessibilityLabel={`${link.platform} profile`}
             />
           </Animated.View>
         );
@@ -6978,17 +7107,29 @@ const fetchFooterData = async () => {
 
                       <Text style={[styles.adminOrderCardUser, { color: adm.text }]}>{order.metadata?.customer_name || 'Guest'}</Text>
 
-                      <Pressable onPress={() => {
+                      <Pressable
+                        accessibilityLabel="Message customer about this order"
+                        onPress={() => {
+                          const phone = order.metadata?.customer_phone;
+                          if (!phone) {
+                            alert('This order has no customer phone number.');
+                            return;
+                          }
 
-                        const phone = order.metadata?.customer_phone || '+233240000000';
-
-                        let waPhone = phone.replace(/[^0-9]/g, '');
-
-                        if (waPhone.startsWith('0')) waPhone = '233' + waPhone.substring(1);
-
-                        Linking.openURL(`https://wa.me/${waPhone}`);
-
-                      }}>
+                          const orderReference = String(order.id).slice(0, 8).toUpperCase();
+                          const message = `[CUSTOMER ORDER UPDATE · #${orderReference}]\n\nHi ${order.metadata?.customer_name || 'there'}, your order status is ${String(order.status).toLowerCase()}. Please contact us if you need help.`;
+                          try {
+                            const result = openWhatsAppChat(phone, message);
+                            result?.catch((error) => {
+                              console.error('Failed to open customer WhatsApp chat:', error);
+                              alert('Unable to open WhatsApp for this customer.');
+                            });
+                          } catch (error) {
+                            console.error('Failed to open customer WhatsApp chat:', error);
+                            alert('Unable to open WhatsApp for this customer.');
+                          }
+                        }}
+                      >
 
                         <FontAwesome name="whatsapp" size={16} color="#10B981" />
 
@@ -7600,7 +7741,23 @@ const fetchFooterData = async () => {
 
                       <View style={{flexDirection: 'row', gap: 8}}>
 
-                        <Pressable onPress={() => { let w = rider.phone.replace(/[^0-9]/g,''); if(w.startsWith('0')) w='233'+w.substring(1); Linking.openURL(`https://wa.me/${w}`); }} style={{padding: 10, backgroundColor: '#25D366', borderRadius: 8}}>
+                        <Pressable
+                          accessibilityLabel={`Message rider ${rider.name} about delivery coordination`}
+                          onPress={() => {
+                            const message = `[RIDER COORDINATION]\n\nHi ${rider.name}, this is the Prolyn Wear admin team. We’re contacting you about delivery coordination. Please reply here to confirm your availability.`;
+                            try {
+                              const result = openWhatsAppChat(rider.phone, message);
+                              result?.catch((error) => {
+                                console.error('Failed to open rider WhatsApp chat:', error);
+                                alert('Unable to open WhatsApp for this rider.');
+                              });
+                            } catch (error) {
+                              console.error('Failed to open rider WhatsApp chat:', error);
+                              alert('Unable to open WhatsApp for this rider.');
+                            }
+                          }}
+                          style={{padding: 10, backgroundColor: '#25D366', borderRadius: 8}}
+                        >
 
                           <FontAwesome name="whatsapp" size={18} color="#fff" />
 
@@ -8337,7 +8494,8 @@ const fetchFooterData = async () => {
 
                                   // Build message
 
-                                  const msg = formatDeliveryMessage(riderPickerOrder, riderPickerDelivery);
+                                  const orderReference = String(riderPickerOrder.id).slice(0, 8).toUpperCase();
+                                  const msg = `[RIDER DELIVERY · ORDER #${orderReference}]\n\n${formatDeliveryMessage(riderPickerOrder, riderPickerDelivery)}`;
 
                                   const link = createWhatsAppLink(phone, msg);
 
@@ -8481,7 +8639,7 @@ const fetchFooterData = async () => {
 
                   <View>
 
-                    <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>Message Customer</Text>
+                    <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>CUSTOMER WHATSAPP · ORDER / SUPPORT</Text>
 
                     {customerMsgModal && (
 
@@ -8579,15 +8737,18 @@ const fetchFooterData = async () => {
 
                         if (!customerMsgModal || !customMsgText.trim()) return;
 
-                        let phone = customerMsgModal.phone.replace(/[^0-9]/g, '');
-
-                        if (phone.startsWith('0')) phone = '233' + phone.substring(1);
-
-                        const link = `https://wa.me/${phone}?text=${encodeURIComponent(customMsgText.trim())}`;
-
-                        if (typeof window !== 'undefined') window.open(link, '_blank');
-
-                        else Linking.openURL(link);
+                        const message = `[CUSTOMER ORDER UPDATE / SUPPORT]\n\n${customMsgText.trim()}`;
+                        try {
+                          const result = openWhatsAppChat(customerMsgModal.phone, message);
+                          result?.catch((error) => {
+                            console.error('Failed to open customer WhatsApp chat:', error);
+                            alert('Unable to open WhatsApp for this customer.');
+                          });
+                        } catch (error) {
+                          console.error('Failed to open customer WhatsApp chat:', error);
+                          alert('Unable to open WhatsApp for this customer.');
+                          return;
+                        }
 
                         setCustomerMsgModal(null);
 
@@ -8603,7 +8764,7 @@ const fetchFooterData = async () => {
 
                       <FontAwesome name="whatsapp" size={18} color="#fff" />
 
-                      <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>Send via WhatsApp</Text>
+                      <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>Open Customer WhatsApp</Text>
 
                     </Pressable>
 

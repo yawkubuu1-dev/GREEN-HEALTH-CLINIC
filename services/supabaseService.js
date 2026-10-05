@@ -954,6 +954,42 @@ export default {
 // CONSULTATION
 // ============================================
 
+export const socialLinksService = {
+  async getWhatsAppPhoneNumber() {
+    const { data, error } = await supabase
+      .from('social_links')
+      .select('url')
+      .eq('platform', 'whatsapp')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data?.url) return null;
+
+    let phoneValue = data.url.trim();
+    if (/^https?:\/\//i.test(phoneValue)) {
+      try {
+        const whatsappUrl = new URL(phoneValue);
+        phoneValue = whatsappUrl.searchParams.get('phone')
+          || whatsappUrl.pathname.match(/\/(\+?[\d\s()-]+)\/?$/)?.[1]
+          || '';
+      } catch {
+        return null;
+      }
+    }
+
+    let phoneNumber = phoneValue.replace(/\D/g, '');
+    if (phoneNumber.startsWith('00')) phoneNumber = phoneNumber.slice(2);
+    if (phoneNumber.startsWith('0') && phoneNumber.length === 10) {
+      phoneNumber = `233${phoneNumber.slice(1)}`;
+    }
+
+    return /^\d{10,15}$/.test(phoneNumber) ? phoneNumber : null;
+  },
+};
+
 export const consultationWidgetService = {
   async getSettings() {
     const { data, error } = await supabase

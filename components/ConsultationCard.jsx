@@ -6,13 +6,16 @@ import {
   Pressable,
   StyleSheet,
   Platform,
+  Linking,
+  Alert,
   ScrollView,
   useWindowDimensions,
   Animated,
   ActivityIndicator,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { consultationWidgetService, consultationSubmissionService } from '../services/supabaseService';
+import { FontAwesome } from '@expo/vector-icons';
+import { consultationWidgetService, consultationSubmissionService, socialLinksService } from '../services/supabaseService';
 
 /**
  * ConsultationCard - Free consultation form widget for Homepage only
@@ -24,13 +27,13 @@ import { consultationWidgetService, consultationSubmissionService } from '../ser
  */
 export default function ConsultationCard({ isPhone = false, visible = true, onClose, productId, useSticky = false, stickyTop = 76 }) {
   const [fullName, setFullName] = useState('');
-  const [whatsappNumber, setWhatsappNumber] = useState('');
   const [medicalConcern, setMedicalConcern] = useState('');
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [settings, setSettings] = useState(null);
   const [loadingSettings, setLoadingSettings] = useState(true);
+  const [businessWhatsAppNumber, setBusinessWhatsAppNumber] = useState(null);
   
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const shorterSide = Math.min(windowWidth, windowHeight);
@@ -57,7 +60,6 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
           heading: 'Get Free Consultation',
           subheading: 'Our care team replies within minutes',
           name_placeholder: 'Full Name',
-          whatsapp_placeholder: 'WhatsApp Number',
           concern_placeholder: 'Describe your medical concern...',
           button_text: 'Get Free Consultation →',
           trust_line: 'Your information stays confidential'
@@ -68,6 +70,22 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
     };
 
     loadSettings();
+  }, []);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    socialLinksService.getWhatsAppPhoneNumber()
+      .then((phoneNumber) => {
+        if (isCurrent) setBusinessWhatsAppNumber(phoneNumber);
+      })
+      .catch((error) => {
+        console.error('Failed to load business WhatsApp number from social_links:', error);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
   }, []);
 
   // Animate in/out on visibility change (mobile only)
@@ -132,46 +150,55 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
     );
   }
 
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (!fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
-    }
-    
-    if (!whatsappNumber.trim()) {
-      newErrors.whatsappNumber = 'WhatsApp number is required';
-    } else if (!/^\+?[\d\s-()]+$/.test(whatsappNumber)) {
-      newErrors.whatsappNumber = 'Please enter a valid phone number';
-    }
-    
-    if (!medicalConcern.trim()) {
-      newErrors.medicalConcern = 'Please describe your medical concern';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = async () => {
-    if (!validateForm()) return;
-
     setSubmitting(true);
     setErrors({});
 
+    const hasRequestDetails = fullName.trim() && medicalConcern.trim();
+    const message = hasRequestDetails
+      ? `[CONSULTATION REQUEST]\n\nHello, my name is ${fullName.trim()}. I'd like a consultation regarding: ${medicalConcern.trim()}`
+      : "[CONSULTATION REQUEST]\n\nHello, I'd like to request a free consultation.";
+
+    if (businessWhatsAppNumber) {
+      const whatsappUrl = `https://wa.me/${businessWhatsAppNumber}?text=${encodeURIComponent(message)}`;
+      try {
+        if (Platform.OS === 'web') {
+          const newWindow = window.open(whatsappUrl, '_blank');
+          if (!newWindow) throw new Error('The WhatsApp window was blocked by the browser.');
+          newWindow.opener = null;
+        } else {
+          Linking.openURL(whatsappUrl).catch((error) => {
+            console.error('Failed to open WhatsApp consultation:', error);
+            Alert.alert('Unable to connect', 'Unable to connect right now, please try again');
+          });
+        }
+      } catch (error) {
+        console.error('Failed to open WhatsApp consultation:', error);
+        if (Platform.OS === 'web') {
+          window.alert('Unable to connect right now, please try again');
+        } else {
+          Alert.alert('Unable to connect', 'Unable to connect right now, please try again');
+        }
+      }
+    } else if (Platform.OS === 'web') {
+      window.alert('Unable to connect right now, please try again');
+    } else {
+      Alert.alert('Unable to connect', 'Unable to connect right now, please try again');
+    }
+
     try {
       console.log('📋 Submitting consultation form to Supabase...');
-      const submission = await consultationSubmissionService.submit({
+      const submissionPromise = consultationSubmissionService.submit({
         fullName: fullName.trim(),
-        whatsappNumber: whatsappNumber.trim(),
+        whatsappNumber: '',
         medicalConcern: medicalConcern.trim(),
       });
-      
+
+      const submission = await submissionPromise;
       console.log('✅ Consultation form submitted successfully:', submission);
       
       // Clear form and show success
       setFullName('');
-      setWhatsappNumber('');
       setMedicalConcern('');
       setShowSuccess(true);
       
@@ -218,26 +245,6 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
       <View style={[styles.inputContainer, isMobile && styles.inputContainerMobile]}>
         <TextInput
           style={[
-            styles.input,
-            isMobile && styles.inputPhone,
-            isMobile && styles.inputMobile,
-            errors.whatsappNumber && styles.inputError,
-          ]}
-          placeholder={settings?.whatsapp_placeholder || 'WhatsApp Number'}
-          placeholderTextColor="#999"
-          keyboardType="phone-pad"
-          value={whatsappNumber}
-          onChangeText={(text) => {
-            setWhatsappNumber(text);
-            if (errors.whatsappNumber) setErrors({ ...errors, whatsappNumber: null });
-          }}
-          editable={!submitting}
-        />
-        {errors.whatsappNumber && <Text style={styles.errorText}>{errors.whatsappNumber}</Text>}
-      </View>
-      <View style={[styles.inputContainer, isMobile && styles.inputContainerMobile]}>
-        <TextInput
-          style={[
             styles.textarea,
             isMobile && styles.textareaPhone,
             isMobile && styles.textareaMobile,
@@ -275,13 +282,16 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
         {submitting ? (
           <ActivityIndicator size="small" color="#fff" />
         ) : (
-          <Text style={[
-            styles.submitButtonText,
-            isMobile && styles.submitButtonTextPhone,
-            isMobile && styles.submitButtonTextMobile,
-          ]}>
-            {settings?.button_text || 'Get Free Consultation →'}
-          </Text>
+          <View style={styles.submitButtonContent}>
+            <FontAwesome name="whatsapp" size={18} color="#fff" style={styles.submitButtonIcon} />
+            <Text style={[
+              styles.submitButtonText,
+              isMobile && styles.submitButtonTextPhone,
+              isMobile && styles.submitButtonTextMobile,
+            ]}>
+              {settings?.button_text || 'Get Free Consultation →'}
+            </Text>
+          </View>
         )}
       </Pressable>
       <Text style={[
@@ -306,7 +316,7 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
       </Text>
       <Text style={[styles.subheading, styles.subheadingMobile]}>
         {showSuccess
-          ? 'Our care team will contact you via WhatsApp soon.'
+          ? 'Our care team will be in touch shortly.'
           : settings?.subheading || 'Our care team replies within minutes'}
       </Text>
     </View>
@@ -336,7 +346,7 @@ export default function ConsultationCard({ isPhone = false, visible = true, onCl
         <View style={styles.successContainer}>
           <Text style={styles.successIcon}>✅</Text>
           <Text style={styles.heading}>Thanks! We'll be in touch shortly.</Text>
-          <Text style={styles.subheading}>Our care team will contact you via WhatsApp soon.</Text>
+          <Text style={styles.subheading}>Our care team will be in touch shortly.</Text>
         </View>
       ) : (
         <>
@@ -661,6 +671,14 @@ const styles = StyleSheet.create({
   },
   submitButtonPhone: {
     paddingVertical: 12,
+  },
+  submitButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  submitButtonIcon: {
+    marginRight: 8,
   },
   submitButtonPressed: {
     backgroundColor: 'rgba(46, 125, 50, 0.75)',
