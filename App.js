@@ -2182,6 +2182,8 @@ export default function App() {
 
   const [cartItems, setCartItems] = useState([]);
 
+  const [activeBottomTab, setActiveBottomTab] = useState('shop');
+
   // Cart Bottom Sheet State & Animation
 
   const [cartModalVisible, setCartModalVisible] = useState(false);
@@ -2191,6 +2193,8 @@ export default function App() {
 
 
   const openCart = () => {
+
+    setActiveBottomTab('cart');
 
     setCartModalVisible(true);
 
@@ -5057,6 +5061,10 @@ const fetchFooterData = async () => {
   const isHomePage = currentPage === 'home';
 
   const isShopPage = currentPage === 'shop';
+
+  useEffect(() => {
+    if (isShopPage) setActiveBottomTab('shop');
+  }, [currentPage]);
 
   const isAccountPage = currentPage === 'account';
 
@@ -10303,17 +10311,20 @@ const fetchFooterData = async () => {
 
             style={styles.navItem}
 
-            onPress={() => setCurrentPage('shop')}
+            onPress={() => {
+              setActiveBottomTab('shop');
+              setCurrentPage('shop');
+            }}
 
           >
 
-            <View style={[styles.navIconCircle, currentPage === 'shop' && styles.navIconCircleActive]}>
+            <View style={[styles.navIconCircle, activeBottomTab === 'shop' && styles.navIconCircleActive]}>
 
               <FontAwesome name="home" size={20} color='#008000' />
 
             </View>
 
-            <Text style={[styles.navLabel, currentPage === 'shop' && styles.navLabelActive]}>Shop</Text>
+            <Text style={[styles.navLabel, activeBottomTab === 'shop' && styles.navLabelActive]}>Shop</Text>
 
           </Pressable>
 
@@ -10329,13 +10340,13 @@ const fetchFooterData = async () => {
 
           >
 
-            <View style={[styles.navIconCircle, cartModalVisible && styles.navIconCircleActive]}>
+            <View style={[styles.navIconCircle, activeBottomTab === 'cart' && styles.navIconCircleActive]}>
 
               <FontAwesome name="shopping-cart" size={20} color='#008000' />
 
             </View>
 
-            <Text style={[styles.navLabel, cartModalVisible && styles.navLabelActive]}>Cart</Text>
+            <Text style={[styles.navLabel, activeBottomTab === 'cart' && styles.navLabelActive]}>Cart</Text>
 
           </Pressable>
 
@@ -10348,7 +10359,7 @@ const fetchFooterData = async () => {
             style={styles.navItem}
 
             onPress={() => {
-
+              setActiveBottomTab('account');
               if (user) {
 
                 fetchCustomerOrders();
@@ -10367,13 +10378,13 @@ const fetchFooterData = async () => {
 
           >
 
-            <View style={[styles.navIconCircle, userAccountSheetVisible && styles.navIconCircleActive]}>
+            <View style={[styles.navIconCircle, activeBottomTab === 'account' && styles.navIconCircleActive]}>
 
               <FontAwesome name="user" size={20} color='#008000' />
 
             </View>
 
-            <Text style={[styles.navLabel, userAccountSheetVisible && styles.navLabelActive]}>
+            <Text style={[styles.navLabel, activeBottomTab === 'account' && styles.navLabelActive]}>
 
               {user ? 'Account' : 'Sign In'}
 
