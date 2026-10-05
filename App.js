@@ -5007,6 +5007,8 @@ const fetchFooterData = async () => {
 
   const cardWidth = (availableWidth - (GAP * (columnCount - 1))) / columnCount;
 
+  const desktopProductGridWidth = (cardWidth * 3) + (GAP * 2) + (PADDING * 2);
+
   const isCompactCard = cardWidth < 200;
 
   const isCompactAdmin = width < 760;
@@ -10091,14 +10093,16 @@ const fetchFooterData = async () => {
 
 
         <View style={[styles.searchWrap, {
-          width: '100%',
-          maxWidth: 480,
-          alignSelf: 'flex-start',
+          width: width >= 980 ? desktopProductGridWidth : '100%',
+          alignSelf: width >= 980 ? 'center' : 'stretch',
+          paddingHorizontal: width >= 980 ? PADDING : 16,
           backgroundColor: isUserDarkMode ? darkPalette.surface : undefined,
           borderColor: isUserDarkMode ? '#333' : undefined
         }]}>
-
-          <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+          <View style={[
+            { flexDirection: 'row', alignItems: 'center', gap: 8 },
+            width >= 980 && { width: 480 - (PADDING * 2) },
+          ]}>
 
             <TextInput
 
@@ -10157,9 +10161,7 @@ const fetchFooterData = async () => {
 
 
         <View style={[styles.productGrid, {
-          width: width >= 980
-            ? (cardWidth * 3) + (GAP * 2) + (PADDING * 2)
-            : '100%',
+          width: width >= 980 ? desktopProductGridWidth : '100%',
           alignSelf: 'center',
           justifyContent: 'center',
           paddingHorizontal: PADDING,
