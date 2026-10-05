@@ -91,6 +91,8 @@ const palette = {
 
 };
 
+const DEFAULT_ADMIN_AVATAR = require('./assets/medical_team_neat_hair.png');
+
 
 
 const darkPalette = {
@@ -2310,7 +2312,7 @@ export default function App() {
 
   // Admin Profile State
 
-  const [adminAvatarUrl, setAdminAvatarUrl] = useState('https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=150&q=80');
+  const [adminAvatarUrl, setAdminAvatarUrl] = useState('');
 
   const [adminProfileModalVisible, setAdminProfileModalVisible] = useState(false);
 
@@ -5482,23 +5484,14 @@ const fetchFooterData = async () => {
     inputBg: '#253347',
 
   } : {
-
-    bg: '#FAF9F9',
-
-    surface: '#FFFFFF',
-
-    surfaceAlt: '#F9F9F9',
-
-    border: 'rgba(27,28,28,0.08)',
-
-    text: '#1B1C1C',
-
-    sub: '#5F5E5F',
-
-    tableHead: '#F9F9F9',
-
-    inputBg: '#FFFFFF',
-
+    bg: palette.background,
+    surface: palette.surface,
+    surfaceAlt: palette.secondaryBackground,
+    border: palette.border,
+    text: palette.charcoal,
+    sub: palette.secondary,
+    tableHead: palette.secondaryBackground,
+    inputBg: palette.surface,
   };
 
 
@@ -6348,6 +6341,12 @@ const fetchFooterData = async () => {
 
               </Pressable>
 
+              <Pressable style={styles.mobileMenuItem} onPress={() => { setMobileMenuVisible(false); openAdmin(); }}>
+
+                <Text style={[styles.mobileMenuItemText, { color: isUserDarkMode ? darkPalette.charcoal : palette.charcoal }]}>Admin Login</Text>
+
+              </Pressable>
+
 
 
               <View style={[styles.mobileSocialIcons, { flexWrap: 'wrap', gap: 14 }]}>
@@ -6560,9 +6559,9 @@ const fetchFooterData = async () => {
 
                 placeholder="admin@example.com"
 
-                placeholderTextColor="#C4A89C"
+                placeholderTextColor={palette.secondary}
 
-                style={{ borderWidth: 1, borderColor: 'rgba(74,4,4,0.2)', backgroundColor: '#FAFAFA', padding: 14, fontSize: 14, color: palette.charcoal }}
+                style={{ borderWidth: 1, borderColor: palette.border, backgroundColor: palette.surface, padding: 14, fontSize: 14, color: palette.charcoal }}
 
               />
 
@@ -6586,9 +6585,9 @@ const fetchFooterData = async () => {
 
                 placeholder="••••••••"
 
-                placeholderTextColor="#C4A89C"
+                placeholderTextColor={palette.secondary}
 
-                style={{ borderWidth: 1, borderColor: 'rgba(74,4,4,0.2)', backgroundColor: '#FAFAFA', padding: 14, fontSize: 14, color: palette.charcoal }}
+                style={{ borderWidth: 1, borderColor: palette.border, backgroundColor: palette.surface, padding: 14, fontSize: 14, color: palette.charcoal }}
 
               />
 
@@ -6602,7 +6601,7 @@ const fetchFooterData = async () => {
 
               onPress={() => { setIsLoginMode(true); handleLogin(); }}
 
-              style={({ pressed }) => [{ backgroundColor: pressed ? '#3a0303' : palette.oxblood, paddingVertical: 16, alignItems: 'center', marginBottom: 14 }]}
+              style={({ pressed }) => [{ backgroundColor: pressed ? palette.secondary : palette.oxblood, paddingVertical: 16, alignItems: 'center', marginBottom: 14 }]}
 
             >
 
@@ -6632,9 +6631,9 @@ const fetchFooterData = async () => {
 
           {/* SIDEBAR — hidden on mobile, shown on desktop */}
 
-          <View style={[styles.adminSidebar, isCompactAdmin && { display: 'none' }]}>
+          <View style={[styles.adminSidebar, { backgroundColor: adm.surfaceAlt, borderRightColor: adm.border }, isCompactAdmin && { display: 'none' }]}>
 
-            <Text style={styles.adminSidebarBrand}>Prolyn Wear</Text>
+            <Text style={[styles.adminSidebarBrand, { color: adm.text }]}>Prolyn Wear</Text>
 
             
 
@@ -6642,9 +6641,9 @@ const fetchFooterData = async () => {
 
               <Pressable onPress={() => { setTempAvatarUrl(adminAvatarUrl); setAdminProfileModalVisible(true); }}>
 
-                <Image source={{ uri: adminAvatarUrl }} style={styles.adminAvatar} />
+                <Image source={adminAvatarUrl ? { uri: adminAvatarUrl } : DEFAULT_ADMIN_AVATAR} style={styles.adminAvatar} />
 
-                <View style={{position: 'absolute', bottom: -2, right: -2, backgroundColor: '#4A0404', borderRadius: 12, width: 20, height: 20, alignItems: 'center', justifyContent: 'center'}}>
+                <View style={{position: 'absolute', bottom: -2, right: -2, backgroundColor: palette.oxblood, borderRadius: 12, width: 20, height: 20, alignItems: 'center', justifyContent: 'center'}}>
 
                   <FontAwesome name="pencil" size={10} color="#fff" />
 
@@ -6654,9 +6653,9 @@ const fetchFooterData = async () => {
 
               <View style={styles.adminProfileInfo}>
 
-                <Text style={styles.adminProfileName}>Administrator</Text>
+                <Text style={[styles.adminProfileName, { color: adm.text }]}>Administrator</Text>
 
-                <Text style={styles.adminProfileRole}>ADMIN ACCESS</Text>
+                <Text style={[styles.adminProfileRole, { color: adm.sub }]}>ADMIN ACCESS</Text>
 
               </View>
 
@@ -6690,7 +6689,7 @@ const fetchFooterData = async () => {
 
                   >
 
-                    <Text style={[styles.adminNavText, activeAdminTab === item && styles.adminNavTextActive]}>{item}</Text>
+                    <Text style={[styles.adminNavText, { color: adm.sub }, activeAdminTab === item && styles.adminNavTextActive]}>{item}</Text>
 
                   </Pressable>
 
@@ -6722,7 +6721,7 @@ const fetchFooterData = async () => {
 
                   >
 
-                    <Text style={[styles.adminNavText, activeAdminTab === item && styles.adminNavTextActive]}>{item}</Text>
+                    <Text style={[styles.adminNavText, { color: adm.sub }, activeAdminTab === item && styles.adminNavTextActive]}>{item}</Text>
 
                   </Pressable>
 
@@ -6758,7 +6757,7 @@ const fetchFooterData = async () => {
 
                       justifyContent: 'center', alignItems: 'center',
 
-                      backgroundColor: '#F5F5F5',
+                      backgroundColor: palette.secondaryBackground,
 
                       borderRadius: 6,
 
@@ -6768,7 +6767,7 @@ const fetchFooterData = async () => {
 
                   >
 
-                    <FontAwesome name="bars" size={18} color="#4A0404" />
+                    <FontAwesome name="bars" size={18} color={palette.oxblood} />
 
                   </Pressable>
 
@@ -6788,7 +6787,7 @@ const fetchFooterData = async () => {
 
                 }} style={{ marginRight: 16 }}>
 
-                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#5F5E5F' }}>LOGOUT</Text>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: palette.secondary }}>LOGOUT</Text>
 
                 </Pressable>
 
@@ -6882,17 +6881,17 @@ const fetchFooterData = async () => {
 
               
 
-              <View style={[styles.adminNewStatCard, styles.adminNewStatCardDark]}>
+              <View style={[styles.adminNewStatCard, styles.adminNewStatCardDark, { backgroundColor: '#fff', borderColor: adm.border }]}>
 
                 <View style={styles.adminNewStatCardHeader}>
 
-                  <Text style={[styles.adminNewStatLabel, {color: '#fff'}]}>ACTIVE SHIPMENTS</Text>
+                  <Text style={[styles.adminNewStatLabel, {color: '#2563EB'}]}>ACTIVE SHIPMENTS</Text>
 
                 </View>
 
-                <Text style={[styles.adminNewStatValue, {color: '#fff'}]}>{adminOrders.filter(o => ['processing', 'delivery'].includes(String(o.status).toLowerCase())).length}</Text>
+                <Text style={[styles.adminNewStatValue, {color: '#2563EB'}]}>{adminOrders.filter(o => ['processing', 'delivery'].includes(String(o.status).toLowerCase())).length}</Text>
 
-                <Text style={[styles.adminNewStatSub, {color: '#FF9999'}]}>{adminOrders.filter(o => String(o.status).toLowerCase() === 'delivery').length} delivering today</Text>
+                <Text style={[styles.adminNewStatSub, {color: '#2563EB'}]}>{adminOrders.filter(o => String(o.status).toLowerCase() === 'delivery').length} delivering today</Text>
 
                 <Text style={styles.adminDarkCardIcon}>🚚</Text>
 
@@ -7282,9 +7281,8 @@ const fetchFooterData = async () => {
 
                 <Text style={[styles.adminMainSubtitle, { color: adm.text }]}>Customer CRM</Text>
 
-                <View style={{backgroundColor: '#F3F4F6', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12}}>
-
-                  <Text style={{fontSize: 12, fontWeight: '700', color: '#5F5E5F'}}>{uniqueCustomers.length} customers</Text>
+                <View style={{backgroundColor: palette.secondaryBackground, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12}}>
+                  <Text style={{fontSize: 12, fontWeight: '700', color: palette.secondary}}>{uniqueCustomers.length} customers</Text>
 
                 </View>
 
@@ -7294,7 +7292,7 @@ const fetchFooterData = async () => {
 
               {/* Search Bar */}
 
-              <View style={{flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9F9F9', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 14, gap: 8}}>
+              <View style={{flexDirection: 'row', alignItems: 'center', backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 14, gap: 8}}>
 
                 <FontAwesome name="search" size={13} color="#9CA3AF" />
 
@@ -7308,7 +7306,7 @@ const fetchFooterData = async () => {
 
                   onChangeText={setCustomerSearch}
 
-                  style={{flex: 1, fontSize: 13, color: '#1B1C1C', padding: 0}}
+                  style={{flex: 1, fontSize: 13, color: adm.text, padding: 0}}
 
                 />
 
@@ -7408,7 +7406,7 @@ const fetchFooterData = async () => {
 
                           {/* Avatar */}
 
-                          <View style={{width: 44, height: 44, borderRadius: 22, backgroundColor: '#4A0404', alignItems: 'center', justifyContent: 'center', flexShrink: 0}}>
+                          <View style={{width: 44, height: 44, borderRadius: 22, backgroundColor: palette.oxblood, alignItems: 'center', justifyContent: 'center', flexShrink: 0}}>
 
                             <Text style={{color: '#fff', fontWeight: '700', fontSize: 16}}>
 
@@ -7426,7 +7424,7 @@ const fetchFooterData = async () => {
 
                             <View style={{flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap'}}>
 
-                              <Text style={{fontSize: 14, fontWeight: '700', color: '#1B1C1C'}}>{customer.name}</Text>
+                              <Text style={{fontSize: 14, fontWeight: '700', color: adm.text}}>{customer.name}</Text>
 
                               {customer.isDuplicate && (
 
@@ -7442,7 +7440,7 @@ const fetchFooterData = async () => {
 
                             </View>
 
-                            <Text style={{fontSize: 12, color: '#5F5E5F', marginTop: 2}}>{customer.phone}</Text>
+                            <Text style={{fontSize: 12, color: adm.sub, marginTop: 2}}>{customer.phone}</Text>
 
                             <Text style={{fontSize: 11, color: '#9CA3AF', marginTop: 1}}>
 
@@ -7458,7 +7456,7 @@ const fetchFooterData = async () => {
 
                           <View style={{alignItems: 'flex-end', gap: 6}}>
 
-                            <Text style={{fontSize: 14, fontWeight: '700', color: '#4A0404'}}>{formatCurrency(customer.totalSpent)}</Text>
+                            <Text style={{fontSize: 14, fontWeight: '700', color: palette.oxblood}}>{formatCurrency(customer.totalSpent)}</Text>
 
                             <Pressable
 
@@ -7490,7 +7488,7 @@ const fetchFooterData = async () => {
 
                             <View style={{paddingHorizontal: 14, paddingTop: 10, paddingBottom: 4}}>
 
-                              <Text style={{fontSize: 11, fontWeight: '700', color: '#5F5E5F', letterSpacing: 0.5}}>ORDER HISTORY</Text>
+                              <Text style={{fontSize: 11, fontWeight: '700', color: adm.sub, letterSpacing: 0.5}}>ORDER HISTORY</Text>
 
                             </View>
 
@@ -7510,7 +7508,7 @@ const fetchFooterData = async () => {
 
                                   {(ord.order_items || []).length > 0 && (
 
-                                    <Text style={{fontSize: 11, color: '#5F5E5F', marginTop: 2}} numberOfLines={1}>
+                                    <Text style={{fontSize: 11, color: adm.sub, marginTop: 2}} numberOfLines={1}>
 
                                       {(ord.order_items || []).map(it => `${it.product_name || it.products?.name || 'Item'} x${it.quantity || 1}`).join(', ')}
 
@@ -7596,7 +7594,7 @@ const fetchFooterData = async () => {
 
                   style={{
 
-                    backgroundColor: showAddRiderForm ? '#E5E7EB' : '#4A0404',
+                    backgroundColor: showAddRiderForm ? palette.secondaryBackground : palette.oxblood,
 
                     paddingHorizontal: 16, paddingVertical: 10,
 
@@ -7608,7 +7606,7 @@ const fetchFooterData = async () => {
 
                   <FontAwesome name={showAddRiderForm ? 'times' : 'plus'} size={13} color={showAddRiderForm ? '#1B1C1C' : '#fff'} />
 
-                  <Text style={{color: showAddRiderForm ? '#1B1C1C' : '#fff', fontWeight: '700', fontSize: 13}}>
+                  <Text style={{color: showAddRiderForm ? palette.charcoal : '#fff', fontWeight: '700', fontSize: 13}}>
 
                     {showAddRiderForm ? 'Cancel' : 'Add Rider'}
 
@@ -7624,19 +7622,19 @@ const fetchFooterData = async () => {
 
                 <View style={[styles.adminNewOrderCard, {flexDirection: 'column', gap: 12, marginBottom: 20}]}>
 
-                  <Text style={{fontSize: 12, fontWeight: '700', color: '#1B1C1C', letterSpacing: 0.5}}>NEW RIDER</Text>
+                  <Text style={{fontSize: 12, fontWeight: '700', color: adm.text, letterSpacing: 0.5}}>NEW RIDER</Text>
 
                   <TextInput
 
                     placeholder="Full Name"
 
-                    placeholderTextColor="#999"
+                    placeholderTextColor={adm.sub}
 
                     value={newRiderName}
 
                     onChangeText={setNewRiderName}
 
-                    style={{borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 6, padding: 10, fontSize: 14, color: '#1B1C1C', backgroundColor: '#FAFAFA'}}
+                    style={{borderWidth: 1, borderColor: adm.border, borderRadius: 6, padding: 10, fontSize: 14, color: adm.text, backgroundColor: adm.inputBg}}
 
                   />
 
@@ -7644,7 +7642,7 @@ const fetchFooterData = async () => {
 
                     placeholder="WhatsApp Number (e.g. +233241234567)"
 
-                    placeholderTextColor="#999"
+                    placeholderTextColor={adm.sub}
 
                     value={newRiderPhone}
 
@@ -7652,7 +7650,7 @@ const fetchFooterData = async () => {
 
                     keyboardType="phone-pad"
 
-                    style={{borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 6, padding: 10, fontSize: 14, color: '#1B1C1C', backgroundColor: '#FAFAFA'}}
+                    style={{borderWidth: 1, borderColor: adm.border, borderRadius: 6, padding: 10, fontSize: 14, color: adm.text, backgroundColor: adm.inputBg}}
 
                   />
 
@@ -7660,13 +7658,13 @@ const fetchFooterData = async () => {
 
                     placeholder="Notes (optional)"
 
-                    placeholderTextColor="#999"
+                    placeholderTextColor={adm.sub}
 
                     value={newRiderNotes}
 
                     onChangeText={setNewRiderNotes}
 
-                    style={{borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 6, padding: 10, fontSize: 14, color: '#1B1C1C', backgroundColor: '#FAFAFA'}}
+                    style={{borderWidth: 1, borderColor: adm.border, borderRadius: 6, padding: 10, fontSize: 14, color: adm.text, backgroundColor: adm.inputBg}}
 
                   />
 
@@ -7676,7 +7674,7 @@ const fetchFooterData = async () => {
 
                     disabled={addRiderLoading}
 
-                    style={{backgroundColor: addRiderLoading ? '#ccc' : '#25D366', padding: 13, borderRadius: 6, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8}}
+                    style={{backgroundColor: addRiderLoading ? palette.border : palette.oxblood, padding: 13, borderRadius: 6, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8}}
 
                   >
 
@@ -7698,7 +7696,7 @@ const fetchFooterData = async () => {
 
               {ridersLoading ? (
 
-                <ActivityIndicator size="large" color="#4A0404" style={{marginVertical: 40}} />
+                <ActivityIndicator size="large" color={palette.oxblood} style={{marginVertical: 40}} />
 
               ) : riders.length === 0 ? (
 
@@ -7706,17 +7704,16 @@ const fetchFooterData = async () => {
 
                   <FontAwesome name="motorcycle" size={48} color="#E0E0E0" />
 
-                  <Text style={{fontSize: 16, fontWeight: '700', color: '#1B1C1C'}}>No Riders Yet</Text>
+                  <Text style={{fontSize: 16, fontWeight: '700', color: adm.text}}>No Riders Yet</Text>
 
-                  <Text style={{fontSize: 13, color: '#888', textAlign: 'center'}}>
+                  <Text style={{fontSize: 13, color: adm.sub, textAlign: 'center'}}>
 
                     Tap "Add Rider" above to add your first delivery rider.
 
                   </Text>
 
-                  <Pressable onPress={fetchRiders} style={{backgroundColor: '#F3F4F6', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 6}}>
-
-                    <Text style={{fontSize: 12, fontWeight: '700', color: '#4A0404'}}>↺ Refresh</Text>
+                  <Pressable onPress={fetchRiders} style={{backgroundColor: palette.secondaryBackground, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 6}}>
+                    <Text style={{fontSize: 12, fontWeight: '700', color: palette.oxblood}}>↺ Refresh</Text>
 
                   </Pressable>
 
@@ -7740,7 +7737,7 @@ const fetchFooterData = async () => {
 
                         <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap'}}>
 
-                          <Text style={{fontSize: 15, fontWeight: '700', color: '#1B1C1C'}}>{rider.name}</Text>
+                          <Text style={{fontSize: 15, fontWeight: '700', color: adm.text}}>{rider.name}</Text>
 
                           <View style={{backgroundColor: rider.is_active ? '#ECFDF5' : '#F3F4F6', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 4}}>
 
@@ -7754,9 +7751,9 @@ const fetchFooterData = async () => {
 
                         </View>
 
-                        <Text style={{fontSize: 13, color: '#5F5E5F', marginTop: 3}}>{rider.phone}</Text>
+                        <Text style={{fontSize: 13, color: adm.sub, marginTop: 3}}>{rider.phone}</Text>
 
-                        {rider.notes ? <Text style={{fontSize: 11, color: '#9CA3AF', marginTop: 2}}>{rider.notes}</Text> : null}
+                        {rider.notes ? <Text style={{fontSize: 11, color: adm.sub, marginTop: 2}}>{rider.notes}</Text> : null}
 
                       </View>
 
@@ -7810,15 +7807,14 @@ const fetchFooterData = async () => {
 
               <View style={[styles.adminNewOrderCard, {flexDirection: 'column', gap: 16}]}>
 
-                <Text style={{fontSize: 13, fontWeight: '700', color: '#1B1C1C', letterSpacing: 0.5}}>APPEARANCE</Text>
+                <Text style={{fontSize: 13, fontWeight: '700', color: adm.text, letterSpacing: 0.5}}>APPEARANCE</Text>
 
                 <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
 
                   <View>
 
-                    <Text style={{fontSize: 14, fontWeight: '600', color: '#1B1C1C'}}>Admin Dark Mode</Text>
-
-                    <Text style={{fontSize: 12, color: '#5F5E5F', marginTop: 2}}>Toggle dark theme for the admin dashboard</Text>
+                    <Text style={{fontSize: 14, fontWeight: '600', color: adm.text}}>Admin Dark Mode</Text>
+                    <Text style={{fontSize: 12, color: adm.sub, marginTop: 2}}>Toggle dark theme for the admin dashboard</Text>
 
                   </View>
 
@@ -7830,7 +7826,7 @@ const fetchFooterData = async () => {
 
                       width: 50, height: 28, borderRadius: 14,
 
-                      backgroundColor: isAdminDarkMode ? '#4A0404' : '#E5E7EB',
+                      backgroundColor: isAdminDarkMode ? palette.oxblood : palette.border,
 
                       justifyContent: 'center',
 
@@ -7862,9 +7858,8 @@ const fetchFooterData = async () => {
 
               <View style={[styles.adminNewOrderCard, {flexDirection: 'column', gap: 16, marginTop: 16}]}>
 
-                <Text style={{fontSize: 13, fontWeight: '700', color: '#1B1C1C', letterSpacing: 0.5}}>CURRENCY</Text>
-
-                <Text style={{fontSize: 12, color: '#5F5E5F'}}>Select the default currency for the storefront.</Text>
+                <Text style={{fontSize: 13, fontWeight: '700', color: adm.text, letterSpacing: 0.5}}>CURRENCY</Text>
+                <Text style={{fontSize: 12, color: adm.sub}}>Select the default currency for the storefront.</Text>
 
                 <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8}}>
 
@@ -7902,13 +7897,13 @@ const fetchFooterData = async () => {
 
               <View style={[styles.adminNewOrderCard, {flexDirection: 'column', gap: 12, marginTop: 16}]}>
 
-                <Text style={{fontSize: 13, fontWeight: '700', color: '#1B1C1C', letterSpacing: 0.5}}>ACCOUNT</Text>
+                <Text style={{fontSize: 13, fontWeight: '700', color: adm.text, letterSpacing: 0.5}}>ACCOUNT</Text>
 
                 <Pressable
 
                   onPress={() => { setAdminUnlocked(false); setCurrentPage('shop'); }}
 
-                  style={{backgroundColor: '#4A0404', padding: 14, alignItems: 'center'}}
+                  style={{backgroundColor: palette.oxblood, padding: 14, alignItems: 'center'}}
 
                 >
 
@@ -7934,15 +7929,14 @@ const fetchFooterData = async () => {
 
               <View style={[styles.adminNewOrderCard, {flexDirection: 'column', gap: 12}]}>
 
-                <Text style={{fontSize: 13, fontWeight: '700', color: '#1B1C1C', letterSpacing: 0.5}}>PRODUCT PRICES</Text>
-
-                <Text style={{fontSize: 12, color: '#5F5E5F', lineHeight: 18}}>To update individual product prices, go to the Inventory tab and tap the ✎ edit icon next to any product.</Text>
+                <Text style={{fontSize: 13, fontWeight: '700', color: adm.text, letterSpacing: 0.5}}>PRODUCT PRICES</Text>
+                <Text style={{fontSize: 12, color: adm.sub, lineHeight: 18}}>To update individual product prices, go to the Inventory tab and tap the ✎ edit icon next to any product.</Text>
 
                 <Pressable
 
                   onPress={() => setActiveAdminTab('Inventory')}
 
-                  style={{backgroundColor: '#4A0404', padding: 14, alignItems: 'center', marginTop: 8}}
+                  style={{backgroundColor: palette.oxblood, padding: 14, alignItems: 'center', marginTop: 8}}
 
                 >
 
@@ -7958,7 +7952,7 @@ const fetchFooterData = async () => {
 
                 <Text style={{fontSize: 13, fontWeight: '700', color: '#1B1C1C', letterSpacing: 0.5}}>CURRENCY RATES</Text>
 
-                <Text style={{fontSize: 12, color: '#5F5E5F', lineHeight: 18}}>Currency rates are fetched live from the open exchange rates API on app start. Switch currency display below:</Text>
+                <Text style={{fontSize: 12, color: adm.sub, lineHeight: 18}}>Currency rates are fetched live from the open exchange rates API on app start. Switch currency display below:</Text>
 
                 <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4}}>
 
@@ -8034,7 +8028,7 @@ const fetchFooterData = async () => {
 
               width: 260,
 
-              backgroundColor: palette.vault,
+              backgroundColor: palette.oxblood,
 
               zIndex: 101,
 
@@ -8100,9 +8094,8 @@ const fetchFooterData = async () => {
 
               <View style={{ position: 'relative' }}>
 
-                <Image source={{ uri: adminAvatarUrl }} style={{ width: 42, height: 42, borderRadius: 21, borderWidth: 2, borderColor: '#4A0404' }} />
-
-                <View style={{ position: 'absolute', bottom: -2, right: -2, backgroundColor: '#4A0404', borderRadius: 10, width: 18, height: 18, alignItems: 'center', justifyContent: 'center' }}>
+                <Image source={adminAvatarUrl ? { uri: adminAvatarUrl } : DEFAULT_ADMIN_AVATAR} style={{ width: 42, height: 42, borderRadius: 21, borderWidth: 2, borderColor: palette.oxbloodSoft }} />
+                <View style={{ position: 'absolute', bottom: -2, right: -2, backgroundColor: palette.oxbloodSoft, borderRadius: 10, width: 18, height: 18, alignItems: 'center', justifyContent: 'center' }}>
 
                   <FontAwesome name="pencil" size={8} color="#fff" />
 
@@ -8162,17 +8155,15 @@ const fetchFooterData = async () => {
 
                         paddingHorizontal: 20, paddingVertical: 13,
 
-                        backgroundColor: active ? 'rgba(74,4,4,0.6)' : 'transparent',
-
+                        backgroundColor: active ? 'rgba(255,255,255,0.14)' : 'transparent',
                         borderLeftWidth: active ? 3 : 0,
-
-                        borderLeftColor: '#D26A5F',
+                        borderLeftColor: palette.oxbloodSoft,
 
                       }}
 
                     >
 
-                      <FontAwesome name={icon} size={16} color={active ? '#D26A5F' : 'rgba(255,255,255,0.5)'} />
+                      <FontAwesome name={icon} size={16} color={active ? '#fff' : 'rgba(255,255,255,0.65)'} />
 
                       <Text style={{ color: active ? '#fff' : 'rgba(255,255,255,0.6)', fontWeight: active ? '700' : '400', fontSize: 14 }}>{label}</Text>
 
@@ -8210,17 +8201,15 @@ const fetchFooterData = async () => {
 
                         paddingHorizontal: 20, paddingVertical: 13,
 
-                        backgroundColor: active ? 'rgba(74,4,4,0.6)' : 'transparent',
-
+                        backgroundColor: active ? 'rgba(255,255,255,0.14)' : 'transparent',
                         borderLeftWidth: active ? 3 : 0,
-
-                        borderLeftColor: '#D26A5F',
+                        borderLeftColor: palette.oxbloodSoft,
 
                       }}
 
                     >
 
-                      <FontAwesome name={icon} size={16} color={active ? '#D26A5F' : 'rgba(255,255,255,0.5)'} />
+                      <FontAwesome name={icon} size={16} color={active ? '#fff' : 'rgba(255,255,255,0.65)'} />
 
                       <Text style={{ color: active ? '#fff' : 'rgba(255,255,255,0.6)', fontWeight: active ? '700' : '400', fontSize: 14 }}>{label}</Text>
 
@@ -8254,9 +8243,9 @@ const fetchFooterData = async () => {
 
             >
 
-              <FontAwesome name="sign-out" size={16} color="#D26A5F" />
+              <FontAwesome name="sign-out" size={16} color={palette.oxbloodSoft} />
 
-              <Text style={{ color: '#D26A5F', fontWeight: '700', fontSize: 13, letterSpacing: 1 }}>LOGOUT</Text>
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13, letterSpacing: 1 }}>LOGOUT</Text>
 
             </Pressable>
 
@@ -8314,7 +8303,7 @@ const fetchFooterData = async () => {
 
                 <View style={{
 
-                  backgroundColor: '#4A0404', paddingHorizontal: 20, paddingVertical: 16,
+                  backgroundColor: palette.oxblood, paddingHorizontal: 20, paddingVertical: 16,
 
                   flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
 
@@ -8360,13 +8349,12 @@ const fetchFooterData = async () => {
 
                   }}>
 
-                    <FontAwesome name="map-marker" size={14} color="#4A0404" style={{ marginTop: 2 }} />
+                    <FontAwesome name="map-marker" size={14} color={palette.oxblood} style={{ marginTop: 2 }} />
 
                     <View style={{ flex: 1 }}>
 
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: '#4A0404', letterSpacing: 0.5 }}>DELIVERY TO</Text>
-
-                      <Text style={{ fontSize: 13, color: '#1B1C1C', marginTop: 2 }}>{riderPickerDelivery.address}</Text>
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: palette.oxblood, letterSpacing: 0.5 }}>DELIVERY TO</Text>
+                      <Text style={{ fontSize: 13, color: palette.charcoal, marginTop: 2 }}>{riderPickerDelivery.address}</Text>
 
                     </View>
 
@@ -8476,7 +8464,7 @@ const fetchFooterData = async () => {
 
                               </View>
 
-                              <Text style={{ fontSize: 12, color: '#5F5E5F', marginTop: 2 }}>{rider.phone}</Text>
+                              <Text style={{ fontSize: 12, color: palette.secondary, marginTop: 2 }}>{rider.phone}</Text>
 
                               {rider.notes ? <Text style={{ fontSize: 11, color: '#9CA3AF', marginTop: 1 }}>{rider.notes}</Text> : null}
 
@@ -8676,7 +8664,7 @@ const fetchFooterData = async () => {
 
                   <View style={{ padding: 16, gap: 10 }}>
 
-                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#5F5E5F', letterSpacing: 0.5, marginBottom: 4 }}>QUICK MESSAGES</Text>
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.5, marginBottom: 4 }}>QUICK MESSAGES</Text>
 
 
 
@@ -8702,19 +8690,16 @@ const fetchFooterData = async () => {
 
                           borderWidth: 1.5,
 
-                          borderColor: customMsgText === msg ? '#25D366' : '#E5E7EB',
-
+                          borderColor: customMsgText === msg ? palette.oxblood : palette.border,
                           borderRadius: 8, padding: 12,
-
-                          backgroundColor: customMsgText === msg ? '#F0FDF4' : '#FAFAFA',
+                          backgroundColor: customMsgText === msg ? palette.secondaryBackground : palette.background,
 
                         }}
 
                       >
 
-                        <Text style={{ fontSize: 12, fontWeight: '700', color: '#1B1C1C', marginBottom: 4 }}>{label}</Text>
-
-                        <Text style={{ fontSize: 12, color: '#5F5E5F', lineHeight: 18 }}>{msg}</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '700', color: palette.charcoal, marginBottom: 4 }}>{label}</Text>
+                        <Text style={{ fontSize: 12, color: palette.secondary, lineHeight: 18 }}>{msg}</Text>
 
                       </Pressable>
 
@@ -8722,9 +8707,8 @@ const fetchFooterData = async () => {
 
 
 
-                    <View style={{ height: 1, backgroundColor: '#F0F0F0', marginVertical: 4 }} />
-
-                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#5F5E5F', letterSpacing: 0.5 }}>CUSTOM MESSAGE</Text>
+                    <View style={{ height: 1, backgroundColor: palette.border, marginVertical: 4 }} />
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: palette.secondary, letterSpacing: 0.5 }}>CUSTOM MESSAGE</Text>
 
                     <TextInput
 
@@ -8740,7 +8724,7 @@ const fetchFooterData = async () => {
 
                       numberOfLines={3}
 
-                      style={{ borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 8, padding: 12, fontSize: 13, color: '#1B1C1C', backgroundColor: '#FAFAFA', minHeight: 80, textAlignVertical: 'top' }}
+                      style={{ borderWidth: 1, borderColor: palette.border, borderRadius: 8, padding: 12, fontSize: 13, color: palette.charcoal, backgroundColor: palette.background, minHeight: 80, textAlignVertical: 'top' }}
 
                     />
 
@@ -8772,7 +8756,7 @@ const fetchFooterData = async () => {
 
                       disabled={!customMsgText.trim()}
 
-                      style={{ backgroundColor: !customMsgText.trim() ? '#D1D5DB' : '#25D366', borderRadius: 8, padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                      style={{ backgroundColor: !customMsgText.trim() ? palette.border : palette.oxblood, borderRadius: 8, padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
 
                     >
 
@@ -12913,7 +12897,7 @@ const fetchFooterData = async () => {
       />
 
       {/* Floating social column — desktop/tablet only, fixed to right edge, hidden on Shop/Services/About/Blogs pages */}
-      {!isPhoneScreen && !['shop', 'services', 'about', 'blogs'].includes(currentPage) && <FloatingSocialColumn />}
+      {!isAdminPage && !isAdminLoginPage && !isPhoneScreen && !['shop', 'services', 'about', 'blogs'].includes(currentPage) && <FloatingSocialColumn />}
 
     </SafeAreaView>
     </FooterProvider>
@@ -15239,27 +15223,17 @@ const styles = StyleSheet.create({
 
 
   adminDashboardLayout: {
-
     flex: 1,
-
     flexDirection: 'row',
-
-    backgroundColor: '#FAF9F9',
-
+    backgroundColor: palette.background,
   },
 
   adminSidebar: {
-
     width: 260,
-
-    backgroundColor: '#F5F4F4',
-
+    backgroundColor: palette.secondaryBackground,
     borderRightWidth: 1,
-
-    borderRightColor: 'rgba(27,28,28,0.06)',
-
+    borderRightColor: palette.border,
     paddingVertical: 32,
-
   },
 
   adminSidebarBrand: {
@@ -15270,7 +15244,7 @@ const styles = StyleSheet.create({
 
     fontWeight: '700',
 
-    color: '#1B1C1C',
+    color: palette.charcoal,
 
     paddingHorizontal: 24,
 
@@ -15316,7 +15290,7 @@ const styles = StyleSheet.create({
 
     fontWeight: '500',
 
-    color: '#1B1C1C',
+    color: palette.charcoal,
 
   },
 
@@ -15326,7 +15300,7 @@ const styles = StyleSheet.create({
 
     fontWeight: '700',
 
-    color: '#888989',
+    color: palette.secondary,
 
     letterSpacing: 0.8,
 
@@ -15350,15 +15324,13 @@ const styles = StyleSheet.create({
 
   adminNavItemActive: {
 
-    backgroundColor: '#270808',
+    backgroundColor: palette.oxblood,
 
   },
 
   adminNavText: {
-
     fontSize: 14,
-
-    color: '#5F5E5F',
+    color: palette.secondary,
 
   },
 
@@ -15371,22 +15343,17 @@ const styles = StyleSheet.create({
   },
 
   adminNavListBottom: {
-
     gap: 8,
-
     borderTopWidth: 1,
-
-    borderTopColor: 'rgba(27,28,28,0.06)',
+    borderTopColor: palette.border,
 
     paddingTop: 16,
 
   },
 
   adminMainContent: {
-
     flex: 1,
-
-    backgroundColor: '#FAF9F9',
+    backgroundColor: palette.background,
 
   },
 
@@ -15408,7 +15375,7 @@ const styles = StyleSheet.create({
 
     borderBottomWidth: 1,
 
-    borderBottomColor: 'rgba(27,28,28,0.08)',
+    borderBottomColor: palette.border,
 
     paddingBottom: 24,
 
@@ -15424,7 +15391,7 @@ const styles = StyleSheet.create({
 
     fontWeight: '700',
 
-    color: '#1B1C1C',
+    color: palette.charcoal,
 
   },
 
@@ -15442,7 +15409,7 @@ const styles = StyleSheet.create({
 
     fontWeight: '700',
 
-    color: '#888989',
+    color: palette.secondary,
 
     letterSpacing: 1.2,
 
@@ -15474,17 +15441,16 @@ const styles = StyleSheet.create({
 
     borderWidth: 1,
 
-    borderColor: 'rgba(27,28,28,0.1)',
-
-    backgroundColor: '#fff',
+    borderColor: palette.border,
+    backgroundColor: palette.surface,
 
   },
 
   adminCurrencyToggleActive: {
 
-    backgroundColor: '#270808',
+    backgroundColor: palette.oxblood,
 
-    borderColor: '#270808',
+    borderColor: palette.oxblood,
 
   },
 
@@ -15494,7 +15460,7 @@ const styles = StyleSheet.create({
 
     fontWeight: '600',
 
-    color: '#5F5E5F',
+    color: palette.secondary,
 
   },
 
@@ -15517,26 +15483,23 @@ const styles = StyleSheet.create({
   },
 
   adminNewStatCard: {
-
     flex: 1,
-
     minWidth: 250,
-
-    backgroundColor: '#fff',
+    backgroundColor: palette.surface,
 
     padding: 24,
 
     borderWidth: 1,
 
-    borderColor: 'rgba(27,28,28,0.08)',
+    borderColor: palette.border,
 
   },
 
   adminNewStatCardDark: {
 
-    backgroundColor: '#2A0303',
+    backgroundColor: palette.oxblood,
 
-    borderColor: '#2A0303',
+    borderColor: palette.oxblood,
 
     overflow: 'hidden',
 
@@ -15560,7 +15523,7 @@ const styles = StyleSheet.create({
 
     fontWeight: '700',
 
-    color: '#5F5E5F',
+    color: palette.secondary,
 
     letterSpacing: 1,
 
@@ -15640,7 +15603,7 @@ const styles = StyleSheet.create({
 
     fontWeight: '700',
 
-    color: '#1B1C1C',
+    color: palette.charcoal,
 
     marginBottom: 8,
 
@@ -15650,7 +15613,7 @@ const styles = StyleSheet.create({
 
     fontSize: 12,
 
-    color: '#888989',
+    color: palette.secondary,
 
   },
 
@@ -15658,7 +15621,7 @@ const styles = StyleSheet.create({
 
     height: 4,
 
-    backgroundColor: '#4A0404',
+    backgroundColor: palette.oxblood,
 
     width: 60,
 
@@ -15706,7 +15669,7 @@ const styles = StyleSheet.create({
 
     fontWeight: '700',
 
-    color: '#1B1C1C',
+    color: palette.charcoal,
 
     marginBottom: 16,
 
@@ -15714,7 +15677,7 @@ const styles = StyleSheet.create({
 
   adminDarkButton: {
 
-    backgroundColor: '#270808',
+    backgroundColor: palette.oxblood,
 
     paddingHorizontal: 16,
 
@@ -15734,11 +15697,9 @@ const styles = StyleSheet.create({
 
   adminNewTable: {
 
-    backgroundColor: '#fff',
-
+    backgroundColor: palette.surface,
     borderWidth: 1,
-
-    borderColor: 'rgba(27,28,28,0.08)',
+    borderColor: palette.border,
 
   },
 
@@ -15750,11 +15711,9 @@ const styles = StyleSheet.create({
 
     paddingHorizontal: 20,
 
-    backgroundColor: '#F9F9F9',
-
+    backgroundColor: palette.secondaryBackground,
     borderBottomWidth: 1,
-
-    borderBottomColor: 'rgba(27,28,28,0.08)',
+    borderBottomColor: palette.border,
 
   },
 
@@ -15764,7 +15723,7 @@ const styles = StyleSheet.create({
 
     fontWeight: '700',
 
-    color: '#888989',
+    color: palette.secondary,
 
     letterSpacing: 1,
 
@@ -15780,7 +15739,7 @@ const styles = StyleSheet.create({
 
     borderBottomWidth: 1,
 
-    borderBottomColor: 'rgba(27,28,28,0.04)',
+    borderBottomColor: palette.border,
 
     alignItems: 'center',
 
@@ -15806,7 +15765,7 @@ const styles = StyleSheet.create({
 
     fontWeight: '700',
 
-    color: '#1B1C1C',
+    color: palette.charcoal,
 
   },
 
@@ -15814,7 +15773,7 @@ const styles = StyleSheet.create({
 
     fontSize: 13,
 
-    color: '#5F5E5F',
+    color: palette.secondary,
 
   },
 
@@ -15867,10 +15826,8 @@ const styles = StyleSheet.create({
   },
 
   adminEditIcon: {
-
     fontSize: 18,
-
-    color: '#888989',
+    color: palette.secondary,
 
   },
 
@@ -15883,12 +15840,9 @@ const styles = StyleSheet.create({
   },
 
   adminNewOrderCard: {
-
-    backgroundColor: '#fff',
-
+    backgroundColor: palette.surface,
     borderWidth: 1,
-
-    borderColor: 'rgba(27,28,28,0.08)',
+    borderColor: palette.border,
 
     padding: 20,
 
@@ -15898,7 +15852,7 @@ const styles = StyleSheet.create({
 
     fontSize: 13,
 
-    color: '#5F5E5F',
+    color: palette.secondary,
 
     fontWeight: '500',
 
@@ -15912,7 +15866,7 @@ const styles = StyleSheet.create({
 
     fontWeight: '700',
 
-    color: '#1B1C1C',
+    color: palette.charcoal,
 
   },
 
@@ -15920,7 +15874,7 @@ const styles = StyleSheet.create({
 
     fontSize: 12,
 
-    color: '#888989',
+    color: palette.secondary,
 
     marginTop: 4,
 
@@ -15928,7 +15882,7 @@ const styles = StyleSheet.create({
 
   adminOrderCardStatusBadge: {
 
-    backgroundColor: '#F3F4F6',
+    backgroundColor: palette.secondaryBackground,
 
     paddingHorizontal: 8,
 
@@ -15960,7 +15914,7 @@ const styles = StyleSheet.create({
 
     fontWeight: '700',
 
-    color: '#1B1C1C',
+    color: palette.charcoal,
 
   },
 
@@ -15968,13 +15922,13 @@ const styles = StyleSheet.create({
 
     borderWidth: 1,
 
-    borderColor: 'rgba(27,28,28,0.4)',
+    borderColor: palette.oxblood,
 
     paddingVertical: 14,
 
     alignItems: 'center',
 
-    backgroundColor: '#FAF9F9',
+    backgroundColor: palette.surface,
 
   },
 
@@ -15984,7 +15938,7 @@ const styles = StyleSheet.create({
 
     fontWeight: '600',
 
-    color: '#1B1C1C',
+    color: palette.oxblood,
 
   },
 
