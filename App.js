@@ -10091,11 +10091,11 @@ const fetchFooterData = async () => {
 
 
         <View style={[styles.searchWrap, {
-
+          width: '100%',
+          maxWidth: 480,
+          alignSelf: 'flex-start',
           backgroundColor: isUserDarkMode ? darkPalette.surface : undefined,
-
           borderColor: isUserDarkMode ? '#333' : undefined
-
         }]}>
 
           <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
