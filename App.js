@@ -2182,8 +2182,6 @@ export default function App() {
 
   const [cartItems, setCartItems] = useState([]);
 
-  const [activeBottomTab, setActiveBottomTab] = useState('shop');
-
   // Cart Bottom Sheet State & Animation
 
   const [cartModalVisible, setCartModalVisible] = useState(false);
@@ -2193,8 +2191,6 @@ export default function App() {
 
 
   const openCart = () => {
-
-    setActiveBottomTab('cart');
 
     setCartModalVisible(true);
 
@@ -5062,9 +5058,15 @@ const fetchFooterData = async () => {
 
   const isShopPage = currentPage === 'shop';
 
-  useEffect(() => {
-    if (isShopPage) setActiveBottomTab('shop');
-  }, [currentPage]);
+  const activeBottomTab = authModalVisible || userAccountSheetVisible
+    ? 'account'
+    : cartModalVisible
+      ? 'cart'
+      : currentPage === 'shop'
+        ? 'shop'
+        : currentPage === 'account'
+          ? 'account'
+          : null;
 
   const isAccountPage = currentPage === 'account';
 
@@ -10311,10 +10313,7 @@ const fetchFooterData = async () => {
 
             style={styles.navItem}
 
-            onPress={() => {
-              setActiveBottomTab('shop');
-              setCurrentPage('shop');
-            }}
+            onPress={() => setCurrentPage('shop')}
 
           >
 
@@ -10359,7 +10358,6 @@ const fetchFooterData = async () => {
             style={styles.navItem}
 
             onPress={() => {
-              setActiveBottomTab('account');
               if (user) {
 
                 fetchCustomerOrders();
